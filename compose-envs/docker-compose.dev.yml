@@ -1,0 +1,18 @@
+services:
+  backend:
+    ports:
+      - "8050:8000"
+    volumes:
+      - ./backend/src/:/app/src/
+    environment:
+      - DJANGO_DEBUG=1
+
+  frontend:
+    ports:
+      - "3050:3000"
+    volumes:
+      - ./frontend/src/:/app/src/
+
+  db:
+    ports:
+      - "5439:5432"

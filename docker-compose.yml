@@ -1,0 +1,25 @@
+volumes:
+  postgres_data:
+
+services:
+  backend:
+    build: ./backend
+    depends_on:
+      - db
+    env_file:
+      - .env
+    volumes:
+      - ./backend/src:/app/src
+      - ./data/geo_metadata/:/data/geo_metadata/
+
+  frontend:
+    build: ./frontend
+    depends_on:
+      - backend
+
+  db:
+    image: postgres:17
+    env_file:
+      - .env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data

@@ -1,0 +1,22 @@
+[project]
+name = "backend"
+version = "0.1.0"
+description = "Meta2Onto Backend API"
+requires-python = ">=3.10"
+dependencies = [
+    "django>=5.2.6",
+    "django-cors-headers>=4.8.0",
+    "django-extensions>=4.1",
+    "django-rest-framework>=0.1.0",
+    "drf-nested-routers>=0.95.0",
+    "gunicorn>=23.0.0",
+    "pgpq>=0.9.0",
+    "psycopg[binary]>=3.2.10",
+]
+
+# [build-system]
+# requires = ["uv_build>=0.8.17,<0.9.0"]
+# build-backend = "uv_build"
+
+[tool.uv]
+package = false
