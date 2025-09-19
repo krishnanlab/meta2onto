@@ -1,0 +1,27 @@
+volumes:
+  frontend_built:
+  caddy_data:
+  caddy_config:
+
+services:
+  frontend:
+    command: sh -c "bun install && bun run build --outdir /opt/dist"
+    volumes:
+      - frontend_built:/opt/dist
+    environment:
+      # update to whatever your frontend framework uses for env vars
+      - REACT_APP_API_BASE_URL=http://${DOMAIN}/api
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./services/caddy/Caddyfile:/etc/caddy/Caddyfile
+      - frontend_built:/opt/frontend/:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - backend

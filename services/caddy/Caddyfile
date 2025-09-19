@@ -1,0 +1,17 @@
+# Explicit HTTP → HTTPS redirect
+http://{$DOMAIN} {
+	redir https://{$DOMAIN}{uri} 308
+}
+
+# Main site (HTTPS is automatic)
+{$DOMAIN} {
+	# /api -> backend:8000, strip the /api prefix
+	handle_path /api/* {
+		reverse_proxy backend:8000
+	}
+
+	# Everything else -> frontend:3000 (SPA)
+	handle {
+		reverse_proxy frontend:3000
+	}
+}
