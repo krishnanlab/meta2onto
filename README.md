@@ -1,6 +1,6 @@
 # Meta2Onto Stack
 
-This repo contains the complete code for the Meta2Onto stack, including
+This repo contains the implementation of the Meta2Onto stack including
 the backend API, web frontend, and definitions for supporting services (e.g.,
 the db).
 
