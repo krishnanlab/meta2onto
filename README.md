@@ -1,12 +1,6 @@
 # Meta2Onto Stack
 
-This repo replaces a few other repositories where prototype implementations of
-the Meta2Onto stack were being stored, specifically:
-- [meta2onto_scripts](https://github.com/krishnanlab/meta2onto_scripts)
-- [meta2onto_webserver](https://github.com/krishnanlab/meta2onto_webserver)
-- [meta2onto_api](https://github.com/krishnanlab/meta2onto_api)
-
-Instead, this repo will contain all the code for the Meta2Onto stack, including
+This repo contains the complete code for the Meta2Onto stack, including
 the backend API, web frontend, and definitions for supporting services (e.g.,
 the db).
 
@@ -39,5 +33,13 @@ This will create a `.env` file from `.env.TEMPLATE` if it doesn't exist,
 populate it with the necessary secrets for the app to run, and then start the
 application using Docker Compose.
 
-The backend API will be accessible at `http://localhost:8000` and the frontend
-at `http://localhost:3000`.
+The backend API will be accessible at `http://localhost:8050` and the frontend
+at `http://localhost:3050`.
+
+## Deprecated Repos
+
+This repo replaces a few other repositories where prototype implementations of
+the Meta2Onto stack were being stored, specifically:
+- [meta2onto_scripts](https://github.com/krishnanlab/meta2onto_scripts)
+- [meta2onto_webserver](https://github.com/krishnanlab/meta2onto_webserver)
+- [meta2onto_api](https://github.com/krishnanlab/meta2onto_api)
