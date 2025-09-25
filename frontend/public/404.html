@@ -1,0 +1,19 @@
+<!doctype html>
+<html>
+  <body>
+    <script type="text/javascript">
+      // redirect to root and pass page to router
+      console.debug("Redirecting from:", location);
+      console.debug("With state:", history.state);
+      const { origin, pathname, search, hash } = location;
+      sessionStorage.redirectPath = pathname + search + hash;
+      // don't fail redirection all together if state exceeds session storage limit
+      try {
+        sessionStorage.redirectState = JSON.stringify(history.state);
+      } catch (error) {
+        console.error(error);
+      }
+      location = "/";
+    </script>
+  </body>
+</html>

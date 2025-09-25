@@ -8,9 +8,6 @@ services:
     command: sh -c "bun install && bun run build --outdir /opt/dist"
     volumes:
       - frontend_built:/opt/dist
-    environment:
-      # update to whatever your frontend framework uses for env vars
-      - REACT_APP_API_BASE_URL=http://${DOMAIN}/api
 
   caddy:
     image: caddy:2

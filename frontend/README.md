@@ -1,22 +1,24 @@
-# frontend
+# Frontend
 
-To install dependencies:
+This project was scaffolded using Vite, and has the following key features:
 
-```bash
-bun install
-```
+- React 19
+- TypeScript, for static type checking
+- ESLint, for code quality
+- Prettier, for code formatting
 
-To run:
+## Requirements
 
-```bash
-bun run index.ts
-```
+- [Node](https://nodejs.org/) v22+
+- [Bun](https://bun.sh/) v1.2+
 
-This project was created using `bun init` in bun v1.2.20. [Bun](https://bun.com)
-is a fast all-in-one JavaScript runtime.
+## Commands
 
-# Notes for Rescaffolding (remove after doing so)
-
-You can re-run `bun init` in this folder to regenerate the project scaffolding
-with, e.g., a different framework or bundler. The existing `Dockerfile` and
-other supporting files should work with whatever new scaffolding you generate. 
+| Command           | Description                                       |
+| ----------------- | ------------------------------------------------- |
+| `bun install`     | Install packages                                  |
+| `bun run dev`     | Start local dev server with hot-reloading         |
+| `bun run build`   | Build production version of app                   |
+| `bun run preview` | Serve built version of app (must run build first) |
+| `bun run lint`    | Fix linting and formatting                        |
+| `bun run test`    | Run tests                                         |

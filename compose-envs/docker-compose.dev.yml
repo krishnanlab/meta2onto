@@ -9,9 +9,12 @@ services:
 
   frontend:
     ports:
-      - "3050:3000"
+      - "5173:5173"
     volumes:
       - ./frontend/src/:/app/src/
+    environment:
+      - VITE_API=http://localhost:8050
+    command: bun run dev --host 0.0.0.0 --port 5173
 
   db:
     ports:

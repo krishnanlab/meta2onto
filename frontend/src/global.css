@@ -1,0 +1,60 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Outfit", sans-serif;
+  --font-mono: "Sometype Mono", monospace;
+
+  --color-light: hsl(30, 75%, 90%);
+  --color-dark: hsl(220, 50%, 20%);
+  --color-primary: hsl(10, 70%, 55%);
+  --color-secondary: hsl(300, 30%, 45%);
+}
+
+* {
+  @apply font-sans;
+}
+
+html {
+  @apply font-thin;
+}
+
+body {
+  @apply m-0;
+}
+
+#root {
+  @apply flex min-h-screen flex-col;
+}
+
+main {
+  @apply flex flex-grow flex-col;
+}
+
+section {
+  @apply flex flex-col gap-y-4 p-8;
+}
+
+section:nth-of-type(even) {
+  @apply bg-slate-100;
+}
+
+section:last-child {
+  @apply flex-grow;
+}
+
+h1 {
+  @apply text-center text-2xl tracking-wide uppercase;
+}
+
+button {
+  @apply cursor-pointer;
+}
+
+a {
+  @apply text-primary underline hover:text-current;
+}
+
+.lucide {
+  width: unset;
+  height: 1em;
+}
