@@ -1,3 +1,6 @@
+import Button from "@/components/Button";
+import Link from "@/components/Link";
+
 export const Home = () => (
   <>
     <section className="bg-light text-center">
@@ -10,6 +13,19 @@ export const Home = () => (
           Search millions of annotated samples across major databases
         </p>
       </hgroup>
+    </section>
+
+    <section>
+      <div className="flex flex-wrap justify-center gap-4">
+        <Link to="https://coolors.co">Link</Link>
+        <Button to="https://coolors.co">Button</Button>
+        <Button to="https://coolors.co" color="secondary">
+          Button
+        </Button>
+        <Button onClick={() => console.info("click")} color="critical">
+          Button
+        </Button>
+      </div>
     </section>
 
     <section>
