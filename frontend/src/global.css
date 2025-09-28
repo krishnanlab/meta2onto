@@ -4,8 +4,8 @@
   --font-sans: "Outfit", sans-serif;
   --font-mono: "Sometype Mono", monospace;
 
-  --color-light: hsl(340, 100%, 85%);
-  --color-dark: hsl(240, 25%, 25%);
+  --color-light: hsl(240, 100%, 90%);
+  --color-dark: hsl(240, 35%, 35%);
   --color-primary: hsl(340, 75%, 50%);
   --color-secondary: hsl(240, 75%, 60%);
 }
