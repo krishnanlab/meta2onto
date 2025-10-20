@@ -8,7 +8,7 @@ type Base = {
   /** fill */
   fill?: "solid" | "hollow";
   /** color */
-  color?: "primary" | "secondary" | "critical";
+  color?: "none" | "primary" | "secondary" | "critical";
   /** class on button */
   className?: string;
   /** content */
@@ -38,7 +38,7 @@ type _Button = { ref?: Ref<HTMLButtonElement> } & Pick<
  */
 const Button = ({
   ref,
-  color = "primary",
+  color = "none",
   className,
   children,
   ...props
@@ -46,10 +46,11 @@ const Button = ({
   /** combine styles */
   const _class = clsx(
     className,
-    "flex items-center gap-2 rounded px-3 py-1 text-white! no-underline! hover:bg-slate-700",
-    color === "primary" && "bg-primary",
-    color === "secondary" && "bg-secondary",
-    color === "critical" && "bg-black",
+    "flex items-center gap-2 rounded p-2 leading-none hover:bg-slate-500 hover:text-white",
+    color === "none" && "text-secondary bg-transparent",
+    color === "primary" && "bg-primary text-white",
+    color === "secondary" && "bg-secondary text-white",
+    color === "critical" && "bg-black text-white",
   );
 
   /** if "to", render as link */

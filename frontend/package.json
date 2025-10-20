@@ -1,13 +1,15 @@
 {
   "type": "module",
   "scripts": {
-    "build": "vite build",
     "dev": "vite --open",
+    "build": "vite build",
     "preview": "vite preview",
-    "lint": "eslint . --fix && prettier **/*.{tsx,ts,module.css,css,html,md,json,yaml} --write --no-error-on-unmatched-pattern",
-    "test:lint": "eslint . && prettier **/*.{tsx,ts,module.css,css,html,md,json,yaml} --check --no-error-on-unmatched-pattern",
+    "lint": "eslint . --fix",
+    "format": "prettier --write src/",
     "test:types": "tsc",
-    "test": "bun run test:lint && bun run test:types",
+    "test:lint": "eslint .",
+    "test:format": "prettier --check src/",
+    "test": "bun run test:types && bun run test:lint && bun run test:format",
     "clean": "rm -rf node_modules dist bun.lock && bun pm cache rm"
   },
   "dependencies": {

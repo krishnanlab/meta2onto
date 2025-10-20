@@ -1,27 +1,23 @@
-const { VITE_TITLE: title } = import.meta.env;
+import Button from "@/components/Button";
 
-/** nav bar links */
-const links = [{ name: "About", href: "/about" }];
+const { VITE_TITLE: title } = import.meta.env;
 
 const Header = () => (
   <header className="bg-dark flex flex-wrap items-center justify-between gap-4 p-4 text-white">
     <a
       href="/"
-      className="hover:text-light! p-2 text-2xl tracking-wider text-white! no-underline!"
+      className="hover:text-light! p-2 text-2xl tracking-wider text-white!"
     >
       {title}
     </a>
 
     <nav className="flex gap-4 text-xl">
-      {links.map((link, index) => (
-        <a
-          key={index}
-          href={link.href}
-          className="hover:text-light! p-2 text-white! no-underline!"
-        >
-          {link.name}
-        </a>
-      ))}
+      <Button to="/about" className="text-white!">
+        About
+      </Button>
+      <Button to="/cart" color="primary">
+        Data
+      </Button>
     </nav>
   </header>
 );

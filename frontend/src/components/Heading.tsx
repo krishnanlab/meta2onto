@@ -31,11 +31,7 @@ const Heading = ({ level, anchor, className, children }: Props) => {
   const id = anchor ?? slugify(renderText(children));
 
   return (
-    <Tag
-      id={id}
-      ref={ref}
-      className={clsx(className, "group flex justify-center gap-2")}
-    >
+    <Tag id={id} ref={ref} className={clsx(className, "group")}>
       {/* content */}
       {children}
 
@@ -43,10 +39,10 @@ const Heading = ({ level, anchor, className, children }: Props) => {
       {id && (
         <Link
           to={"#" + id}
-          className="opacity-0 group-hover:opacity-100 focus:opacity-100"
+          className="-ml-2 h-0 w-0 opacity-0 group-hover:opacity-100 focus:opacity-100"
           aria-label="Heading link"
         >
-          <Hash />
+          <Hash className="translate-x-2" />
         </Link>
       )}
     </Tag>

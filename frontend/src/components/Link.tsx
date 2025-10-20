@@ -47,7 +47,10 @@ const Link = ({
   const _showArrow = showArrow ?? target;
 
   /** combine styles */
-  const _class = clsx(className, "inline-flex items-center gap-1");
+  const _class = clsx(
+    className,
+    "text-secondary inline-flex items-center gap-1 hover:text-current",
+  );
 
   /** full element to render */
   const element = external ? (

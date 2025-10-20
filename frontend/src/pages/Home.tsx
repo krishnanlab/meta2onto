@@ -1,6 +1,3 @@
-import Button from "@/components/Button";
-import Link from "@/components/Link";
-
 export const Home = () => (
   <>
     <section className="bg-light text-center">
@@ -15,40 +12,7 @@ export const Home = () => (
       </hgroup>
     </section>
 
-    <section>
-      <div className="flex flex-wrap justify-center gap-4">
-        <Link to="https://coolors.co">Link</Link>
-        <Button to="https://coolors.co">Button</Button>
-        <Button to="https://coolors.co" color="secondary">
-          Button
-        </Button>
-        <Button onClick={() => console.info("click")} color="critical">
-          Button
-        </Button>
-      </div>
-    </section>
-
-    <section>
-      <p>
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
-        tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim
-        veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea
-        commodo consequat. Duis aute irure dolor in reprehenderit in voluptate
-        velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint
-        occaecat cupidatat non proident, sunt in culpa qui officia deserunt
-        mollit anim id est laborum.
-      </p>
-
-      <p>
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
-        tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim
-        veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea
-        commodo consequat. Duis aute irure dolor in reprehenderit in voluptate
-        velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint
-        occaecat cupidatat non proident, sunt in culpa qui officia deserunt
-        mollit anim id est laborum.
-      </p>
-    </section>
+    <section></section>
   </>
 );
 

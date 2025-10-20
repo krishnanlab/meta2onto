@@ -4,10 +4,10 @@
   --font-sans: "Outfit", sans-serif;
   --font-mono: "Sometype Mono", monospace;
 
-  --color-light: hsl(240, 100%, 90%);
-  --color-dark: hsl(240, 35%, 35%);
-  --color-primary: hsl(340, 75%, 50%);
-  --color-secondary: hsl(240, 75%, 60%);
+  --color-dark: hsl(200, 50%, 30%);
+  --color-light: hsl(30, 100%, 90%);
+  --color-primary: hsl(340, 50%, 50%);
+  --color-secondary: hsl(200, 50%, 40%);
 }
 
 * {
@@ -35,26 +35,50 @@ section {
 }
 
 section:nth-of-type(even) {
-  @apply bg-slate-100;
+  @apply bg-slate-50;
 }
 
 section:last-child {
   @apply flex-grow;
 }
 
+h1,
+h2,
+h3,
+h4 {
+  @apply flex items-center justify-center gap-2;
+}
+
 h1 {
   @apply text-center text-2xl tracking-wide uppercase;
 }
 
+h2 {
+  @apply text-center text-xl;
+}
+
+h3 {
+  @apply justify-start text-lg font-medium;
+}
+
+h4 {
+  @apply justify-start font-medium;
+}
+
 button {
-  @apply cursor-pointer;
+  @apply cursor-pointer transition-colors;
 }
 
 a {
-  @apply text-primary underline hover:text-current;
+  @apply transition-all;
+}
+
+p > a {
+  @apply underline;
 }
 
 .lucide {
   width: unset;
   height: 1em;
+  @apply overflow-visible;
 }
