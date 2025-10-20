@@ -30,6 +30,8 @@ export default defineConfig([
     rules: {
       ...eslintPluginReactHooks.configs.recommended.rules,
       "prettier/prettier": "warn",
+      "prefer-const": ["error", { destructuring: "all" }],
+      "@typescript-eslint/no-unused-vars": ["warn", { caughtErrors: "none" }],
       "@typescript-eslint/consistent-type-definitions": ["error", "type"],
       "@typescript-eslint/consistent-type-imports": "error",
       "react-refresh/only-export-components": ["off"],

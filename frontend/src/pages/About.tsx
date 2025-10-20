@@ -12,33 +12,6 @@ export const About = () => (
     </section>
 
     <section>
-      <div className="flex flex-wrap justify-center gap-4">
-        <Link to="/">Link</Link>
-        <Link to="https://google.com">Link</Link>
-        <Button to="">Button</Button>
-        <Button to="" color="primary">
-          Button
-        </Button>
-        <Button to="" color="secondary">
-          Button
-        </Button>
-        <Button to="" color="critical">
-          Button
-        </Button>
-        <Button onClick={() => null}>Button</Button>
-        <Button onClick={() => null} color="primary">
-          Button
-        </Button>
-        <Button onClick={() => null} color="secondary">
-          Button
-        </Button>
-        <Button onClick={() => null} color="critical">
-          Button
-        </Button>
-      </div>
-    </section>
-
-    <section>
       <Heading level={2}>Heading 2</Heading>
       <Heading level={3}>Heading 3</Heading>
       <Heading level={4}>Heading 4</Heading>
@@ -62,6 +35,37 @@ export const About = () => (
         occaecat cupidatat non proident, sunt in culpa qui officia deserunt
         mollit anim id est laborum.
       </p>
+    </section>
+
+    <section>
+      <div className="flex flex-wrap justify-center gap-4">
+        <Link to="/">Link</Link>
+        <Link to="https://google.com">Link</Link>
+      </div>
+      <div className="flex flex-wrap justify-center gap-4">
+        <Button to="">Button</Button>
+        <Button to="" color="primary">
+          Button
+        </Button>
+        <Button to="" color="secondary">
+          Button
+        </Button>
+        <Button to="" color="critical">
+          Button
+        </Button>
+      </div>
+      <div className="flex flex-wrap justify-center gap-4">
+        <Button onClick={() => null}>Button</Button>
+        <Button onClick={() => null} color="primary">
+          Button
+        </Button>
+        <Button onClick={() => null} color="secondary">
+          Button
+        </Button>
+        <Button onClick={() => null} color="critical">
+          Button
+        </Button>
+      </div>
     </section>
   </>
 );

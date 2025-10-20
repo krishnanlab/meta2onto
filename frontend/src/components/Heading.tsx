@@ -36,10 +36,10 @@ const Heading = ({ level, anchor, className, children }: Props) => {
       {children}
 
       {/* link to section */}
-      {id && (
+      {id && level !== 1 && (
         <Link
           to={"#" + id}
-          className="-ml-2 h-0 w-0 opacity-0 group-hover:opacity-100 focus:opacity-100"
+          className="-ml-2 size-0 opacity-0 group-hover:opacity-100 focus:opacity-100"
           aria-label="Heading link"
         >
           <Hash className="translate-x-2" />

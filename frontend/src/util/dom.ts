@@ -41,15 +41,29 @@ export const renderText = (node: ReactNode) =>
  * this function in situ becomes much more of pain).
  */
 
+/** get coordinates of element relative to document */
+export const getDocBbox = (element: Element) => {
+  const { left, top, right, bottom } = element.getBoundingClientRect();
+  return {
+    top: top + window.scrollY,
+    bottom: bottom + window.scrollY,
+    left: left + window.scrollX,
+    right: right + window.scrollX,
+  };
+};
+
 /** glow element */
-export const glow = (element: Element) =>
-  elementOrSection(element).animate(
+export const glow = (element: Element) => {
+  const target = elementOrSection(element);
+  const original = window.getComputedStyle(target).backgroundColor;
+  target.animate(
     [
-      { boxShadow: "inset 0 0 40px var(--color-primary)", offset: 0 },
-      { boxShadow: "inset 0 0 40px transparent", offset: 1 },
+      { backgroundColor: "var(--color-light)", offset: 0 },
+      { backgroundColor: original, offset: 1 },
     ],
     { duration: 2000 },
   );
+};
 
 /** if element is first child of section, change element to section itself */
 export const elementOrSection = <El extends Element>(element: El) => {

@@ -23,7 +23,7 @@ export const Meta = (page: Props) => {
   const title = [page.title]
     .flat()
     .concat(site.title)
-    .map((part) => truncate(part.trim(), { length: 25, separator: " " }))
+    .map((part) => truncate(part.trim(), { length: 40, separator: " " }))
     .filter(Boolean)
     .join(" | ");
 
