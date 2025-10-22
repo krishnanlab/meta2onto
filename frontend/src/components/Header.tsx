@@ -1,3 +1,4 @@
+import { ShoppingCart } from "lucide-react";
 import Button from "@/components/Button";
 
 const { VITE_TITLE: title } = import.meta.env;
@@ -15,8 +16,8 @@ const Header = () => (
       <Button to="/about" className="text-white!">
         About
       </Button>
-      <Button to="/cart" color="primary">
-        Data
+      <Button to="/cart" color="primary" aria-label="Data cart">
+        <ShoppingCart />
       </Button>
     </nav>
   </header>

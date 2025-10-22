@@ -31,7 +31,16 @@ main {
 }
 
 section {
-  @apply flex flex-col gap-y-4 p-8;
+  --width: 300;
+  @apply flex flex-col gap-y-4 px-[max(--spacing(8),(100%---spacing(1)*var(--width))/2)] py-8;
+}
+
+section.narrow {
+  --width: 150;
+}
+
+section section.full {
+  --width: 1000;
 }
 
 section:nth-of-type(even) {
@@ -75,6 +84,11 @@ a {
 
 p > a {
   @apply underline;
+}
+
+strong,
+b {
+  @apply font-medium!;
 }
 
 .lucide {
