@@ -1,11 +1,11 @@
-import { useState, type ReactNode } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import clsx from "clsx";
-import { InfoIcon, LoaderCircle, TriangleAlert } from "lucide-react";
-import { sampleSearch, typeColor } from "@/api/api";
+import { quickSearch, typeColor } from "@/api/api";
 import Link from "@/components/Link";
 import Search from "@/components/Search";
+import Status from "@/components/Status";
 
 export const Home = () => {
   const navigate = useNavigate();
@@ -14,33 +14,10 @@ export const Home = () => {
   const [search, setSearch] = useState("");
 
   /** search results */
-  const { data: results, status } = useQuery({
-    queryKey: ["sample-search", search],
-    queryFn: () => sampleSearch(search),
+  const { data, status } = useQuery({
+    queryKey: ["quick-search", search],
+    queryFn: () => quickSearch(search),
   });
-
-  let searchStatus: ReactNode;
-  if (status === "pending")
-    searchStatus = (
-      <span className="contents text-slate-500">
-        <LoaderCircle className="animate-spin" />
-        Searching
-      </span>
-    );
-  else if (status === "error")
-    searchStatus = (
-      <span className="contents text-red-500">
-        <TriangleAlert />
-        Error
-      </span>
-    );
-  else if (status === "success" && results?.length === 0)
-    searchStatus = (
-      <span className="contents text-slate-500">
-        <InfoIcon />
-        No results
-      </span>
-    );
 
   return (
     <>
@@ -60,26 +37,31 @@ export const Home = () => {
           onSearch={setSearch}
           placeholder="Search..."
           options={
-            results?.map(({ type, name, description }) => ({
+            data?.map(({ type, name, description }) => ({
               id: name,
               content: (
                 <Link to={`/search/${name}`}>
                   <span
                     className={clsx(
                       "rounded-full px-1 text-sm leading-none text-white",
-                      typeColor[type],
+                      typeColor[type] ?? typeColor["default"],
                     )}
                   >
                     {type}
                   </span>
                   <span className="font-normal">{name}</span>
-                  <span className="text-slate-500">{description}</span>
+                  <span
+                    className="text-slate-500"
+                    dangerouslySetInnerHTML={{ __html: description }}
+                  />
                 </Link>
               ),
             })) ?? []
           }
-          onSelect={(id) => navigate(`/search/${id}`)}
-          extraRows={[searchStatus]}
+          onSelect={(id) => id?.trim() && navigate(`/search/${id}`)}
+          extraRows={[
+            <Status status={status} data={data} className="contents!" />,
+          ]}
         />
       </section>
 

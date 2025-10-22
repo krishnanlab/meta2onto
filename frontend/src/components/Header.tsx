@@ -18,6 +18,7 @@ const Header = () => (
       </Button>
       <Button to="/cart" color="primary" aria-label="Data cart">
         <ShoppingCart />
+        <span>Cart</span>
       </Button>
     </nav>
   </header>

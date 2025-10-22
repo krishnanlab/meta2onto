@@ -49,7 +49,7 @@ const Search = ({
     >
       <div className="relative">
         <ComboboxInput
-          className="border-secondary w-full rounded border-1 bg-white p-2 pr-8 leading-none"
+          className="w-full rounded border-1 border-slate-500 bg-white p-2 pr-8 leading-none"
           placeholder={placeholder}
           value={search}
           onChange={(event) => {

@@ -1,7 +1,8 @@
 import { request } from "@/api";
+import { fakeFull, fakeQuick, fakeSearch } from "@/api/fake";
 import { sleep } from "@/util/misc";
 
-type SampleSearch = {
+export type QuickSearch = {
   type: string;
   name: string;
   description: string;
@@ -11,33 +12,47 @@ type SampleSearch = {
 export const typeColor: Record<string, string> = {
   tissue: "bg-rose-700/70",
   disease: "bg-indigo-700/70",
+  anatomy: "bg-rose-700/70",
+  pathway: "bg-orange-700/70",
+  default: "bg-gray-700/70",
 };
 
-/** sample data search */
-export const sampleSearch = async (search: string) => {
-  /** temp test */
+export const quickSearch = async (search: string) => {
+  await sleep(500);
+  // throw Error("test");
+  return fakeSearch(fakeQuick, search);
+  request<QuickSearch>(`/api/sample-search`, { params: { q: search } });
+};
+
+export type FullSearch = {
+  results: {
+    id: string;
+    name: string;
+    confidence: { name: string; value: number };
+    description: string;
+    date: string;
+    platform: string;
+    database: string[];
+    samples: number;
+  }[];
+  facets: {
+    [facet: string]: {
+      [value: string]: number;
+    };
+  };
+};
+
+export const fullSearch = async (search: string) => {
   await sleep(1000);
-  // throw Error("fake error");
-  const fakeData: SampleSearch[] = [
-    {
-      type: "tissue",
-      name: "hepatoblast",
-      description: "immature liver cell",
-    },
-    {
-      type: "disease",
-      name: "hepatocellular carcinoma",
-      description: "liver cancer",
-    },
-    {
-      type: "tissue",
-      name: "hepatic stellate cell",
-      description: "liver support cell",
-    },
-  ];
-  return fakeData.filter((item) =>
-    JSON.stringify(item).toLowerCase().includes(search.toLowerCase()),
-  );
-
-  request<SampleSearch>(`/api/sample-search`, { params: { q: search } });
+  // throw Error("test");
+  return {
+    results: fakeFull.results,
+    facets: fakeFull.facets,
+  };
+  request<QuickSearch>(`/api/sample-search`, { params: { q: search } });
 };
+
+export type SampleSearch = {
+  name: string;
+  description: string;
+}[];

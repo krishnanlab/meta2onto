@@ -39,7 +39,7 @@ section.narrow {
   --width: 150;
 }
 
-section section.full {
+section.full {
   --width: 1000;
 }
 
@@ -89,6 +89,18 @@ p > a {
 strong,
 b {
   @apply font-medium!;
+}
+
+mark {
+  @apply bg-amber-500/20 font-medium;
+}
+
+label {
+  @apply flex cursor-pointer items-center gap-2;
+}
+
+input[type="checkbox"] {
+  @apply size-4 cursor-pointer;
 }
 
 .lucide {
