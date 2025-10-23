@@ -12,7 +12,7 @@ export type QuickSearch = {
   type: string;
   name: string;
   description: string;
-};
+}[];
 
 /** type to color map */
 export const typeColor: Record<string, string> = {

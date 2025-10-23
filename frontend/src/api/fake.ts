@@ -39,7 +39,7 @@ export const fakeSearch = <T>(items: T[], search: string) =>
     JSON.stringify(item).toLowerCase().includes(search.toLowerCase()),
   );
 
-export const fakeQuick: QuickSearch[] = uniq(
+export const fakeQuick: QuickSearch = uniq(
   Array(20)
     .fill(null)
     .map(() => phrase(1, 4)),

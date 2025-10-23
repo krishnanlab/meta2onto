@@ -1,15 +1,25 @@
+import type { ReactNode } from "react";
 import type { UseQueryResult } from "@tanstack/react-query";
 import clsx from "clsx";
 import { isEmpty } from "lodash";
 import { InfoIcon, LoaderCircle, TriangleAlert } from "lucide-react";
 
 type Props = {
+  loading?: ReactNode;
+  error?: ReactNode;
+  empty?: ReactNode;
   query: UseQueryResult;
   className?: string;
 };
 
 /** status block for query */
-const Status = ({ query, className }: Props) => {
+const Status = ({
+  loading = "Loading",
+  error = "Error",
+  empty = "No results",
+  query,
+  className,
+}: Props) => {
   const base = clsx(
     "flex items-center justify-center gap-2 rounded bg-current/5 p-4",
     className,
@@ -19,21 +29,21 @@ const Status = ({ query, className }: Props) => {
     return (
       <span className={clsx(base, "text-slate-500", className)}>
         <LoaderCircle className="animate-spin" />
-        Searching
+        {loading}
       </span>
     );
   else if (query.status === "error")
     return (
       <span className={clsx(base, "text-red-500", className)}>
         <TriangleAlert />
-        Error
+        {error}
       </span>
     );
   else if (query.status === "success" && isEmpty(query.data))
     return (
       <span className={clsx(base, "text-slate-500", className)}>
         <InfoIcon />
-        No results
+        {empty}
       </span>
     );
 };

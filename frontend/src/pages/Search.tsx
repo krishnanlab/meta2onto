@@ -48,7 +48,7 @@ export const Search = () => {
   delete facets.page;
 
   /** page title */
-  const title = `Search for "${search}"`;
+  const title = `Search "${search}"`;
 
   /** search results */
   const query = useQuery({
@@ -60,7 +60,9 @@ export const Search = () => {
   const filtersPanel = (
     <div className="flex min-w-20 flex-col gap-4 rounded bg-slate-100 p-4">
       {/* facets */}
-      {isEmpty(query.data?.facets) && <>Filters</>}
+      {isEmpty(query.data?.facets) && (
+        <span className="text-slate-500">Filters</span>
+      )}
       {Object.entries(query.data?.facets ?? {}).map(([facet, values]) => (
         <div key={facet} className="flex flex-col gap-2">
           <strong>{facet}</strong>

@@ -91,11 +91,7 @@ export const router = createBrowserRouter(routes, {
 
 /** network request client */
 const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 0,
-    },
-  },
+  defaultOptions: { queries: { retry: 2 } },
 });
 
 /** scroll to target of url hash on page */
