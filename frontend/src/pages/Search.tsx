@@ -6,6 +6,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Dna,
+  Download,
   Hash,
   Logs,
   Plus,
@@ -16,6 +17,7 @@ import Checkbox from "@/components/Checkbox";
 import Dialog from "@/components/Dialog";
 import Heading from "@/components/Heading";
 import Meta from "@/components/Meta";
+import Meter from "@/components/Meter";
 import Select from "@/components/Select";
 import Status, { showStatus } from "@/components/Status";
 
@@ -136,15 +138,7 @@ export const Search = () => {
           >
             <div className="flex items-start justify-between gap-2">
               <strong>{name}</strong>
-              <div
-                className="flex gap-1 rounded px-1"
-                style={{
-                  backgroundColor: `color-mix(in hsl, transparent, #10b981 ${50 * confidence.value}%)`,
-                }}
-              >
-                <span>{confidence.name}</span>
-                <span>{(100 * confidence.value).toFixed(0)}%</span>
-              </div>
+              <Meter value={confidence.value}>{confidence.name}</Meter>
             </div>
 
             <div className="flex flex-wrap gap-x-6 gap-y-2">
@@ -180,7 +174,14 @@ export const Search = () => {
 
               <div className="flex gap-2">
                 <Dialog
-                  title={`Samples for ${id}`}
+                  title={
+                    <>
+                      <span>
+                        Samples for <strong>{id}</strong>
+                      </span>
+                      <span className="text-sm text-slate-500">{name}</span>
+                    </>
+                  }
                   content={<Samples id={id} />}
                 >
                   <Button color="theme">
@@ -256,17 +257,26 @@ const Samples = ({ id }: { id: string }) => {
   });
 
   return (
-    <div className="flex flex-col gap-4 overflow-y-auto">
-      <Status query={query} />
+    <>
+      <div className="flex flex-col gap-4 overflow-y-auto">
+        <Status query={query} />
 
-      {!showStatus({ query }) &&
-        query.data &&
-        query.data.map((sample) => (
-          <div key={sample.name} className="flex flex-col gap-1">
-            <strong>{sample.name}</strong>
-            <p dangerouslySetInnerHTML={{ __html: sample.description }} />
-          </div>
-        ))}
-    </div>
+        {!showStatus({ query }) &&
+          query.data?.map((sample) => (
+            <div key={sample.name} className="flex flex-col gap-1">
+              <strong>{sample.name}</strong>
+              <p dangerouslySetInnerHTML={{ __html: sample.description }} />
+            </div>
+          ))}
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {query.data && (
+          <Button>
+            <Download />
+            Download
+          </Button>
+        )}
+      </div>
+    </>
   );
 };

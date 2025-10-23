@@ -98,7 +98,11 @@ mark {
 }
 
 label {
-  @apply flex cursor-pointer items-center gap-2;
+  @apply flex items-center gap-2;
+}
+
+label:has(input[type="checkbox"]) {
+  @apply cursor-pointer;
 }
 
 input[type="checkbox"] {
