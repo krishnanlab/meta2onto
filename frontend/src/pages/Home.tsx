@@ -2,10 +2,14 @@ import { useState } from "react";
 import { useNavigate } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import clsx from "clsx";
+import { Lightbulb } from "lucide-react";
 import { quickSearch, typeColor } from "@/api/api";
 import Autocomplete from "@/components/Autocomplete";
 import Link from "@/components/Link";
 import Status, { showStatus } from "@/components/Status";
+
+/** example searches */
+const examples = ["Hepatocyte", "Breast cancer", "Alzheimer's disease"];
 
 export const Home = () => {
   const navigate = useNavigate();
@@ -69,6 +73,19 @@ export const Home = () => {
             )
           }
         />
+
+        {/* examples */}
+        <p className="flex flex-wrap items-center justify-center gap-4 leading-none">
+          <span className="flex items-center gap-1 text-slate-500">
+            <Lightbulb />
+            Try
+          </span>
+          {examples.map((example) => (
+            <Link key={example} to={`/search/${example}`}>
+              {example}
+            </Link>
+          ))}
+        </p>
       </section>
 
       <section>
