@@ -18,8 +18,6 @@ type Props = {
   onSelect?: (value: string | null) => void;
   /** "status" row */
   status?: ReactNode;
-  /** "empty" row */
-  empty?: ReactNode;
 };
 
 /** textbox box with dropdown */
@@ -30,7 +28,6 @@ const Autocomplete = ({
   onSelect,
   placeholder,
   status,
-  empty,
 }: Props) => {
   return (
     <_Autocomplete.Root
@@ -50,16 +47,11 @@ const Autocomplete = ({
 
       <_Autocomplete.Portal>
         <_Autocomplete.Positioner sideOffset={2}>
-          <_Autocomplete.Popup className="shadow-overlay flex h-(--available-height) w-(--anchor-width) flex-col overflow-y-auto rounded bg-white">
+          <_Autocomplete.Popup className="shadow-overlay flex max-h-(--available-height) w-(--anchor-width) flex-col overflow-y-auto rounded bg-white">
             {status && (
               <_Autocomplete.Status className="flex gap-2 p-2 leading-none">
                 {status}
               </_Autocomplete.Status>
-            )}
-            {empty && (
-              <_Autocomplete.Empty className="flex gap-2 p-2 leading-none">
-                {empty}
-              </_Autocomplete.Empty>
             )}
             <_Autocomplete.List>
               {(tag: (typeof options)[number]) => (

@@ -1,5 +1,5 @@
 import { request } from "@/api";
-import { fakeFull, fakeQuick, fakeSearch } from "@/api/fake";
+import { fakeFull, fakeQuick, fakeSamples, fakeSearch } from "@/api/fake";
 import { sleep } from "@/util/misc";
 
 export type QuickSearch = {
@@ -18,7 +18,7 @@ export const typeColor: Record<string, string> = {
 };
 
 export const quickSearch = async (search: string) => {
-  await sleep(500);
+  await sleep(100);
   // throw Error("test");
   return fakeSearch(fakeQuick, search);
   request<QuickSearch>(`/api/sample-search`, { params: { q: search } });
@@ -43,7 +43,7 @@ export type FullSearch = {
 };
 
 export const fullSearch = async (search: string) => {
-  await sleep(1000);
+  await sleep(100);
   // throw Error("test");
   return {
     results: fakeFull.results,
@@ -52,7 +52,14 @@ export const fullSearch = async (search: string) => {
   request<QuickSearch>(`/api/sample-search`, { params: { q: search } });
 };
 
-export type SampleSearch = {
+export type SamplesLookup = {
   name: string;
   description: string;
 }[];
+
+export const sampleLookup = async (id: string) => {
+  await sleep(1000);
+  // throw Error("test");
+  return fakeSamples(id);
+  request<SamplesLookup>(`/api/sample/${id}`);
+};

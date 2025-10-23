@@ -1,35 +1,35 @@
-import type { QueryStatus } from "@tanstack/react-query";
+import type { UseQueryResult } from "@tanstack/react-query";
 import clsx from "clsx";
+import { isEmpty } from "lodash";
 import { InfoIcon, LoaderCircle, TriangleAlert } from "lucide-react";
 
 type Props = {
-  status: QueryStatus;
-  data: unknown[] | undefined;
+  query: UseQueryResult;
   className?: string;
 };
 
 /** status block for query */
-const Status = ({ status, data, className }: Props) => {
+const Status = ({ query, className }: Props) => {
   const base = clsx(
     "flex items-center justify-center gap-2 rounded bg-current/5 p-4",
     className,
   );
 
-  if (status === "pending")
+  if (query.status === "pending" || query.isFetching)
     return (
       <span className={clsx(base, "text-slate-500", className)}>
         <LoaderCircle className="animate-spin" />
         Searching
       </span>
     );
-  else if (status === "error")
+  else if (query.status === "error")
     return (
       <span className={clsx(base, "text-red-500", className)}>
         <TriangleAlert />
         Error
       </span>
     );
-  else if (status === "success" && data?.length === 0)
+  else if (query.status === "success" && isEmpty(query.data))
     return (
       <span className={clsx(base, "text-slate-500", className)}>
         <InfoIcon />
@@ -39,3 +39,6 @@ const Status = ({ status, data, className }: Props) => {
 };
 
 export default Status;
+
+/** is there any status to show */
+export const showStatus = (props: Props) => !!Status(props);

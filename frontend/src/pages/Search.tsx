@@ -1,13 +1,14 @@
 import { useParams } from "react-router";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { Calendar, Dna, Hash, Logs, Plus } from "lucide-react";
-import { fullSearch } from "@/api/api";
+import { fullSearch, sampleLookup } from "@/api/api";
 import Button from "@/components/Button";
 import Checkbox from "@/components/Checkbox";
+import Dialog from "@/components/Dialog";
 import Heading from "@/components/Heading";
 import Meta from "@/components/Meta";
 import Select from "@/components/Select";
-import Status from "@/components/Status";
+import Status, { showStatus } from "@/components/Status";
 
 export const Search = () => {
   const { search = "" } = useParams<{ search: string }>();
@@ -16,7 +17,7 @@ export const Search = () => {
   const title = `Search for "${search}"`;
 
   /** search results */
-  const { data, status } = useQuery({
+  const query = useQuery({
     queryKey: ["full-search", search],
     queryFn: () => fullSearch(search),
     placeholderData: keepPreviousData,
@@ -25,11 +26,11 @@ export const Search = () => {
   const filtersPanel = (
     <div className="flex min-w-20 flex-col gap-4 rounded bg-slate-100 p-4">
       {/* facets */}
-      {Object.entries(data?.facets ?? {}).map(([facet, values]) => (
+      {Object.entries(query.data?.facets ?? {}).map(([facet, values]) => (
         <div key={facet} className="flex flex-col gap-2">
           <strong>{facet}</strong>
           {Object.entries(values).map(([value, count]) => (
-            <Checkbox>
+            <Checkbox key={value}>
               {value} ({count})
             </Checkbox>
           ))}
@@ -41,13 +42,13 @@ export const Search = () => {
   const resultsPanel = (
     <div className="flex grow-1 basis-0 flex-col gap-4">
       {/* query status */}
-      {status !== "success" && <Status status={status} data={data?.results} />}
+      <Status query={query} />
 
       {/* overview */}
-      {data?.results && (
+      {query.data?.results && (
         <div className="flex flex-wrap items-center justify-between">
           <div>
-            <b>{data?.results.length.toLocaleString()}</b> results for{" "}
+            <b>{query.data?.results.length.toLocaleString()}</b> results for{" "}
             <b>"{search}"</b>
           </div>
           <label>
@@ -66,7 +67,7 @@ export const Search = () => {
       )}
 
       {/* results */}
-      {data?.results.map(
+      {query.data?.results.map(
         ({
           id,
           name,
@@ -126,10 +127,15 @@ export const Search = () => {
               </div>
 
               <div className="flex gap-2">
-                <Button color="theme">
-                  <Logs />
-                  <span>{samples.toLocaleString()} Samples</span>
-                </Button>
+                <Dialog
+                  title={`Samples for ${id}`}
+                  content={<Samples id={id} />}
+                >
+                  <Button color="theme">
+                    <Logs />
+                    <span>{samples.toLocaleString()} Samples</span>
+                  </Button>
+                </Dialog>
                 <Button color="accent">
                   <Plus />
                   <span>Cart</span>
@@ -161,3 +167,26 @@ export const Search = () => {
 };
 
 export default Search;
+
+/** samples popup */
+const Samples = ({ id }: { id: string }) => {
+  const query = useQuery({
+    queryKey: ["sample-lookup", id],
+    queryFn: () => sampleLookup(id),
+  });
+
+  return (
+    <div className="flex flex-col gap-4 overflow-y-auto">
+      <Status query={query} />
+
+      {!showStatus({ query }) &&
+        query.data &&
+        query.data.map((sample) => (
+          <div key={sample.name} className="flex flex-col gap-1">
+            <strong>{sample.name}</strong>
+            <p dangerouslySetInnerHTML={{ __html: sample.description }} />
+          </div>
+        ))}
+    </div>
+  );
+};
