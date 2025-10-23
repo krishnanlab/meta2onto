@@ -4,10 +4,10 @@
   --font-sans: "Outfit", sans-serif;
   --font-mono: "Sometype Mono", monospace;
 
-  --color-dark: hsl(200, 50%, 30%);
-  --color-light: hsl(30, 100%, 90%);
-  --color-primary: hsl(340, 50%, 50%);
-  --color-secondary: hsl(200, 50%, 40%);
+  --color-theme-light: hsl(230, 80%, 90%);
+  --color-theme: hsl(230, 30%, 50%);
+  --color-theme-dark: hsl(230, 30%, 30%);
+  --color-accent: hsl(0, 60%, 60%);
 
   --shadow-overlay: 0 0 5px #00000020, 0 2px 10px #00000020;
 }
@@ -94,7 +94,7 @@ b {
 }
 
 mark {
-  @apply bg-light/50 font-normal;
+  @apply bg-orange-100 font-normal;
 }
 
 label {
@@ -117,7 +117,7 @@ select {
 }
 
 .truncate-lines:focus {
-  @apply rounded outline-1 outline-offset-2 outline-slate-300;
+  @apply outline-theme-light rounded outline-1 outline-offset-2;
 }
 
 .lucide {

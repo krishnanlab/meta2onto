@@ -5,10 +5,8 @@ import Link from "@/components/Link";
 type Props = Base & (_Link | _Button);
 
 type Base = {
-  /** fill */
-  fill?: "solid" | "hollow";
   /** color */
-  color?: "none" | "primary" | "secondary" | "critical";
+  color?: "none" | "theme" | "accent";
   /** class on button */
   className?: string;
   /** content */
@@ -38,7 +36,7 @@ type _Button = { ref?: Ref<HTMLButtonElement> } & Pick<
  */
 const Button = ({
   ref,
-  color = "none",
+  color = "theme",
   className,
   children,
   ...props
@@ -46,11 +44,10 @@ const Button = ({
   /** combine styles */
   const _class = clsx(
     className,
-    "flex items-center gap-2 rounded p-2 leading-none hover:bg-slate-500 hover:text-white",
-    color === "none" && "text-secondary bg-transparent",
-    color === "primary" && "bg-primary text-white",
-    color === "secondary" && "bg-secondary text-white",
-    color === "critical" && "bg-black text-white",
+    "flex items-center gap-2 rounded p-2 leading-none hover:bg-slate-500/50 hover:text-white",
+    color === "none" && "bg-transparent text-current!",
+    color === "theme" && "bg-theme text-white",
+    color === "accent" && "bg-accent text-white",
   );
 
   /** if "to", render as link */

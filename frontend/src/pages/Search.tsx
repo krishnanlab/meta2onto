@@ -79,12 +79,12 @@ export const Search = () => {
         }) => (
           <div
             key={id}
-            className="flex flex-col gap-2 rounded border border-slate-300 p-4"
+            className="border-theme-light flex flex-col gap-2 rounded border p-4"
           >
             <div className="flex items-start justify-between gap-2">
               <strong>{name}</strong>
               <div
-                className={"flex gap-1 rounded bg-slate-100 px-1"}
+                className="flex gap-1 rounded px-1"
                 style={{
                   backgroundColor: `color-mix(in hsl, transparent, #10b981 ${50 * confidence.value}%)`,
                 }}
@@ -97,14 +97,13 @@ export const Search = () => {
             <div className="flex flex-wrap gap-x-6 gap-y-2">
               {(
                 [
-                  [Logs, `${samples.toLocaleString()} samples`],
+                  [Hash, id],
                   [Calendar, date],
                   [Dna, platform],
-                  [Hash, id],
                 ] as const
               ).map(([Icon, text], index) => (
-                <div key={index} className="flex items-center gap-2">
-                  <Icon className="text-slate-400" />
+                <div key={index} className="text-theme flex items-center gap-2">
+                  <Icon />
                   <span>{text}</span>
                 </div>
               ))}
@@ -120,18 +119,18 @@ export const Search = () => {
             <div className="flex items-end justify-between gap-2">
               <div className="flex flex-wrap gap-2">
                 {database.map((db) => (
-                  <span key={db} className="rounded bg-slate-200 px-1">
+                  <span key={db} className="bg-theme-light rounded px-1">
                     {db}
                   </span>
                 ))}
               </div>
 
               <div className="flex gap-2">
-                <Button aria-label="View samples">
+                <Button color="theme">
                   <Logs />
-                  <span>Samples</span>
+                  <span>{samples.toLocaleString()} Samples</span>
                 </Button>
-                <Button color="primary" aria-label="Add to cart">
+                <Button color="accent">
                   <Plus />
                   <span>Cart</span>
                 </Button>
@@ -151,7 +150,7 @@ export const Search = () => {
         Search results for "{search}"
       </Heading>
 
-      <section className="full">
+      <section className="">
         <div className="flex flex-col gap-4 sm:flex-row">
           {filtersPanel}
           {resultsPanel}

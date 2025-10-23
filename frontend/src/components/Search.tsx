@@ -6,7 +6,6 @@ import {
 } from "react";
 import {
   Combobox,
-  ComboboxButton,
   ComboboxInput,
   ComboboxOption,
   ComboboxOptions,
@@ -47,9 +46,9 @@ const Search = ({
       onClose={() => onSearch("")}
       immediate
     >
-      <div className="relative">
+      <div className="relative flex items-center">
         <ComboboxInput
-          className="w-full rounded border-1 border-slate-500 bg-white p-2 pr-8 leading-none"
+          className="w-full rounded bg-white p-2 pr-8 leading-none"
           placeholder={placeholder}
           value={search}
           onChange={(event) => {
@@ -57,9 +56,7 @@ const Search = ({
             onSearch?.(query);
           }}
         />
-        <ComboboxButton className="absolute inset-y-0 right-0 px-2">
-          <SearchIcon className="opacity-50" />
-        </ComboboxButton>
+        <SearchIcon className="text-theme absolute right-0 px-2" />
       </div>
 
       <ComboboxOptions
@@ -70,7 +67,7 @@ const Search = ({
           <ComboboxOption as={Fragment} key={option.id} value={option.id}>
             {cloneElement(option.content, {
               className:
-                "data-focus:bg-secondary/10 flex cursor-pointer gap-2 p-2 leading-none",
+                "data-focus:bg-theme/10 flex cursor-pointer gap-2 p-2 leading-none",
             })}
           </ComboboxOption>
         ))}

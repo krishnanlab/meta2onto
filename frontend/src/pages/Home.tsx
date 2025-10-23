@@ -21,12 +21,14 @@ export const Home = () => {
 
   return (
     <>
-      <section className="narrow bg-light py-12! text-center">
+      <section className="narrow bg-theme-light py-12! text-center">
         <hgroup className="flex flex-col items-center gap-y-1">
           <h1 className="sr-only">Home</h1>
-          <p className="text-xl font-normal tracking-wide text-balance text-slate-700">
+
+          <p className="text-xl font-normal tracking-wide text-balance">
             Discover Human Transcriptomics Data
           </p>
+
           <p className="text-balance">
             Search millions of annotated samples across major databases
           </p>
@@ -43,15 +45,17 @@ export const Home = () => {
                 <Link to={`/search/${name}`}>
                   <span
                     className={clsx(
-                      "rounded-full px-1 text-sm leading-none text-white",
+                      "rounded px-1 py-0.5 text-sm leading-none text-white",
                       typeColor[type] ?? typeColor["default"],
                     )}
                   >
                     {type}
                   </span>
-                  <span className="font-normal">{name}</span>
+                  <span className="truncate leading-none font-normal">
+                    {name}
+                  </span>
                   <span
-                    className="text-slate-500"
+                    className="truncate leading-none text-slate-500"
                     dangerouslySetInnerHTML={{ __html: description }}
                   />
                 </Link>
