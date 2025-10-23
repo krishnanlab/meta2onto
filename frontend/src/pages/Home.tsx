@@ -3,8 +3,8 @@ import { useNavigate } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import clsx from "clsx";
 import { quickSearch, typeColor } from "@/api/api";
+import Autocomplete from "@/components/Autocomplete";
 import Link from "@/components/Link";
-import Search from "@/components/Search";
 import Status from "@/components/Status";
 
 export const Home = () => {
@@ -34,7 +34,7 @@ export const Home = () => {
           </p>
         </hgroup>
 
-        <Search
+        <Autocomplete
           search={search}
           onSearch={setSearch}
           placeholder="Search..."
@@ -63,9 +63,17 @@ export const Home = () => {
             })) ?? []
           }
           onSelect={(id) => id?.trim() && navigate(`/search/${id}`)}
-          extraRows={[
-            <Status status={status} data={data} className="contents!" />,
-          ]}
+          empty={
+            !data?.length && (
+              <Status status={status} data={data} className="contents!" />
+            )
+          }
+          status={
+            !!data?.length &&
+            status !== "success" && (
+              <Status status={status} data={data} className="contents!" />
+            )
+          }
         />
       </section>
 
