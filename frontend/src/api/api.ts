@@ -1,6 +1,12 @@
-import { request } from "@/api";
-import { fakeFull, fakeQuick, fakeSamples, fakeSearch } from "@/api/fake";
-import { sleep } from "@/util/misc";
+import { api, request } from "@/api";
+import {
+  fakeDelay,
+  fakeError,
+  fakeFull,
+  fakeQuick,
+  fakeSamples,
+  fakeSearch,
+} from "@/api/fake";
 
 export type QuickSearch = {
   type: string;
@@ -18,13 +24,22 @@ export const typeColor: Record<string, string> = {
 };
 
 export const quickSearch = async (search: string) => {
-  await sleep(100);
-  // throw Error("test");
+  const url = new URL(`${api}/api/quick-search`);
+  url.searchParams.set("search", search);
+
+  await fakeDelay();
+  fakeError();
   return fakeSearch(fakeQuick, search);
-  request<QuickSearch>(`/api/sample-search`, { params: { q: search } });
+
+  return request<QuickSearch>(url);
 };
 
 export type FullSearch = {
+  meta: {
+    total: number;
+    pages: number;
+    limit: number;
+  };
   results: {
     id: string;
     name: string;
@@ -42,14 +57,31 @@ export type FullSearch = {
   };
 };
 
-export const fullSearch = async (search: string) => {
-  await sleep(100);
-  // throw Error("test");
-  return {
-    results: fakeFull.results,
-    facets: fakeFull.facets,
-  };
-  request<QuickSearch>(`/api/sample-search`, { params: { q: search } });
+type FullSearchParams = {
+  search: string;
+  sort?: string;
+  page?: number;
+  facets?: Record<string, string[]>;
+};
+
+export const fullSearch = async ({
+  search,
+  sort = "",
+  page = 0,
+  facets = {},
+}: FullSearchParams) => {
+  const url = new URL(`${api}/api/full-search`);
+  url.searchParams.set("search", search);
+  url.searchParams.set("sort", sort);
+  url.searchParams.set("page", String(page));
+  for (const [facet, values] of Object.entries(facets))
+    for (const value of values) url.searchParams.append(facet, value);
+
+  await fakeDelay();
+  fakeError();
+  return fakeFull;
+
+  return request<FullSearch>(url);
 };
 
 export type SamplesLookup = {
@@ -58,8 +90,9 @@ export type SamplesLookup = {
 }[];
 
 export const sampleLookup = async (id: string) => {
-  await sleep(1000);
-  // throw Error("test");
+  await fakeDelay();
+  fakeError();
   return fakeSamples(id);
-  request<SamplesLookup>(`/api/sample/${id}`);
+
+  return request<SamplesLookup>(`${api}/api/sample/${id}`);
 };

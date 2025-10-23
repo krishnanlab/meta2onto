@@ -18,7 +18,7 @@ const Header = () => (
       </Button>
       <Button to="/cart" color="accent" aria-label="Data cart">
         <ShoppingCart />
-        <span>Cart</span>
+        Cart
       </Button>
     </nav>
   </header>

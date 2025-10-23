@@ -1,5 +1,6 @@
 import { random, sample, uniq } from "lodash";
 import type { FullSearch, QuickSearch, SamplesLookup } from "@/api/api";
+import { sleep } from "@/util/misc";
 
 export const words =
   "lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua ut enim ad minim veniam quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur excepteur sint occaecat cupidatat non proident sunt in culpa qui officia deserunt mollit anim id est laborum".split(
@@ -28,6 +29,11 @@ export const type = () =>
     "pathway",
   ]);
 
+export const fakeDelay = () => sleep(random(100, 1000));
+export const fakeError = () => {
+  if (Math.random() < 0.1) throw Error("test");
+};
+
 export const fakeSearch = <T>(items: T[], search: string) =>
   items.filter((item) =>
     JSON.stringify(item).toLowerCase().includes(search.toLowerCase()),
@@ -43,8 +49,16 @@ export const fakeQuick: QuickSearch[] = uniq(
   description: phrase(4, 6, true),
 }));
 
+const total = random(10, 50);
+const limit = 10;
+
 export const fakeFull: FullSearch = {
-  results: Array(20)
+  meta: {
+    total,
+    pages: Math.ceil(total / limit),
+    limit,
+  },
+  results: Array(total)
     .fill(null)
     .map(() => ({
       id: `GSE${random(10000, 99999)}`,

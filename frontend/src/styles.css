@@ -109,6 +109,10 @@ select {
   @apply cursor-pointer;
 }
 
+[disabled] {
+  @apply pointer-events-none brightness-150 grayscale;
+}
+
 .truncate-lines:not(:focus) {
   -webkit-box-orient: vertical;
   display: -webkit-box;

@@ -1,6 +1,15 @@
-import { useParams } from "react-router";
+import { useParams, useSearchParams } from "react-router";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { Calendar, Dna, Hash, Logs, Plus } from "lucide-react";
+import { isEmpty } from "lodash";
+import {
+  Calendar,
+  ChevronLeft,
+  ChevronRight,
+  Dna,
+  Hash,
+  Logs,
+  Plus,
+} from "lucide-react";
 import { fullSearch, sampleLookup } from "@/api/api";
 import Button from "@/components/Button";
 import Checkbox from "@/components/Checkbox";
@@ -10,27 +19,64 @@ import Meta from "@/components/Meta";
 import Select from "@/components/Select";
 import Status, { showStatus } from "@/components/Status";
 
+const sortOptions = [
+  { id: "relevance", value: "Relevance" },
+  { id: "date", value: "Date" },
+  { id: "samples", value: "Samples" },
+] as const;
+
 export const Search = () => {
   const { search = "" } = useParams<{ search: string }>();
+
+  /** url search params state */
+  const [params, setParams] = useSearchParams();
+
+  /** sort state from url params */
+  const sort =
+    sortOptions.find((option) => option.id === params.get("sort"))?.id ??
+    sortOptions[0].id;
+
+  /** page state from url params */
+  const page = Number(params.get("page")) || 0;
+
+  /** selected facets state from url params */
+  const facets = Object.fromEntries(
+    params.keys().map((key) => [key, params.getAll(key)]),
+  );
+  /** exclude param keywords */
+  delete facets.sort;
+  delete facets.page;
 
   /** page title */
   const title = `Search for "${search}"`;
 
   /** search results */
   const query = useQuery({
-    queryKey: ["full-search", search],
-    queryFn: () => fullSearch(search),
+    queryKey: ["full-search", search, sort, page, facets],
+    queryFn: () => fullSearch({ search, sort, page, facets }),
     placeholderData: keepPreviousData,
   });
 
   const filtersPanel = (
     <div className="flex min-w-20 flex-col gap-4 rounded bg-slate-100 p-4">
       {/* facets */}
+      {isEmpty(query.data?.facets) && <>Filters</>}
       {Object.entries(query.data?.facets ?? {}).map(([facet, values]) => (
         <div key={facet} className="flex flex-col gap-2">
           <strong>{facet}</strong>
           {Object.entries(values).map(([value, count]) => (
-            <Checkbox key={value}>
+            <Checkbox
+              key={value}
+              value={params.getAll(facet).includes(value)}
+              onChange={(checked) => {
+                setParams((params) => {
+                  if (checked) {
+                    if (!params.has(facet, value)) params.append(facet, value);
+                  } else params.delete(facet, value);
+                  return params;
+                });
+              }}
+            >
               {value} ({count})
             </Checkbox>
           ))}
@@ -54,12 +100,16 @@ export const Search = () => {
           <label>
             Sort:
             <Select
-              options={
-                [
-                  { id: "relevance", value: "Relevance" },
-                  { id: "date", value: "Date" },
-                  { id: "samples", value: "Samples" },
-                ] as const
+              options={sortOptions}
+              value={
+                sortOptions.find((option) => option.id === sort)?.id ??
+                "relevance"
+              }
+              onChange={(checked) =>
+                setParams((params) => {
+                  params.set("sort", checked);
+                  return params;
+                })
               }
             />
           </label>
@@ -133,18 +183,46 @@ export const Search = () => {
                 >
                   <Button color="theme">
                     <Logs />
-                    <span>{samples.toLocaleString()} Samples</span>
+                    {samples.toLocaleString()} Samples
                   </Button>
                 </Dialog>
                 <Button color="accent">
                   <Plus />
-                  <span>Cart</span>
+                  Cart
                 </Button>
               </div>
             </div>
           </div>
         ),
       )}
+
+      {/* pagination */}
+      <div className="flex justify-center gap-2">
+        <Button
+          disabled={page === 0}
+          onClick={() =>
+            setParams((params) => {
+              params.set("page", String(page - 1));
+              return params;
+            })
+          }
+        >
+          <ChevronLeft />
+          Prev
+        </Button>
+        <Button
+          disabled={page >= (query.data?.meta.pages ?? 1) - 1}
+          onClick={() =>
+            setParams((params) => {
+              params.set("page", String(page + 1));
+              return params;
+            })
+          }
+        >
+          Next
+          <ChevronRight />
+        </Button>
+      </div>
     </div>
   );
 
@@ -156,8 +234,8 @@ export const Search = () => {
         Search results for "{search}"
       </Heading>
 
-      <section className="">
-        <div className="flex flex-col gap-4 sm:flex-row">
+      <section>
+        <div className="flex flex-col items-start gap-4 sm:flex-row">
           {filtersPanel}
           {resultsPanel}
         </div>

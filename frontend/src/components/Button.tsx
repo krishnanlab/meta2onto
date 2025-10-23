@@ -22,6 +22,7 @@ type _Button = { ref?: Ref<HTMLButtonElement> } & Pick<
   ComponentProps<"button">,
   | "type"
   | "style"
+  | "disabled"
   | "onClick"
   | "onDrag"
   | "onDragEnter"

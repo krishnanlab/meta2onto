@@ -7,7 +7,7 @@ type Props<O extends Option> = {
   value?: O["id"];
   /** on selected option state change */
   onChange?: (value: O["id"]) => void;
-} & ComponentProps<"select">;
+} & Omit<ComponentProps<"select">, "value" | "onChange">;
 
 export type Option<ID = string> = {
   id: ID;
