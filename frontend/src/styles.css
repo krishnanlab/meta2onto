@@ -125,3 +125,15 @@ select {
   height: 1em;
   @apply overflow-visible;
 }
+
+:not(html) ::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background-color: theme(--color-slate-200);
+}
+
+:not(html) ::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background-color: theme(--color-slate-400);
+}
