@@ -56,7 +56,7 @@ export const fakeFull: FullSearch = {
         if (value > 0.9) name = "High";
         return { name, value };
       })(),
-      description: phrase(10, 50, true),
+      description: phrase(10, 200, true),
       date: "2025-03-15",
       platform: sample(["RNA-seq", "scRNA-seq", "Microarray"]),
       database: ["GEO", "SRA", "Refine.bio", "ARCHS4"].filter(

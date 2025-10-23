@@ -8,6 +8,8 @@
   --color-light: hsl(30, 100%, 90%);
   --color-primary: hsl(340, 50%, 50%);
   --color-secondary: hsl(200, 50%, 40%);
+
+  --shadow-overlay: 0 0 5px #00000020, 0 2px 10px #00000020;
 }
 
 * {
@@ -92,7 +94,7 @@ b {
 }
 
 mark {
-  @apply bg-amber-500/20 font-medium;
+  @apply bg-light/50 font-normal;
 }
 
 label {
@@ -100,7 +102,22 @@ label {
 }
 
 input[type="checkbox"] {
-  @apply size-4 cursor-pointer;
+  @apply cursor-pointer;
+}
+
+select {
+  @apply cursor-pointer;
+}
+
+.truncate-lines:not(:focus) {
+  -webkit-box-orient: vertical;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  @apply max-w-full cursor-zoom-in overflow-hidden;
+}
+
+.truncate-lines:focus {
+  @apply rounded outline-1 outline-offset-2 outline-slate-300;
 }
 
 .lucide {

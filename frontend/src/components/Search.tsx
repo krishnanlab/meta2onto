@@ -63,8 +63,8 @@ const Search = ({
       </div>
 
       <ComboboxOptions
-        anchor="bottom"
-        className="flex w-(--input-width) flex-col rounded bg-white shadow"
+        anchor={{ to: "bottom", padding: 10 }}
+        className="shadow-overlay flex w-(--input-width) flex-col rounded bg-white"
       >
         {options.map((option) => (
           <ComboboxOption as={Fragment} key={option.id} value={option.id}>
