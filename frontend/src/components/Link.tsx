@@ -49,7 +49,7 @@ const Link = ({
   /** combine styles */
   const _class = clsx(
     className,
-    "text-secondary inline-flex items-center gap-1 hover:text-current",
+    "text-theme inline-flex items-center gap-1 hover:text-current",
   );
 
   /** full element to render */

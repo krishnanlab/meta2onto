@@ -35,6 +35,10 @@ export default defineConfig([
       "@typescript-eslint/consistent-type-definitions": ["error", "type"],
       "@typescript-eslint/consistent-type-imports": "error",
       "react-refresh/only-export-components": ["off"],
+      "jsx-a11y/label-has-associated-control": [
+        "error",
+        { controlComponents: ["Select"] },
+      ],
     },
   },
 ]);

@@ -18,5 +18,5 @@
   "cssDeclarationSorterOrder": "smacss",
   "jsdocCapitalizeDescription": false,
   "htmlWhitespaceSensitivity": "strict",
-  "tailwindFunctions": ["clsx"]
+  "tailwindFunctions": ["clsx", "_class"]
 }

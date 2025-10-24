@@ -2,7 +2,7 @@
 export const api = import.meta.env.VITE_API;
 
 /** url parameters */
-type Params = Record<string, string | string[]>;
+type Params = URLSearchParams;
 
 /** parse response mode */
 type Parse = "json" | "text";
@@ -29,9 +29,8 @@ export async function request<Response>(
   const options: RequestInit = { ...rest };
   /** make url object */
   url = new URL(url);
-  /** construct url params */
-  for (const [key, value] of Object.entries(params))
-    for (const param of [value].flat()) url.searchParams.append(key, param);
+  /** set url params */
+  url.search = params.toString();
   /** stringify body object */
   if (body) options.body = JSON.stringify(body);
   /** construct request */
