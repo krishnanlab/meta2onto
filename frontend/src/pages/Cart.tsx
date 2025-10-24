@@ -130,7 +130,7 @@ const Cart = () => {
         {!!studyIds.length && showStatus({ query: studyDetailsQuery }) && (
           <Status
             query={studyDetailsQuery}
-            loading={`Loading shared cart "${id}"`}
+            loading={`Loading ${studyIds.length} studies`}
           />
         )}
 
