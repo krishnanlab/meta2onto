@@ -1,12 +1,15 @@
+import { useRef } from "react";
 import type { ReactElement, ReactNode } from "react";
 import { Autocomplete as _Autocomplete } from "@base-ui-components/react/autocomplete";
+import clsx from "clsx";
 import { Search } from "lucide-react";
+import Textbox from "@/components/Textbox";
 
 type Props = {
   /** search value */
   search: string;
   /** on input search */
-  onSearch: (search: string) => void;
+  setSearch: (search: string) => void;
   /** search placeholder text */
   placeholder: string;
   /** dropdown options */
@@ -18,29 +21,39 @@ type Props = {
   onSelect?: (value: string | null) => void;
   /** "status" row */
   status?: ReactNode;
+  /** input styles */
+  className?: string;
 };
 
 /** textbox box with dropdown */
 const Autocomplete = ({
   search,
-  onSearch,
+  setSearch,
   options,
   onSelect,
   placeholder,
   status,
+  className,
 }: Props) => {
+  const inputRef = useRef<HTMLInputElement>(null);
+
   return (
     <_Autocomplete.Root
       value={search}
-      onValueChange={onSearch}
+      onValueChange={setSearch}
       items={options}
       mode="none"
       openOnInputClick
     >
       <div className="relative flex items-center">
         <_Autocomplete.Input
-          placeholder={placeholder}
-          className="w-full rounded bg-white p-2 pr-8 leading-none"
+          render={
+            <Textbox
+              ref={inputRef}
+              placeholder={placeholder}
+              className={clsx("w-full", className)}
+            />
+          }
         />
         <Search className="text-theme absolute right-0 px-2" />
       </div>
@@ -53,18 +66,25 @@ const Autocomplete = ({
                 {status}
               </_Autocomplete.Status>
             )}
-            <_Autocomplete.List>
-              {(tag: (typeof options)[number]) => (
-                <_Autocomplete.Item
-                  key={tag.id}
-                  value={tag.id}
-                  className="data-highlighted:bg-theme/10 flex cursor-pointer gap-2 p-2 leading-none"
-                  onClick={() => onSelect?.(tag.id)}
-                >
-                  {tag.content}
-                </_Autocomplete.Item>
-              )}
-            </_Autocomplete.List>
+            {!status && (
+              <_Autocomplete.List>
+                {(tag: (typeof options)[number]) => (
+                  <_Autocomplete.Item
+                    key={tag.id}
+                    value={tag.id}
+                    className="data-highlighted:bg-theme/10 flex cursor-pointer gap-2 p-2 leading-none"
+                    onClick={() => {
+                      /** select option */
+                      onSelect?.(tag.id);
+                      /** close dropdown */
+                      inputRef.current?.blur();
+                    }}
+                  >
+                    {tag.content}
+                  </_Autocomplete.Item>
+                )}
+              </_Autocomplete.List>
+            )}
           </_Autocomplete.Popup>
         </_Autocomplete.Positioner>
       </_Autocomplete.Portal>

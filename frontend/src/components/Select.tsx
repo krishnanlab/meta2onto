@@ -24,7 +24,7 @@ const Select = <O extends Option>({
     <select
       className="border-theme-light rounded border-1 px-2 py-1"
       value={value}
-      onChange={(event) => onChange?.(event.target.value as O["id"])}
+      onChange={(event) => onChange?.(event.currentTarget.value as O["id"])}
       {...props}
     >
       {options.map((option) => (

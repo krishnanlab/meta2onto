@@ -1,8 +1,10 @@
 import { useParams, useSearchParams } from "react-router";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { useAtomValue } from "jotai";
 import { isEmpty } from "lodash";
 import {
   Calendar,
+  Check,
   ChevronLeft,
   ChevronRight,
   Dna,
@@ -11,7 +13,8 @@ import {
   Logs,
   Plus,
 } from "lucide-react";
-import { fullSearch, sampleLookup } from "@/api/api";
+import { fullSearch, samplesLookup } from "@/api/api";
+import { addToCart, cartAtom, inCart, removeFromCart } from "@/cart";
 import Button from "@/components/Button";
 import Checkbox from "@/components/Checkbox";
 import Dialog from "@/components/Dialog";
@@ -20,6 +23,7 @@ import Meta from "@/components/Meta";
 import Meter from "@/components/Meter";
 import Select from "@/components/Select";
 import Status, { showStatus } from "@/components/Status";
+import { SearchBox } from "@/pages/Home";
 
 const sortOptions = [
   { id: "relevance", value: "Relevance" },
@@ -59,6 +63,8 @@ export const Search = () => {
     placeholderData: keepPreviousData,
   });
 
+  const cart = useAtomValue(cartAtom);
+
   const filtersPanel = (
     <div className="flex min-w-20 flex-col gap-4 rounded bg-slate-100 p-4">
       {/* facets */}
@@ -91,6 +97,9 @@ export const Search = () => {
 
   const resultsPanel = (
     <div className="flex grow-1 basis-0 flex-col gap-4">
+      {/* search box */}
+      <SearchBox />
+
       {/* query status */}
       <Status query={query} />
 
@@ -98,8 +107,7 @@ export const Search = () => {
       {query.data?.results && (
         <div className="flex flex-wrap items-center justify-between">
           <div>
-            <b>{query.data?.results.length.toLocaleString()}</b> results for{" "}
-            <b>"{search}"</b>
+            <b>{query.data?.results.length.toLocaleString()}</b> results
           </div>
           <label>
             Sort:
@@ -189,8 +197,16 @@ export const Search = () => {
                     {samples.toLocaleString()} Samples
                   </Button>
                 </Dialog>
-                <Button color="accent">
-                  <Plus />
+                <Button
+                  aria-label={
+                    inCart(cart, id) ? "Remove from cart" : "Add to cart"
+                  }
+                  color={inCart(cart, id) ? "none" : "accent"}
+                  onClick={() =>
+                    inCart(cart, id) ? removeFromCart(id) : addToCart(id)
+                  }
+                >
+                  {inCart(cart, id) ? <Check /> : <Plus />}
                   Cart
                 </Button>
               </div>
@@ -253,7 +269,7 @@ export default Search;
 const Samples = ({ id }: { id: string }) => {
   const query = useQuery({
     queryKey: ["sample-lookup", id],
-    queryFn: () => sampleLookup(id),
+    queryFn: () => samplesLookup(id),
   });
 
   return (
@@ -269,6 +285,7 @@ const Samples = ({ id }: { id: string }) => {
             </div>
           ))}
       </div>
+
       <div className="flex flex-wrap gap-2">
         {query.data && (
           <Button>
