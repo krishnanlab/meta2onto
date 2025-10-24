@@ -1,29 +1,26 @@
-import type { ComponentProps, ReactNode, Ref } from "react";
+import type { ComponentProps, Ref } from "react";
 import clsx from "clsx";
 import Link from "@/components/Link";
 
 type Props = Base & (_Link | _Button);
 
 type Base = {
-  /** fill */
-  fill?: "solid" | "hollow";
   /** color */
-  color?: "none" | "primary" | "secondary" | "critical";
-  /** class on button */
-  className?: string;
-  /** content */
-  children: ReactNode;
+  color?: "none" | "theme" | "accent";
 };
 
 type _Link = { ref?: Ref<HTMLAnchorElement> } & Pick<
   ComponentProps<typeof Link>,
-  "to" | "style"
+  "children" | "to" | "className" | "style"
 >;
 
 type _Button = { ref?: Ref<HTMLButtonElement> } & Pick<
   ComponentProps<"button">,
+  | "children"
   | "type"
+  | "className"
   | "style"
+  | "disabled"
   | "onClick"
   | "onDrag"
   | "onDragEnter"
@@ -38,7 +35,7 @@ type _Button = { ref?: Ref<HTMLButtonElement> } & Pick<
  */
 const Button = ({
   ref,
-  color = "none",
+  color = "theme",
   className,
   children,
   ...props
@@ -46,11 +43,10 @@ const Button = ({
   /** combine styles */
   const _class = clsx(
     className,
-    "flex items-center gap-2 rounded p-2 leading-none hover:bg-slate-500 hover:text-white",
-    color === "none" && "text-secondary bg-transparent",
-    color === "primary" && "bg-primary text-white",
-    color === "secondary" && "bg-secondary text-white",
-    color === "critical" && "bg-black text-white",
+    "flex items-center gap-2 rounded p-2 leading-none hover:bg-slate-500/50 hover:text-white",
+    color === "none" && "bg-transparent text-current disabled:text-slate-300",
+    color === "theme" && "bg-theme text-white disabled:bg-slate-300",
+    color === "accent" && "bg-accent text-white disabled:bg-slate-300",
   );
 
   /** if "to", render as link */

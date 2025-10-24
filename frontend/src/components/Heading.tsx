@@ -31,7 +31,7 @@ const Heading = ({ level, anchor, className, children }: Props) => {
   const id = anchor ?? slugify(renderText(children));
 
   return (
-    <Tag id={id} ref={ref} className={clsx(className, "group")}>
+    <Tag id={id} ref={ref} className={clsx("group", className)}>
       {/* content */}
       {children}
 

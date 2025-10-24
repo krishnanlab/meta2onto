@@ -7,7 +7,7 @@ export const About = () => (
   <>
     <Meta title="About" />
 
-    <section className="bg-light">
+    <section className="bg-theme-light">
       <Heading level={1}>About</Heading>
     </section>
 
@@ -43,26 +43,24 @@ export const About = () => (
         <Link to="https://google.com">Link</Link>
       </div>
       <div className="flex flex-wrap justify-center gap-4">
-        <Button to="">Button</Button>
-        <Button to="" color="primary">
+        <Button to="" color="none">
           Button
         </Button>
-        <Button to="" color="secondary">
+        <Button to="" color="theme">
           Button
         </Button>
-        <Button to="" color="critical">
+        <Button to="" color="accent">
           Button
         </Button>
       </div>
       <div className="flex flex-wrap justify-center gap-4">
-        <Button onClick={() => null}>Button</Button>
-        <Button onClick={() => null} color="primary">
+        <Button onClick={() => null} color="none">
           Button
         </Button>
-        <Button onClick={() => null} color="secondary">
+        <Button onClick={() => null} color="theme">
           Button
         </Button>
-        <Button onClick={() => null} color="critical">
+        <Button onClick={() => null} color="accent">
           Button
         </Button>
       </div>
