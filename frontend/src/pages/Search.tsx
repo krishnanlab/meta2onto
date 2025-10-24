@@ -13,7 +13,7 @@ import {
   Logs,
   Plus,
 } from "lucide-react";
-import { fullSearch, samplesLookup } from "@/api/api";
+import { studySamples, studySearch } from "@/api/api";
 import { addToCart, cartAtom, inCart, removeFromCart } from "@/cart";
 import Button from "@/components/Button";
 import Checkbox from "@/components/Checkbox";
@@ -59,7 +59,7 @@ export const Search = () => {
   /** search results */
   const query = useQuery({
     queryKey: ["full-search", search, sort, page, facets],
-    queryFn: () => fullSearch({ search, sort, page, facets }),
+    queryFn: () => studySearch({ search, sort, page, facets }),
     placeholderData: keepPreviousData,
   });
 
@@ -173,9 +173,9 @@ export const Search = () => {
 
             <div className="flex items-end justify-between gap-2">
               <div className="flex flex-wrap gap-2">
-                {database.map((db) => (
-                  <span key={db} className="bg-theme-light rounded px-1">
-                    {db}
+                {database.map((database) => (
+                  <span key={database} className="bg-theme-light rounded px-1">
+                    {database}
                   </span>
                 ))}
               </div>
@@ -269,7 +269,7 @@ export default Search;
 const Samples = ({ id }: { id: string }) => {
   const query = useQuery({
     queryKey: ["sample-lookup", id],
-    queryFn: () => samplesLookup(id),
+    queryFn: () => studySamples(id),
   });
 
   return (

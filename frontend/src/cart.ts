@@ -5,25 +5,25 @@ import type { CartLookup } from "@/api/api";
 
 const defaultCart: CartLookup = {
   name: "",
-  items: [],
+  studies: [],
 };
 
 /** cart state */
 export const cartAtom = atomWithStorage<CartLookup>("cart", defaultCart);
 
-export const inCart = (cart: CartLookup, item: string) =>
-  cart?.items.includes(item);
+export const inCart = (cart: CartLookup, study: string) =>
+  cart?.studies.includes(study);
 
-export const addToCart = (item: string) =>
+export const addToCart = (study: string) =>
   getDefaultStore().set(cartAtom, (old) => ({
     ...old,
-    items: uniq([...old.items, item]),
+    studies: uniq([...old.studies, study]),
   }));
 
-export const removeFromCart = (item: string) =>
+export const removeFromCart = (study: string) =>
   getDefaultStore().set(cartAtom, (old) => ({
     ...old,
-    items: old.items.filter((i) => i !== item),
+    studies: old.studies.filter((oldStudy) => oldStudy !== study),
   }));
 
 export const clearCart = () => getDefaultStore().set(cartAtom, defaultCart);
