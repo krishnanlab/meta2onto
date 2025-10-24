@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router";
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import clsx from "clsx";
 import { Lightbulb } from "lucide-react";
@@ -12,17 +12,6 @@ import Status, { showStatus } from "@/components/Status";
 const examples = ["Hepatocyte", "Breast cancer", "Alzheimer's disease"];
 
 export const Home = () => {
-  const navigate = useNavigate();
-
-  /** search string state */
-  const [search, setSearch] = useState("");
-
-  /** search results */
-  const query = useQuery({
-    queryKey: ["quick-search", search],
-    queryFn: () => quickSearch(search),
-  });
-
   return (
     <>
       <section className="narrow bg-theme-light py-12! text-center">
@@ -38,41 +27,7 @@ export const Home = () => {
           </p>
         </hgroup>
 
-        <Autocomplete
-          search={search}
-          onSearch={setSearch}
-          placeholder="Search..."
-          options={
-            query.data?.map(({ type, name, description }) => ({
-              id: name,
-              content: (
-                <Link to={`/search/${name}`}>
-                  <span
-                    className={clsx(
-                      "rounded px-1 py-0.5 text-sm leading-none text-white",
-                      typeColor[type] ?? typeColor["default"],
-                    )}
-                  >
-                    {type}
-                  </span>
-                  <span className="truncate leading-none font-normal">
-                    {name}
-                  </span>
-                  <span
-                    className="truncate leading-none text-slate-500"
-                    dangerouslySetInnerHTML={{ __html: description }}
-                  />
-                </Link>
-              ),
-            })) ?? []
-          }
-          onSelect={(id) => id?.trim() && navigate(`/search/${id}`)}
-          status={
-            showStatus({ query }) && (
-              <Status query={query} className="contents!" />
-            )
-          }
-        />
+        <SearchBox />
 
         {/* examples */}
         <p className="flex flex-wrap items-center justify-center gap-4 leading-none">
@@ -114,3 +69,57 @@ export const Home = () => {
 };
 
 export default Home;
+
+export const SearchBox = () => {
+  const navigate = useNavigate();
+
+  /** search string state */
+  const [search, setSearch] = useState("");
+
+  /** update search from url */
+  const params = useParams();
+  useEffect(() => {
+    if (params.search) setSearch(params.search);
+  }, [params.search]);
+
+  /** search results */
+  const query = useQuery({
+    queryKey: ["quick-search", search],
+    queryFn: () => quickSearch(search),
+  });
+
+  return (
+    <Autocomplete
+      search={search}
+      setSearch={setSearch}
+      placeholder="Search..."
+      options={
+        query.data?.map(({ type, name, description }) => ({
+          id: name,
+          content: (
+            <Link to={`/search/${name}`}>
+              <span
+                className={clsx(
+                  "rounded px-1 py-0.5 text-sm leading-none text-white",
+                  typeColor[type] ?? typeColor["default"],
+                )}
+              >
+                {type}
+              </span>
+              <span className="truncate leading-none font-normal">{name}</span>
+              <span
+                className="truncate leading-none text-slate-500"
+                dangerouslySetInnerHTML={{ __html: description }}
+              />
+            </Link>
+          ),
+        })) ?? []
+      }
+      onSelect={(id) => id?.trim() && navigate(`/search/${id}`)}
+      status={
+        showStatus({ query }) && <Status query={query} className="contents!" />
+      }
+      className="bg-white"
+    />
+  );
+};

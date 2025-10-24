@@ -13,7 +13,7 @@ const Checkbox = ({ value, onChange, children }: Props) => {
         className="size-4"
         type="checkbox"
         checked={value}
-        onChange={(e) => onChange?.(e.target.checked)}
+        onChange={(event) => onChange?.(event.currentTarget.checked)}
       />
       {children}
     </label>

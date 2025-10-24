@@ -1,5 +1,6 @@
 import { api, request } from "@/api";
 import {
+  fakeCart,
   fakeDelay,
   fakeError,
   fakeFull,
@@ -24,7 +25,7 @@ export const typeColor: Record<string, string> = {
 };
 
 export const quickSearch = async (search: string) => {
-  const url = new URL(`${api}/api/quick-search`);
+  const url = new URL(`${api}/quick-search`);
   url.searchParams.set("search", search);
 
   await fakeDelay();
@@ -70,7 +71,7 @@ export const fullSearch = async ({
   page = 0,
   facets = {},
 }: FullSearchParams) => {
-  const url = new URL(`${api}/api/full-search`);
+  const url = new URL(`${api}/full-search`);
   url.searchParams.set("search", search);
   url.searchParams.set("sort", sort);
   url.searchParams.set("page", String(page));
@@ -89,10 +90,20 @@ export type SamplesLookup = {
   description: string;
 }[];
 
-export const sampleLookup = async (id: string) => {
+export const samplesLookup = async (id: string) => {
   await fakeDelay();
   fakeError();
   return fakeSamples(id);
 
-  return request<SamplesLookup>(`${api}/api/sample/${id}`);
+  return request<SamplesLookup>(`${api}/sample/${id}`);
+};
+
+export type CartLookup = { name: string; items: string[] };
+
+export const cartLookup = async (id: string) => {
+  await fakeDelay();
+  fakeError();
+  return fakeCart();
+
+  return request<CartLookup>(`${api}/cart/${id}`);
 };

@@ -103,3 +103,10 @@ export const fakeSamples = (id: string): SamplesLookup =>
       name: `${id}_${index}`,
       description: phrase(5, 20, true),
     }));
+
+export const fakeCart = () => ({
+  name: phrase(2, 5),
+  items: Array(random(1, 10))
+    .fill(null)
+    .map(() => `GSE${random(10000, 99999)}`),
+});
