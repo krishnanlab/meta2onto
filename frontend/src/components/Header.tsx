@@ -18,10 +18,10 @@ const Header = () => {
       </a>
 
       <nav className="flex gap-4 text-xl">
-        <Button to="/about" color="none">
+        <Button to="/about" color="none" className="text-current!">
           About
         </Button>
-        <Button to="/search" color="none">
+        <Button to="/search" color="none" className="text-current!">
           Search
         </Button>
         <Button
@@ -32,9 +32,9 @@ const Header = () => {
         >
           <ShoppingCart />
           Cart
-          {!!cart.items.length && (
+          {!!cart.studies.length && (
             <div className="bg-theme-light absolute -top-2 -right-2 grid size-5 place-items-center rounded-full text-sm leading-none text-black">
-              {cart.items.length}
+              {cart.studies.length}
             </div>
           )}
         </Button>

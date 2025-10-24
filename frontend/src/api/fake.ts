@@ -1,5 +1,5 @@
-import { random, sample, uniq } from "lodash";
-import type { FullSearch, QuickSearch, SamplesLookup } from "@/api/api";
+import { random, range, sample, uniq } from "lodash";
+import type { StudyQuickSearch, StudySamples, StudySearch } from "@/api/api";
 import { sleep } from "@/util/misc";
 
 export const words =
@@ -8,13 +8,14 @@ export const words =
   );
 
 export const phrase = (min: number, max: number, format = false) =>
-  Array(random(min, max))
-    .fill(null)
+  range(random(min, max))
     .map(() => sample(words))
     .map((word) =>
       format && Math.random() > 0.9 ? `<mark>${word}</mark>` : word,
     )
     .join(" ");
+
+const fakeId = () => `GSE${random(10000, 99999)}`;
 
 export const type = () =>
   sample([
@@ -30,54 +31,53 @@ export const type = () =>
   ]);
 
 export const fakeDelay = () => sleep(random(100, 1000));
+
 export const fakeError = () => {
   if (Math.random() < 0.1) throw Error("test");
 };
 
-export const fakeSearch = <T>(items: T[], search: string) =>
-  items.filter((item) =>
+export const fakeSearch = <T>(studies: T[], search: string) =>
+  studies.filter((item) =>
     JSON.stringify(item).toLowerCase().includes(search.toLowerCase()),
   );
 
-export const fakeQuick: QuickSearch = uniq(
-  Array(20)
-    .fill(null)
-    .map(() => phrase(1, 4)),
+export const fakeStudyQuickSearch: StudyQuickSearch = uniq(
+  range(20).map(() => phrase(1, 4)),
 ).map((name) => ({
   type: type(),
   name,
   description: phrase(4, 6, true),
 }));
 
+const fakeStudy = () => ({
+  id: fakeId(),
+  name: phrase(4, 20),
+  confidence: (() => {
+    const value = random(0, 1, true);
+    let name = "Low";
+    if (value > 0.7) name = "Medium";
+    if (value > 0.9) name = "High";
+    return { name, value };
+  })(),
+  description: phrase(10, 200, true),
+  date: "2025-03-15",
+  platform: sample(["RNA-seq", "scRNA-seq", "Microarray"]),
+  database: ["GEO", "SRA", "Refine.bio", "ARCHS4"].filter(
+    () => Math.random() > 0.5,
+  ),
+  samples: random(1, 200),
+});
+
 const total = random(10, 50);
 const limit = 10;
 
-export const fakeFull: FullSearch = {
+export const fakeStudySearch: StudySearch = {
   meta: {
     total,
     pages: Math.ceil(total / limit),
     limit,
   },
-  results: Array(total)
-    .fill(null)
-    .map(() => ({
-      id: `GSE${random(10000, 99999)}`,
-      name: phrase(4, 20),
-      confidence: (() => {
-        const value = random(0, 1, true);
-        let name = "Low";
-        if (value > 0.7) name = "Medium";
-        if (value > 0.9) name = "High";
-        return { name, value };
-      })(),
-      description: phrase(10, 200, true),
-      date: "2025-03-15",
-      platform: sample(["RNA-seq", "scRNA-seq", "Microarray"]),
-      database: ["GEO", "SRA", "Refine.bio", "ARCHS4"].filter(
-        () => Math.random() > 0.5,
-      ),
-      samples: random(1, 200),
-    })),
+  results: range(total).map(fakeStudy),
   facets: {
     Platform: {
       "RNA-seq": random(0, 200),
@@ -96,17 +96,15 @@ export const fakeFull: FullSearch = {
   },
 };
 
-export const fakeSamples = (id: string): SamplesLookup =>
-  Array(random(5, 50))
-    .fill(null)
-    .map((_, index) => ({
-      name: `${id}_${index}`,
-      description: phrase(5, 20, true),
-    }));
+export const fakeSample = (index = 1) => ({
+  name: `${fakeId()}_${index}`,
+  description: phrase(5, 20, true),
+});
+
+export const fakeStudySamples = (): StudySamples =>
+  range(1, random(5, 50)).map(fakeSample);
 
 export const fakeCart = () => ({
   name: phrase(2, 5),
-  items: Array(random(1, 10))
-    .fill(null)
-    .map(() => `GSE${random(10000, 99999)}`),
+  studies: range(random(1, 10)).map(fakeId),
 });

@@ -3,12 +3,14 @@ import { useQuery } from "@tanstack/react-query";
 import clsx from "clsx";
 import { useAtomValue } from "jotai";
 import { Download, Plus, Share2, Trash } from "lucide-react";
-import { cartLookup } from "@/api/api";
+import { cartLookup, studyBatchLookup } from "@/api/api";
 import { cartAtom, clearCart } from "@/cart";
 import Button from "@/components/Button";
 import Heading from "@/components/Heading";
 import { Meta } from "@/components/Meta";
 import Status, { showStatus } from "@/components/Status";
+import Table from "@/components/Table";
+import { formatDate } from "@/util/string";
 
 const Cart = () => {
   /** local, current cart */
@@ -20,32 +22,48 @@ const Cart = () => {
   /** is this a shared cart or local */
   const shared = !!id;
 
-  /** look up cart items from id */
-  const query = useQuery({
+  /** look up study ids from cart id */
+  const studyIdsQuery = useQuery({
     queryKey: ["cart", id],
     queryFn: () => cartLookup(id),
     enabled: shared,
   });
 
   /** cart definition */
-  const cart = shared ? query.data : localCart;
+  const cart = shared ? studyIdsQuery.data : localCart;
+
+  /** cart study ids */
+  const studyIds = cart?.studies || [];
 
   /** cart size */
-  const size = cart?.items.length || 0;
+  const size = studyIds.length || 0;
 
   /** cart name */
-  const name = query.data?.name ?? id;
+  const name = studyIdsQuery.data?.name ?? id;
+
+  /** look up study details from study ids */
+  const studyDetailsQuery = useQuery({
+    queryKey: ["cart", id],
+    queryFn: () => studyBatchLookup(studyIds),
+    enabled: !!studyIds.length,
+  });
+
+  /** full study details */
+  const studyDetails = studyDetailsQuery.data || [];
 
   /** page title */
   const title = shared ? `Shared cart "${name}"` : `Data Cart`;
 
-  if (id && showStatus({ query }))
+  if (id && showStatus({ query: studyIdsQuery }))
     return (
       <>
         <Meta title={title} />
 
         <section>
-          <Status query={query} loading={`Loading shared cart "${id}"`} />
+          <Status
+            query={studyIdsQuery}
+            loading={`Loading shared cart "${id}"`}
+          />
         </section>
       </>
     );
@@ -101,19 +119,51 @@ const Cart = () => {
       <section>
         {!size && (
           <div className="flex flex-col items-center gap-4">
-            <div>No items yet</div>
+            <div>No studies yet</div>
             <Button to="/search">
               <Plus />
               Search
             </Button>
           </div>
         )}
-        {!!size && (
-          <ul>
-            {cart?.items.map((item, index) => (
-              <li key={index}>{item}</li>
-            ))}
-          </ul>
+
+        {!!studyIds.length && showStatus({ query: studyDetailsQuery }) && (
+          <Status
+            query={studyDetailsQuery}
+            loading={`Loading shared cart "${id}"`}
+          />
+        )}
+
+        {!!studyDetails.length && (
+          <Table
+            cols={[
+              { key: "id", name: "ID" },
+              { key: "name", name: "Name" },
+              { key: "samples", name: "Samples" },
+              {
+                key: "date",
+                name: "Date",
+                render: (date) => formatDate(date),
+              },
+              {
+                key: "database",
+                name: "Databases",
+                render: (database) => (
+                  <>
+                    {database.map((database) => (
+                      <span
+                        key={database}
+                        className="bg-theme-light rounded px-1"
+                      >
+                        {database}
+                      </span>
+                    ))}
+                  </>
+                ),
+              },
+            ]}
+            rows={studyDetails}
+          />
         )}
       </section>
     </>
