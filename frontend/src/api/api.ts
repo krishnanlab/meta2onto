@@ -3,13 +3,13 @@ import {
   fakeCart,
   fakeDelay,
   fakeError,
+  fakeModelSearch,
   fakeSearch,
-  fakeStudyQuickSearch,
   fakeStudySamples,
   fakeStudySearch,
 } from "@/api/fake";
 
-export type StudyQuickSearch = {
+export type ModelSearch = {
   type: string;
   name: string;
   description: string;
@@ -24,24 +24,20 @@ export const typeColor: Record<string, string> = {
   default: "bg-gray-700/70",
 };
 
-/** search for studies quickly (for autocompletel) and get high level info */
-export const studyQuickSearch = async (search: string) => {
-  const url = new URL(`${api}/study/quick-search`);
+/** search for models */
+export const modelSearch = async (search: string) => {
+  const url = new URL(`${api}/model`);
   url.searchParams.set("search", search);
 
   await fakeDelay();
   fakeError();
-  return fakeSearch(fakeStudyQuickSearch, search);
+  return fakeSearch(fakeModelSearch, search);
 
-  return request<StudyQuickSearch>(url);
+  return request<ModelSearch>(url);
 };
 
 export type StudySearch = {
-  meta: {
-    total: number;
-    pages: number;
-    limit: number;
-  };
+  count: number;
   results: {
     id: string;
     name: string;
@@ -59,72 +55,82 @@ export type StudySearch = {
   };
 };
 
-type StudySearchParams = {
-  search: string;
-  sort?: string;
-  page?: number;
-  facets?: Record<string, string[]>;
-};
-
 /** search for studies and get full details */
 export const studySearch = async ({
-  search,
-  sort = "",
-  page = 0,
-  facets = {},
-}: StudySearchParams) => {
-  const url = new URL(`${api}/study/search`);
+  search = "",
+  ordering = "",
+  offset = 0,
+  limit = 100,
+  facets = {} as Record<string, string[]>,
+}) => {
+  const url = new URL(`${api}/study`);
   url.searchParams.set("search", search);
-  url.searchParams.set("sort", sort);
-  url.searchParams.set("page", String(page));
+  url.searchParams.set("ordering", ordering);
+  url.searchParams.set("offset", String(offset));
+  url.searchParams.set("limit", String(limit));
   for (const [facet, values] of Object.entries(facets))
     for (const value of values) url.searchParams.append(facet, value);
 
   await fakeDelay();
   fakeError();
+  const data = fakeStudySearch;
+
+  // const data = request<StudySearch>(url);
+  return { ...data, pages: Math.ceil(data.count / limit) };
+};
+
+/** batch lookup full study details by ids */
+export const studyBatchLookup = async ({
+  ids = [] as string[],
+  offset = 0,
+  limit = 20,
+}) => {
+  const url = new URL(`${api}/study/lookup`);
+
+  const options = {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: { ids, offset, limit },
+  };
+
+  await fakeDelay();
+  fakeError();
   return fakeStudySearch;
 
-  return request<StudySearch>(url);
+  return request<StudySearch>(url, options);
 };
 
 export type StudySamples = {
-  name: string;
-  description: string;
-}[];
+  count: number;
+  results: {
+    name: string;
+    description: string;
+  }[];
+};
 
 /** lookup all samples for a study */
-export const studySamples = async (id: string) => {
+export const studySamples = async ({ id = "", offset = 0, limit = 10 }) => {
+  const url = new URL(`${api}/study/${id}/samples`);
+  url.searchParams.set("offset", String(offset));
+  url.searchParams.set("limit", String(limit));
+
   await fakeDelay();
   fakeError();
-  return fakeStudySamples();
+  const data = fakeStudySamples();
 
-  return request<StudySamples>(`${api}/study/${id}/samples`);
+  // const data= request<StudySamples>(url);
+  return { ...data, pages: Math.ceil(data.count / limit) };
 };
 
 export type CartLookup = { name: string; studies: string[] };
 
 /** lookup a cart by id */
 export const cartLookup = async (id: string) => {
+  const url = new URL(`${api}/cart/${id}`);
+
   await fakeDelay();
   fakeError();
   return fakeCart();
 
-  return request<CartLookup>(`${api}/cart/${id}`);
-};
-
-/** batch lookup full study details by ids */
-export const studyBatchLookup = async (ids: string[]) => {
-  const url = new URL(`${api}/study/lookup`);
-
-  const options = {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: { ids },
-  };
-
-  await fakeDelay();
-  fakeError();
-  return fakeStudySearch.results;
-
-  return request<StudySearch["results"]>(url, options);
+  return request<CartLookup>(url);
 };

@@ -44,12 +44,12 @@ const Cart = () => {
   /** look up study details from study ids */
   const studyDetailsQuery = useQuery({
     queryKey: ["cart", id],
-    queryFn: () => studyBatchLookup(studyIds),
+    queryFn: () => studyBatchLookup({ ids: studyIds }),
     enabled: !!studyIds.length,
   });
 
   /** full study details */
-  const studyDetails = studyDetailsQuery.data || [];
+  const studyDetails = studyDetailsQuery.data?.results || [];
 
   /** page title */
   const title = shared ? `Shared cart "${name}"` : `Data Cart`;

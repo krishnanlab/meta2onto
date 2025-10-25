@@ -1,5 +1,5 @@
 import { random, range, sample, uniq } from "lodash";
-import type { StudyQuickSearch, StudySamples, StudySearch } from "@/api/api";
+import type { ModelSearch, StudySamples, StudySearch } from "@/api/api";
 import { sleep } from "@/util/misc";
 
 export const words =
@@ -41,7 +41,7 @@ export const fakeSearch = <T>(studies: T[], search: string) =>
     JSON.stringify(item).toLowerCase().includes(search.toLowerCase()),
   );
 
-export const fakeStudyQuickSearch: StudyQuickSearch = uniq(
+export const fakeModelSearch: ModelSearch = uniq(
   range(20).map(() => phrase(1, 4)),
 ).map((name) => ({
   type: type(),
@@ -68,16 +68,11 @@ const fakeStudy = () => ({
   samples: random(1, 200),
 });
 
-const total = random(10, 50);
-const limit = 10;
+const totalStudies = random(10, 50);
 
 export const fakeStudySearch: StudySearch = {
-  meta: {
-    total,
-    pages: Math.ceil(total / limit),
-    limit,
-  },
-  results: range(total).map(fakeStudy),
+  count: totalStudies,
+  results: range(totalStudies).map(fakeStudy),
   facets: {
     Platform: {
       "RNA-seq": random(0, 200),
@@ -101,8 +96,12 @@ export const fakeSample = (index = 1) => ({
   description: phrase(5, 20, true),
 });
 
-export const fakeStudySamples = (): StudySamples =>
-  range(1, random(5, 50)).map(fakeSample);
+const totalSamples = random(5, 50);
+
+export const fakeStudySamples = (): StudySamples => ({
+  count: totalSamples,
+  results: range(1, totalSamples).map(fakeSample),
+});
 
 export const fakeCart = () => ({
   name: phrase(2, 5),

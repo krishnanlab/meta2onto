@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useParams, useSearchParams } from "react-router";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
@@ -8,7 +9,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Dna,
-  Download,
   Hash,
   Logs,
   Plus,
@@ -25,10 +25,20 @@ import Select from "@/components/Select";
 import Status, { showStatus } from "@/components/Status";
 import { SearchBox } from "@/pages/Home";
 
-const sortOptions = [
-  { id: "relevance", value: "Relevance" },
-  { id: "date", value: "Date" },
-  { id: "samples", value: "Samples" },
+/** per page select options */
+const limitOptions = [
+  { value: "5" },
+  { value: "10" },
+  { value: "20" },
+  { value: "50" },
+  { value: "100" },
+] as const;
+
+/** sort select options */
+const orderingOptions = [
+  { value: "relevance" },
+  { value: "date" },
+  { value: "samples" },
 ] as const;
 
 export const Search = () => {
@@ -37,29 +47,36 @@ export const Search = () => {
   /** url search params state */
   const [params, setParams] = useSearchParams();
 
-  /** sort state from url params */
-  const sort =
-    sortOptions.find((option) => option.id === params.get("sort"))?.id ??
-    sortOptions[0].id;
+  /** ordering state from url params */
+  const ordering =
+    orderingOptions.find((option) => option.value === params.get("ordering"))
+      ?.value ?? orderingOptions[0].value;
 
-  /** page state from url params */
-  const page = Number(params.get("page")) || 0;
+  /** pagination page state from url params */
+  const offset = Number(params.get("offset")) || 0;
+
+  /** pagination per page state from url params */
+  const limit =
+    limitOptions.find((option) => option.value === params.get("limit"))
+      ?.value ?? limitOptions[1].value;
 
   /** selected facets state from url params */
   const facets = Object.fromEntries(
     params.keys().map((key) => [key, params.getAll(key)]),
   );
   /** exclude param keywords */
-  delete facets.sort;
-  delete facets.page;
+  delete facets.ordering;
+  delete facets.offset;
+  delete facets.limit;
 
   /** page title */
   const title = `Search "${search}"`;
 
   /** search results */
   const query = useQuery({
-    queryKey: ["full-search", search, sort, page, facets],
-    queryFn: () => studySearch({ search, sort, page, facets }),
+    queryKey: ["full-search", search, ordering, offset, limit, facets],
+    queryFn: () =>
+      studySearch({ search, ordering, offset, limit: Number(limit), facets }),
     placeholderData: keepPreviousData,
   });
 
@@ -109,17 +126,15 @@ export const Search = () => {
           <div>
             <b>{query.data?.results.length.toLocaleString()}</b> results
           </div>
+
           <label>
-            Sort:
+            Sort
             <Select
-              options={sortOptions}
-              value={
-                sortOptions.find((option) => option.id === sort)?.id ??
-                "relevance"
-              }
+              options={orderingOptions}
+              value={ordering}
               onChange={(checked) =>
                 setParams((params) => {
-                  params.set("sort", checked);
+                  params.set("ordering", checked);
                   return params;
                 })
               }
@@ -218,10 +233,10 @@ export const Search = () => {
       {/* pagination */}
       <div className="flex justify-center gap-2">
         <Button
-          disabled={page === 0}
+          disabled={offset === 0}
           onClick={() =>
             setParams((params) => {
-              params.set("page", String(page - 1));
+              params.set("offset", String(offset - 1));
               return params;
             })
           }
@@ -230,10 +245,10 @@ export const Search = () => {
           Prev
         </Button>
         <Button
-          disabled={page >= (query.data?.meta.pages ?? 1) - 1}
+          disabled={offset >= (query.data?.pages ?? 1) - 1}
           onClick={() =>
             setParams((params) => {
-              params.set("page", String(page + 1));
+              params.set("offset", String(offset + 1));
               return params;
             })
           }
@@ -241,6 +256,20 @@ export const Search = () => {
           Next
           <ChevronRight />
         </Button>
+
+        <label>
+          Per Page
+          <Select
+            options={limitOptions}
+            value={limit}
+            onChange={(checked) =>
+              setParams((params) => {
+                params.set("limit", checked);
+                return params;
+              })
+            }
+          />
+        </label>
       </div>
     </div>
   );
@@ -267,9 +296,13 @@ export default Search;
 
 /** samples popup */
 const Samples = ({ id }: { id: string }) => {
+  /** pagination */
+  const [offset, setOffset] = useState(0);
+  const [limit] = useState(10);
+
   const query = useQuery({
-    queryKey: ["sample-lookup", id],
-    queryFn: () => studySamples(id),
+    queryKey: ["sample-lookup", id, offset, limit],
+    queryFn: () => studySamples({ id, offset, limit }),
   });
 
   return (
@@ -278,7 +311,7 @@ const Samples = ({ id }: { id: string }) => {
         <Status query={query} />
 
         {!showStatus({ query }) &&
-          query.data?.map((sample) => (
+          query.data?.results.map((sample) => (
             <div key={sample.name} className="flex flex-col gap-1">
               <strong>{sample.name}</strong>
               <p dangerouslySetInnerHTML={{ __html: sample.description }} />
@@ -286,13 +319,19 @@ const Samples = ({ id }: { id: string }) => {
           ))}
       </div>
 
-      <div className="flex flex-wrap gap-2">
-        {query.data && (
-          <Button>
-            <Download />
-            Download
-          </Button>
-        )}
+      {/* pagination */}
+      <div className="flex gap-2">
+        <Button disabled={offset === 0} onClick={() => setOffset(offset - 1)}>
+          <ChevronLeft />
+          Prev
+        </Button>
+        <Button
+          disabled={offset >= (query.data?.pages ?? 1) - 1}
+          onClick={() => setOffset(offset + 1)}
+        >
+          Next
+          <ChevronRight />
+        </Button>
       </div>
     </>
   );

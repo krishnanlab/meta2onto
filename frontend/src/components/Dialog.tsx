@@ -17,7 +17,7 @@ const Dialog = ({ title, content, children }: Props) => {
         <_Dialog.Popup className="pointer-events-none fixed inset-0 z-20 grid place-items-center p-4">
           <div className="pointer-events-auto flex max-h-full min-h-0 flex-col gap-4 rounded bg-white p-4">
             <div className="flex items-start justify-between gap-4">
-              <_Dialog.Title className="flex flex-col items-start! gap-1 leading-none">
+              <_Dialog.Title className="flex flex-col items-start! gap-1 text-left! leading-none">
                 {title}
               </_Dialog.Title>
               <_Dialog.Close>

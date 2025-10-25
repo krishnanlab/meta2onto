@@ -22,7 +22,7 @@ import {
   MoveUp,
 } from "lucide-react";
 import Button from "@/components/Button";
-import Select, { type Option } from "@/components/Select";
+import Select from "@/components/Select";
 import { formatDate, formatNumber } from "@/util/string";
 
 type Props<Datum extends object> = {
@@ -56,15 +56,17 @@ type _Col<Datum extends object> = {
   [Key in keyof Datum]: Col<Datum, Key>;
 }[keyof Datum];
 
-const Table = <Datum extends object>({ cols, rows, sort }: Props<Datum>) => {
-  /** per page options */
-  const perPageOptions: Option[] = [5, 10, 25, 50, 100].map((value) => ({
-    id: String(value),
-    value: String(value),
-  }));
+const perPageOptions = [
+  { value: "5" },
+  { value: "10" },
+  { value: "20" },
+  { value: "50" },
+  { value: "100" },
+] as const;
 
+const Table = <Datum extends object>({ cols, rows, sort }: Props<Datum>) => {
   /** initial per page */
-  const defaultPerPage = perPageOptions[1]!.id;
+  const defaultPerPage = perPageOptions[1].value;
 
   const columnHelper = createColumnHelper<Datum>();
   /** column definitions */

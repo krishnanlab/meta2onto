@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import clsx from "clsx";
 import { Lightbulb } from "lucide-react";
-import { studyQuickSearch, typeColor } from "@/api/api";
+import { modelSearch, typeColor } from "@/api/api";
 import Autocomplete from "@/components/Autocomplete";
 import Link from "@/components/Link";
 import Status, { showStatus } from "@/components/Status";
@@ -85,7 +85,7 @@ export const SearchBox = () => {
   /** search results */
   const query = useQuery({
     queryKey: ["quick-search", search],
-    queryFn: () => studyQuickSearch(search),
+    queryFn: () => modelSearch(search),
   });
 
   return (
