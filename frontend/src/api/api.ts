@@ -82,22 +82,27 @@ export const studySearch = async ({
 /** batch lookup full study details by ids */
 export const studyBatchLookup = async ({
   ids = [] as string[],
+  ordering = "",
   offset = 0,
-  limit = 20,
+  limit = 100,
 }) => {
   const url = new URL(`${api}/study/lookup`);
+  url.searchParams.set("ordering", ordering);
+  url.searchParams.set("offset", String(offset));
+  url.searchParams.set("limit", String(limit));
 
   const options = {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: { ids, offset, limit },
+    body: { ids },
   };
 
   await fakeDelay();
   fakeError();
-  return fakeStudySearch;
+  const data = fakeStudySearch;
 
-  return request<StudySearch>(url, options);
+  // const data = request<StudySearch>(url, options);
+  return { ...data, pages: Math.ceil(data.count / limit) };
 };
 
 export type StudySamples = {
@@ -118,7 +123,7 @@ export const studySamples = async ({ id = "", offset = 0, limit = 10 }) => {
   fakeError();
   const data = fakeStudySamples();
 
-  // const data= request<StudySamples>(url);
+  // const data = request<StudySamples>(url);
   return { ...data, pages: Math.ceil(data.count / limit) };
 };
 

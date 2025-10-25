@@ -3,16 +3,7 @@ import { useParams, useSearchParams } from "react-router";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
 import { isEmpty } from "lodash";
-import {
-  Calendar,
-  Check,
-  ChevronLeft,
-  ChevronRight,
-  Dna,
-  Hash,
-  Logs,
-  Plus,
-} from "lucide-react";
+import { Calendar, Check, Dna, Hash, Logs, Plus } from "lucide-react";
 import { studySamples, studySearch } from "@/api/api";
 import { addToCart, cartAtom, inCart, removeFromCart } from "@/cart";
 import Button from "@/components/Button";
@@ -21,9 +12,12 @@ import Dialog from "@/components/Dialog";
 import Heading from "@/components/Heading";
 import Meta from "@/components/Meta";
 import Meter from "@/components/Meter";
+import Pagination from "@/components/Pagination";
+import type { PerPage } from "@/components/Pagination";
 import Select from "@/components/Select";
-import Status, { showStatus } from "@/components/Status";
+import Status from "@/components/Status";
 import { SearchBox } from "@/pages/Home";
+import { formatNumber } from "@/util/string";
 
 /** per page select options */
 const limitOptions = [
@@ -74,7 +68,7 @@ export const Search = () => {
 
   /** search results */
   const query = useQuery({
-    queryKey: ["full-search", search, ordering, offset, limit, facets],
+    queryKey: ["study-search", search, ordering, offset, limit, facets],
     queryFn: () =>
       studySearch({ search, ordering, offset, limit: Number(limit), facets }),
     placeholderData: keepPreviousData,
@@ -124,7 +118,7 @@ export const Search = () => {
       {query.data?.results && (
         <div className="flex flex-wrap items-center justify-between">
           <div>
-            <b>{query.data?.results.length.toLocaleString()}</b> results
+            <b>{formatNumber(query.data?.results.length)}</b> results
           </div>
 
           <label>
@@ -209,7 +203,7 @@ export const Search = () => {
                 >
                   <Button color="theme">
                     <Logs />
-                    {samples.toLocaleString()} Samples
+                    {formatNumber(samples)} Samples
                   </Button>
                 </Dialog>
                 <Button
@@ -231,46 +225,24 @@ export const Search = () => {
       )}
 
       {/* pagination */}
-      <div className="flex justify-center gap-2">
-        <Button
-          disabled={offset === 0}
-          onClick={() =>
-            setParams((params) => {
-              params.set("offset", String(offset - 1));
-              return params;
-            })
-          }
-        >
-          <ChevronLeft />
-          Prev
-        </Button>
-        <Button
-          disabled={offset >= (query.data?.pages ?? 1) - 1}
-          onClick={() =>
-            setParams((params) => {
-              params.set("offset", String(offset + 1));
-              return params;
-            })
-          }
-        >
-          Next
-          <ChevronRight />
-        </Button>
-
-        <label>
-          Per Page
-          <Select
-            options={limitOptions}
-            value={limit}
-            onChange={(checked) =>
-              setParams((params) => {
-                params.set("limit", checked);
-                return params;
-              })
-            }
-          />
-        </label>
-      </div>
+      <Pagination
+        count={query.data?.count ?? 0}
+        page={offset}
+        setPage={(page) =>
+          setParams((params) => {
+            params.set("offset", String(page));
+            return params;
+          })
+        }
+        perPage={limit}
+        setPerPage={(limit) =>
+          setParams((params) => {
+            params.set("limit", limit);
+            return params;
+          })
+        }
+        pages={query.data?.pages ?? 1}
+      />
     </div>
   );
 
@@ -298,11 +270,12 @@ export default Search;
 const Samples = ({ id }: { id: string }) => {
   /** pagination */
   const [offset, setOffset] = useState(0);
-  const [limit] = useState(10);
+  const [limit, setLimit] = useState<PerPage>("10");
 
   const query = useQuery({
-    queryKey: ["sample-lookup", id, offset, limit],
-    queryFn: () => studySamples({ id, offset, limit }),
+    queryKey: ["study-samples", id, offset, limit],
+    queryFn: () => studySamples({ id, offset, limit: Number(limit) }),
+    placeholderData: keepPreviousData,
   });
 
   return (
@@ -310,29 +283,23 @@ const Samples = ({ id }: { id: string }) => {
       <div className="flex flex-col gap-4 overflow-y-auto">
         <Status query={query} />
 
-        {!showStatus({ query }) &&
-          query.data?.results.map((sample) => (
-            <div key={sample.name} className="flex flex-col gap-1">
-              <strong>{sample.name}</strong>
-              <p dangerouslySetInnerHTML={{ __html: sample.description }} />
-            </div>
-          ))}
+        {query.data?.results.map((sample) => (
+          <div key={sample.name} className="flex flex-col gap-1">
+            <strong>{sample.name}</strong>
+            <p dangerouslySetInnerHTML={{ __html: sample.description }} />
+          </div>
+        ))}
       </div>
 
       {/* pagination */}
-      <div className="flex gap-2">
-        <Button disabled={offset === 0} onClick={() => setOffset(offset - 1)}>
-          <ChevronLeft />
-          Prev
-        </Button>
-        <Button
-          disabled={offset >= (query.data?.pages ?? 1) - 1}
-          onClick={() => setOffset(offset + 1)}
-        >
-          Next
-          <ChevronRight />
-        </Button>
-      </div>
+      <Pagination
+        count={query.data?.count ?? 0}
+        page={offset}
+        setPage={setOffset}
+        perPage={limit}
+        setPerPage={setLimit}
+        pages={query.data?.pages ?? 1}
+      />
     </>
   );
 };

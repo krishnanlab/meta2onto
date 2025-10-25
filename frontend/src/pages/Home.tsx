@@ -84,7 +84,7 @@ export const SearchBox = () => {
 
   /** search results */
   const query = useQuery({
-    queryKey: ["quick-search", search],
+    queryKey: ["model-search", search],
     queryFn: () => modelSearch(search),
   });
 

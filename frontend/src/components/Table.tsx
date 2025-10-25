@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import {
   createColumnHelper,
   flexRender,
+  functionalUpdate,
   getCoreRowModel,
   getFacetedMinMaxValues,
   getFacetedRowModel,
@@ -11,24 +12,24 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import type { NoInfer, SortingState } from "@tanstack/react-table";
-import {
-  ArrowUpDown,
-  ChevronLeft,
-  ChevronRight,
-  ChevronsLeft,
-  ChevronsRight,
-  MoveDown,
-  MoveUp,
-} from "lucide-react";
+import type {
+  NoInfer,
+  PaginationState,
+  SortingState,
+} from "@tanstack/react-table";
+import { ArrowUpDown, MoveDown, MoveUp } from "lucide-react";
 import Button from "@/components/Button";
-import Select from "@/components/Select";
 import { formatDate, formatNumber } from "@/util/string";
 
 type Props<Datum extends object> = {
   cols: _Col<Datum>[];
   rows: Datum[];
-  sort?: SortingState;
+  sort?: SortingState[number];
+  onSort?: (sort: SortingState[number]) => void;
+  page?: PaginationState["pageIndex"];
+  onPage?: (page: PaginationState["pageIndex"]) => void;
+  perPage?: PaginationState["pageSize"];
+  onPerPage?: (perPage: PaginationState["pageSize"]) => void;
 };
 
 type Col<
@@ -56,24 +57,22 @@ type _Col<Datum extends object> = {
   [Key in keyof Datum]: Col<Datum, Key>;
 }[keyof Datum];
 
-const perPageOptions = [
-  { value: "5" },
-  { value: "10" },
-  { value: "20" },
-  { value: "50" },
-  { value: "100" },
-] as const;
-
-const Table = <Datum extends object>({ cols, rows, sort }: Props<Datum>) => {
-  /** initial per page */
-  const defaultPerPage = perPageOptions[1].value;
-
+const Table = <Datum extends object>({
+  cols,
+  rows,
+  sort,
+  onSort,
+  page,
+  onPage,
+  perPage,
+  onPerPage,
+}: Props<Datum>) => {
   const columnHelper = createColumnHelper<Datum>();
   /** column definitions */
-  const columns = cols.map((col, index) =>
+  const columns = cols.map((col) =>
     columnHelper.accessor((row: Datum) => row[col.key], {
-      /** unique column id, from position in provided column list */
-      id: String(index),
+      /** unique column id */
+      id: String(col.key),
       /** name */
       header: col.name,
       /** sortable */
@@ -89,6 +88,12 @@ const Table = <Datum extends object>({ cols, rows, sort }: Props<Datum>) => {
     }),
   );
 
+  /** current sorting state */
+  const sorting = sort?.id ? [sort] : [];
+
+  /** current pagination state */
+  const pagination = { pageIndex: page ?? 0, pageSize: perPage ?? 10 };
+
   /** tanstack table api */
   const table = useReactTable({
     data: rows,
@@ -103,13 +108,17 @@ const Table = <Datum extends object>({ cols, rows, sort }: Props<Datum>) => {
     getColumnCanGlobalFilter: () => true,
     autoResetPageIndex: true,
     columnResizeMode: "onChange",
-    /** initial sort, page, etc. state */
-    initialState: {
-      sorting: sort ?? [{ id: "0", desc: false }],
-      pagination: {
-        pageIndex: 0,
-        pageSize: Number(defaultPerPage),
-      },
+    state: { sorting, pagination },
+    onSortingChange: (updater) => {
+      /** https://github.com/TanStack/table/discussions/4005 */
+      const newSort = functionalUpdate(updater, sorting);
+      onSort?.(newSort[0] ?? { id: "", desc: false });
+    },
+    onPaginationChange: (updater) => {
+      /** https://github.com/TanStack/table/discussions/4005 */
+      const { pageIndex, pageSize } = functionalUpdate(updater, pagination);
+      onPage?.(pageIndex);
+      onPerPage?.(pageSize);
     },
   });
 
@@ -174,8 +183,8 @@ const Table = <Datum extends object>({ cols, rows, sort }: Props<Datum>) => {
                   }
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <td key={cell.id}>
-                      <div className="flex flex-wrap items-center gap-2 border-b-1 border-slate-100 p-2 leading-none">
+                    <td key={cell.id} className="border-b-1 border-slate-100">
+                      <div className="flex flex-wrap items-center gap-2 p-2 leading-none">
                         {flexRender(
                           cell.column.columnDef.cell,
                           cell.getContext(),
@@ -194,66 +203,6 @@ const Table = <Datum extends object>({ cols, rows, sort }: Props<Datum>) => {
             )}
           </tbody>
         </table>
-      </div>
-
-      {/* controls */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        {/* pagination */}
-        <div className="flex items-center gap-2">
-          <Button
-            color="none"
-            onClick={() => table.setPageIndex(0)}
-            disabled={!table.getCanPreviousPage()}
-            aria-label="First page"
-          >
-            <ChevronsLeft />
-          </Button>
-          <Button
-            color="none"
-            onClick={table.previousPage}
-            disabled={!table.getCanPreviousPage()}
-            aria-label="Previous page"
-          >
-            <ChevronLeft />
-          </Button>
-
-          <div className="px-2">
-            Page {formatNumber(table.getState().pagination.pageIndex + 1)} of{" "}
-            {formatNumber(table.getPageCount())}
-          </div>
-
-          <Button
-            color="none"
-            onClick={table.nextPage}
-            disabled={!table.getCanNextPage()}
-            aria-label="Next page"
-          >
-            <ChevronRight />
-          </Button>
-          <Button
-            color="none"
-            onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-            disabled={!table.getCanNextPage()}
-            aria-label="Last page"
-          >
-            <ChevronsRight />
-          </Button>
-        </div>
-
-        {/* filters */}
-        <div>
-          {/* per page */}
-          <label>
-            Per page
-            <Select
-              value={defaultPerPage}
-              options={perPageOptions}
-              onChange={(option) => {
-                table.setPageSize(Number(option));
-              }}
-            />
-          </label>
-        </div>
       </div>
     </div>
   );
