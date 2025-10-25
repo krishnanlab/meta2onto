@@ -8,6 +8,7 @@ import { studySamples, studySearch } from "@/api/api";
 import { addToCart, cartAtom, inCart, removeFromCart } from "@/cart";
 import Button from "@/components/Button";
 import Checkbox from "@/components/Checkbox";
+import Database from "@/components/Database";
 import Dialog from "@/components/Dialog";
 import Heading from "@/components/Heading";
 import Meta from "@/components/Meta";
@@ -182,10 +183,8 @@ export const Search = () => {
 
             <div className="flex items-end justify-between gap-2">
               <div className="flex flex-wrap gap-2">
-                {database.map((database) => (
-                  <span key={database} className="bg-theme-light rounded px-1">
-                    {database}
-                  </span>
+                {database.map((database, index) => (
+                  <Database key={index} database={database} />
                 ))}
               </div>
 

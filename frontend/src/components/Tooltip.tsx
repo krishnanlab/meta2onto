@@ -13,7 +13,7 @@ const Tooltip = ({ children, content }: Props) => {
         <_Tooltip.Trigger render={children} />
         <_Tooltip.Portal>
           <_Tooltip.Positioner sideOffset={10}>
-            <_Tooltip.Popup className="rounded bg-slate-900 px-2 py-1 text-white">
+            <_Tooltip.Popup className="flex flex-col gap-2 rounded bg-slate-900 p-2 leading-none text-white">
               <_Tooltip.Arrow className="data-[side=bottom]:bottom-full data-[side=bottom]:rotate-180 data-[side=top]:top-full">
                 <svg viewBox="-10 -10 20 10" width="10">
                   <path

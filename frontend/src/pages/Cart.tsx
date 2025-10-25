@@ -7,6 +7,7 @@ import { Download, Plus, Share2, Trash } from "lucide-react";
 import { cartLookup, studyBatchLookup } from "@/api/api";
 import { cartAtom, clearCart } from "@/cart";
 import Button from "@/components/Button";
+import Database from "@/components/Database";
 import Heading from "@/components/Heading";
 import { Meta } from "@/components/Meta";
 import Pagination, { type PerPage } from "@/components/Pagination";
@@ -155,18 +156,10 @@ const Cart = () => {
                     {
                       key: "database",
                       name: "Databases",
-                      render: (database) => (
-                        <>
-                          {database.map((database) => (
-                            <span
-                              key={database}
-                              className="bg-theme-light rounded px-1"
-                            >
-                              {database}
-                            </span>
-                          ))}
-                        </>
-                      ),
+                      render: (database) =>
+                        database.map((database, index) => (
+                          <Database key={index} database={database} />
+                        )),
                     },
                   ]}
                   rows={studyDetails}
