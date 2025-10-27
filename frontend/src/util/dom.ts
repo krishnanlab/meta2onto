@@ -58,7 +58,7 @@ export const glow = (element: Element) => {
   const original = window.getComputedStyle(target).backgroundColor;
   target.animate(
     [
-      { backgroundColor: "var(--color-light)", offset: 0 },
+      { backgroundColor: "var(--color-theme-light)", offset: 0 },
       { backgroundColor: original, offset: 1 },
     ],
     { duration: 2000 },

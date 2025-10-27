@@ -4,10 +4,12 @@
   --font-sans: "Outfit", sans-serif;
   --font-mono: "Sometype Mono", monospace;
 
-  --color-dark: hsl(200, 50%, 30%);
-  --color-light: hsl(30, 100%, 90%);
-  --color-primary: hsl(340, 50%, 50%);
-  --color-secondary: hsl(200, 50%, 40%);
+  --color-theme-light: hsl(230, 80%, 90%);
+  --color-theme: hsl(230, 30%, 50%);
+  --color-theme-dark: hsl(230, 30%, 30%);
+  --color-accent: hsl(0, 60%, 60%);
+
+  --shadow-overlay: 0 0 5px #00000020, 0 2px 10px #00000020;
 }
 
 * {
@@ -39,7 +41,7 @@ section.narrow {
   --width: 150;
 }
 
-section section.full {
+section.full {
   --width: 1000;
 }
 
@@ -91,8 +93,55 @@ b {
   @apply font-medium!;
 }
 
+mark {
+  @apply bg-orange-100 font-normal;
+}
+
+label {
+  @apply flex items-center gap-2;
+}
+
+label:has(input[type="checkbox"]) {
+  @apply cursor-pointer;
+}
+
+input[type="checkbox"] {
+  @apply cursor-pointer;
+}
+
+select {
+  @apply cursor-pointer;
+}
+
+[disabled] {
+  @apply pointer-events-none brightness-150 grayscale;
+}
+
+.truncate-lines:not(:focus) {
+  -webkit-box-orient: vertical;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  @apply max-w-full cursor-zoom-in overflow-hidden;
+}
+
+.truncate-lines:focus {
+  @apply outline-theme-light rounded outline-1 outline-offset-2;
+}
+
 .lucide {
   width: unset;
   height: 1em;
   @apply overflow-visible;
+}
+
+:not(html) ::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background-color: theme(--color-slate-200);
+}
+
+:not(html) ::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background-color: theme(--color-slate-400);
 }
