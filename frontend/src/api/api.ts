@@ -127,7 +127,12 @@ export const studySamples = async ({ id = "", offset = 0, limit = 10 }) => {
   return { ...data, pages: Math.ceil(data.count / limit) };
 };
 
-export type CartLookup = { name: string; studies: string[] };
+export type CartLookup = {
+  id: string;
+  name: string;
+  studies: { id: string; added: string }[];
+  created: string;
+};
 
 /** lookup a cart by id */
 export const cartLookup = async (id: string) => {
@@ -138,23 +143,21 @@ export const cartLookup = async (id: string) => {
   const data = fakeCart();
 
   // const data= request<CartLookup>(url);
-  return { ...data, studies: data.studies.map((id) => ({ id, created: "" })) };
+  return data;
 };
 
-export type ShareCart = { id: string };
-
 /** share cart */
-export const shareCart = async (name: string, studyIds: string[]) => {
+export const shareCart = async (cart: CartLookup) => {
   const url = new URL(`${api}/cart`);
   const options = {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: { name, studyIds },
+    body: cart,
   };
 
   await fakeDelay();
   fakeError();
-  return { id: "lorem-ipsum-dolor" };
+  return fakeCart();
 
-  return request<ShareCart>(url, options);
+  return request<CartLookup>(url, options);
 };

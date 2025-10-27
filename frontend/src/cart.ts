@@ -1,11 +1,12 @@
 import { getDefaultStore } from "jotai";
 import { atomWithStorage } from "jotai/utils";
-import { uniq } from "lodash";
+import { isEqual, uniqBy, uniqWith } from "lodash";
 import type { CartLookup } from "@/api/api";
 
-const defaultCart = {
+const defaultCart: CartLookup = {
+  id: "",
   name: "",
-  studies: [] as { id: string; added: string }[],
+  studies: [],
   created: "",
 };
 
@@ -14,16 +15,16 @@ export const cartAtom = atomWithStorage("cart", defaultCart);
 
 /** is study in cart */
 export const inCart = (cart: CartLookup, study: string) =>
-  cart?.studies.includes(study);
+  cart?.studies.find((s) => s.id === study);
 
 /** add study id to cart */
 export const addToCart = (study: string) =>
   getDefaultStore().set(cartAtom, (old) => ({
     ...old,
-    studies: uniq([
-      ...old.studies,
-      { id: study, added: new Date().toISOString() },
-    ]),
+    studies: uniqBy(
+      [...old.studies, { id: study, added: new Date().toISOString() }],
+      "id",
+    ),
   }));
 
 /** remove study id from cart */
@@ -35,3 +36,19 @@ export const removeFromCart = (study: string) =>
 
 /** clear cart */
 export const clearCart = () => getDefaultStore().set(cartAtom, defaultCart);
+
+/** cart creation history */
+export const createdCartsAtom = atomWithStorage<CartLookup[]>(
+  "created-carts",
+  [],
+);
+
+/** add cart to creation history */
+export const addCreatedCart = (cart: CartLookup) =>
+  getDefaultStore().set(createdCartsAtom, (old) =>
+    uniqWith([...old, cart], isEqual),
+  );
+
+/** clear cart creation history */
+export const clearCreatedCarts = () =>
+  getDefaultStore().set(createdCartsAtom, []);

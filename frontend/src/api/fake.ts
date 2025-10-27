@@ -104,6 +104,11 @@ export const fakeStudySamples = (): StudySamples => ({
 });
 
 export const fakeCart = () => ({
+  id: fakeId(),
   name: phrase(2, 5),
-  studies: range(random(1, 10)).map(fakeId),
+  studies: range(random(1, 10)).map(() => ({
+    id: fakeId(),
+    added: new Date().toISOString(),
+  })),
+  created: new Date().toISOString(),
 });

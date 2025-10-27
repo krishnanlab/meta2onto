@@ -3,21 +3,28 @@ import { useParams } from "react-router";
 import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
 import type { ColumnSort } from "@tanstack/react-table";
 import { useAtomValue } from "jotai";
-import { Download, Link, Mail, Plus, Share2, Trash } from "lucide-react";
+import { Download, LinkIcon, Mail, Plus, Share2, Trash } from "lucide-react";
 import { cartLookup, shareCart, studyBatchLookup } from "@/api/api";
-import { cartAtom, clearCart, removeFromCart } from "@/cart";
+import {
+  addCreatedCart,
+  cartAtom,
+  clearCart,
+  createdCartsAtom,
+  removeFromCart,
+} from "@/cart";
 import Ago from "@/components/Ago";
 import Button from "@/components/Button";
 import Copy from "@/components/Copy";
 import Database from "@/components/Database";
 import Dialog from "@/components/Dialog";
 import Heading from "@/components/Heading";
+import Link from "@/components/Link";
 import { Meta } from "@/components/Meta";
 import Pagination, { type PerPage } from "@/components/Pagination";
 import Status, { showStatus } from "@/components/Status";
 import Table from "@/components/Table";
 import Textbox from "@/components/Textbox";
-import { formatDate, formatNumber } from "@/util/string";
+import { formatNumber } from "@/util/string";
 
 const Cart = () => {
   /** local, current cart */
@@ -46,7 +53,10 @@ const Cart = () => {
   const size = studyIds.length || 0;
 
   /** cart name */
-  const [name, setName] = useState(studyIdsQuery.data?.name || id || "");
+  const name = studyIdsQuery.data?.name || id;
+
+  /** custom cart name for sharing */
+  const [shareName, setShareName] = useState(name);
 
   /** pagination */
   const [ordering, setOrdering] = useState<ColumnSort>({ id: "", desc: true });
@@ -75,8 +85,9 @@ const Cart = () => {
 
   /** share cart */
   const shareMutation = useMutation({
-    mutationKey: ["share-cart"],
-    mutationFn: () => shareCart(name, studyIds),
+    mutationKey: ["share-cart", cart],
+    mutationFn: async () => (cart ? await shareCart(cart) : null),
+    onSuccess: (cart) => cart && addCreatedCart(cart),
   });
 
   /** share url */
@@ -91,6 +102,9 @@ const Cart = () => {
   useEffect(() => {
     reset();
   }, [reset, _studyIds]);
+
+  /** created carts */
+  const createdCarts = useAtomValue(createdCartsAtom);
 
   return (
     <>
@@ -108,12 +122,14 @@ const Cart = () => {
         <>
           <section>
             <div className="flex flex-wrap items-center justify-between gap-4">
+              {/* cart details */}
               <div className="flex flex-wrap gap-4">
                 <span className="font-medium">
                   {size ? formatNumber(size) : 0} items
                 </span>
               </div>
 
+              {/* cart actions */}
               <div className="flex flex-wrap gap-2">
                 {!shared && <Clear size={size} />}
 
@@ -133,11 +149,13 @@ const Cart = () => {
                             <p>Save this cart to a public link</p>
                             <Textbox
                               placeholder="Cart name"
-                              value={name}
-                              onChange={(event) => setName(event.target.value)}
+                              value={shareName}
+                              onChange={(event) =>
+                                setShareName(event.target.value)
+                              }
                             />
                             <Button onClick={() => shareMutation.mutate()}>
-                              <Link />
+                              <LinkIcon />
                               Generate
                             </Button>
                           </>
@@ -183,6 +201,7 @@ const Cart = () => {
             </div>
           </section>
 
+          {/* cart contents */}
           <section>
             {!size && (
               <div className="flex flex-col items-center gap-4">
@@ -218,7 +237,7 @@ const Cart = () => {
                     {
                       key: "date",
                       name: "Date",
-                      render: (date) => formatDate(date),
+                      render: (date) => <Ago date={date} />,
                     },
                     {
                       key: "database",
@@ -265,6 +284,29 @@ const Cart = () => {
                 />
               </>
             )}
+          </section>
+
+          {/* cart creation history */}
+          <section>
+            <Heading level={2}>History</Heading>
+
+            <p className="self-center text-center">
+              Carts you've created from this device
+            </p>
+
+            <div className="lg: grid max-w-max gap-4 self-center sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+              {createdCarts.map(({ id, name, studies, created }, index) => (
+                <Link
+                  key={index}
+                  to={`/cart/${id}`}
+                  className="border-theme-light flex flex-col items-start gap-2 rounded border-1 p-2 leading-none"
+                >
+                  <strong>{name || id}</strong>
+                  <span>{formatNumber(studies.length)} items</span>
+                  <Ago date={created} />
+                </Link>
+              ))}
+            </div>
           </section>
         </>
       )}

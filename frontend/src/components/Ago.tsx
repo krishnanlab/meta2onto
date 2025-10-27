@@ -27,7 +27,7 @@ const Ago = ({ date, className }: Props) => {
   return (
     <Tooltip content={full || "???"}>
       <ReactTimeAgo
-        className={clsx("text-sm text-nowrap", className)}
+        className={clsx("text-nowrap", className)}
         date={parsed}
         locale="en-US"
         tabIndex={0}
