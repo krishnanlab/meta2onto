@@ -29,7 +29,7 @@ const Status = ({
     className,
   );
 
-  if (query.status === "pending" || ("isFetching" in query && query.isFetching))
+  if ("isFetching" in query ? query.isFetching : query.status === "pending")
     return (
       <span className={clsx(base, "text-slate-500", className)}>
         <LoaderCircle className="animate-spin" />

@@ -5,7 +5,8 @@ import type { ColumnSort } from "@tanstack/react-table";
 import { useAtomValue } from "jotai";
 import { Download, Link, Mail, Plus, Share2, Trash } from "lucide-react";
 import { cartLookup, shareCart, studyBatchLookup } from "@/api/api";
-import { cartAtom, clearCart } from "@/cart";
+import { cartAtom, clearCart, removeFromCart } from "@/cart";
+import Ago from "@/components/Ago";
 import Button from "@/components/Button";
 import Copy from "@/components/Copy";
 import Database from "@/components/Database";
@@ -39,7 +40,7 @@ const Cart = () => {
   const cart = shared ? studyIdsQuery.data : localCart;
 
   /** cart study ids */
-  const studyIds = cart?.studies || [];
+  const studyIds = (cart?.studies || []).map((study) => study.id);
 
   /** cart size */
   const size = studyIds.length || 0;
@@ -62,7 +63,7 @@ const Cart = () => {
         offset,
         limit: Number(limit),
       }),
-    enabled: !!studyIds.length,
+    enabled: !!size,
     placeholderData: keepPreviousData,
   });
 
@@ -148,7 +149,7 @@ const Cart = () => {
                           <>
                             <div className="flex flex-col gap-2">
                               Cart saved to:
-                              <div className="flex gap-2 items-center">
+                              <div className="flex items-center gap-2">
                                 <Textbox
                                   readOnly
                                   value={shareUrl}
@@ -202,9 +203,18 @@ const Cart = () => {
               <>
                 <Table
                   cols={[
-                    { key: "id", name: "ID" },
-                    { key: "name", name: "Name" },
-                    { key: "samples", name: "Samples" },
+                    {
+                      key: "id",
+                      name: "ID",
+                    },
+                    {
+                      key: "name",
+                      name: "Name",
+                    },
+                    {
+                      key: "samples",
+                      name: "Samples",
+                    },
                     {
                       key: "date",
                       name: "Date",
@@ -218,8 +228,28 @@ const Cart = () => {
                           <Database key={index} database={database} />
                         )),
                     },
+                    {
+                      key: "added",
+                      name: "Added",
+                      render: (added) => <Ago date={added} />,
+                    },
+                    {
+                      key: "id",
+                      name: "",
+                      sortable: false,
+                      render: (id) => (
+                        <Button onClick={() => removeFromCart(id)}>
+                          <Trash />
+                        </Button>
+                      ),
+                    },
                   ]}
-                  rows={studyDetails}
+                  rows={studyDetails.map((study) => ({
+                    ...study,
+                    added:
+                      localCart?.studies.find((s) => s.id === study.id)
+                        ?.added ?? "2025-01-01T00:00:00.000Z",
+                  }))}
                   sort={ordering}
                   onSort={setOrdering}
                   page={offset}

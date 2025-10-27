@@ -135,9 +135,10 @@ export const cartLookup = async (id: string) => {
 
   await fakeDelay();
   fakeError();
-  return fakeCart();
+  const data = fakeCart();
 
-  return request<CartLookup>(url);
+  // const data= request<CartLookup>(url);
+  return { ...data, studies: data.studies.map((id) => ({ id, created: "" })) };
 };
 
 export type ShareCart = { id: string };

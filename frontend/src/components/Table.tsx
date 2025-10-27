@@ -54,7 +54,7 @@ type Col<
  * https://github.com/vuejs/core/discussions/8851
  */
 type _Col<Datum extends object> = {
-  [Key in keyof Datum]: Col<Datum, Key>;
+  [Key in keyof Datum]: Col<Datum, Key extends string ? Key : never>;
 }[keyof Datum];
 
 const Table = <Datum extends object>({
@@ -69,10 +69,10 @@ const Table = <Datum extends object>({
 }: Props<Datum>) => {
   const columnHelper = createColumnHelper<Datum>();
   /** column definitions */
-  const columns = cols.map((col) =>
+  const columns = cols.map((col, index) =>
     columnHelper.accessor((row: Datum) => row[col.key], {
       /** unique column id */
-      id: String(col.key),
+      id: `${col.key}_${index}`,
       /** name */
       header: col.name,
       /** sortable */
@@ -133,10 +133,14 @@ const Table = <Datum extends object>({
           <thead>
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <th key={header.id} aria-colindex={Number(header.id) + 1}>
+                {headerGroup.headers.map((header, index) => (
+                  <th
+                    key={header.id}
+                    className="bg-slate-50"
+                    aria-colindex={index + 1}
+                  >
                     {header.isPlaceholder ? null : (
-                      <div className="flex items-center gap-2 bg-slate-50 p-2 leading-none">
+                      <div className="flex items-center gap-2 p-2 leading-none">
                         {/* header label */}
                         <span>
                           {flexRender(
