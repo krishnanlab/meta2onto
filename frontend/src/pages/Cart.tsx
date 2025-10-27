@@ -3,7 +3,7 @@ import { useParams } from "react-router";
 import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
 import type { ColumnSort } from "@tanstack/react-table";
 import { useAtomValue } from "jotai";
-import { Download, Link, Plus, Share2, Trash } from "lucide-react";
+import { Download, Link, Mail, Plus, Share2, Trash } from "lucide-react";
 import { cartLookup, shareCart, studyBatchLookup } from "@/api/api";
 import { cartAtom, clearCart } from "@/cart";
 import Button from "@/components/Button";
@@ -148,13 +148,19 @@ const Cart = () => {
                           <>
                             <div className="flex flex-col gap-2">
                               Cart saved to:
-                              <div className="flex gap-2">
+                              <div className="flex gap-2 items-center">
                                 <Textbox
                                   readOnly
                                   value={shareUrl}
                                   onFocus={(event) => event.target.select()}
                                 />
                                 <Copy content={shareUrl} />
+                                <Button
+                                  to={`mailto:?body=${encodeURIComponent(shareUrl)}`}
+                                >
+                                  <Mail />
+                                  Email
+                                </Button>
                               </div>
                             </div>
                             <div className="flex flex-col gap-2">

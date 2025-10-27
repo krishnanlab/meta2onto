@@ -17,7 +17,7 @@ const Header = () => {
         {title}
       </a>
 
-      <nav className="flex gap-4 text-xl">
+      <nav className="flex items-center gap-4 text-xl">
         <Button to="/about" color="none" className="text-current!">
           About
         </Button>
