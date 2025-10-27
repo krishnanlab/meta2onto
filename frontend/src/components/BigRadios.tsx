@@ -23,8 +23,6 @@ export type Option<Value = string> = {
   render: ReactElement<Record<string, unknown>>;
 };
 
-/** known issue: https://github.com/mui/material-ui/issues/43106 */
-
 const BigRadios = <O extends Option>({
   label,
   options,
@@ -52,7 +50,12 @@ const BigRadios = <O extends Option>({
             key={index}
             className="border-theme-light relative flex min-w-50 flex-1 cursor-pointer flex-col items-start! gap-2 rounded border-1 p-2 transition-colors hover:bg-slate-100"
           >
-            <Radio.Root value={option.value} render={option.render} />
+            <Radio.Root
+              value={option.value}
+              render={option.render}
+              /** related: https://github.com/mui/material-ui/issues/43106 */
+              nativeButton={false}
+            />
             {option.value === value && (
               <CheckCircle2 className="absolute top-2 right-2 text-xl text-green-500" />
             )}
