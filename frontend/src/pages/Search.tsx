@@ -167,7 +167,10 @@ export const Search = () => {
                   [Dna, platform],
                 ] as const
               ).map(([Icon, text], index) => (
-                <div key={index} className="text-theme flex items-center gap-2">
+                <div
+                  key={index}
+                  className="flex items-center gap-2 text-slate-500"
+                >
                   <Icon />
                   <span>{text}</span>
                 </div>

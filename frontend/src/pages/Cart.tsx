@@ -7,6 +7,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import type { ColumnSort } from "@tanstack/react-table";
+import clsx from "clsx";
 import { useAtomValue } from "jotai";
 import {
   Braces,
@@ -367,7 +368,13 @@ const Cart = () => {
               Carts you've created from this device
             </p>
 
-            <div className="xs:grid-cols-1 grid max-w-max gap-4 self-center sm:grid-cols-2 md:grid-cols-3">
+            <div
+              className={clsx(
+                "xs:grid-cols-1 grid max-w-max gap-4 self-center sm:grid-cols-2 md:grid-cols-3",
+                createdCarts.length === 1 && "grid-cols-1!",
+                createdCarts.length === 2 && "grid-cols-2!",
+              )}
+            >
               {createdCarts.map(({ id, name, studies, created }, index) => (
                 <Link
                   key={index}
