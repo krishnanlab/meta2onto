@@ -139,3 +139,21 @@ export const cartLookup = async (id: string) => {
 
   return request<CartLookup>(url);
 };
+
+export type ShareCart = { id: string };
+
+/** share cart */
+export const shareCart = async (name: string, studyIds: string[]) => {
+  const url = new URL(`${api}/cart`);
+  const options = {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: { name, studyIds },
+  };
+
+  await fakeDelay();
+  fakeError();
+  return { id: "lorem-ipsum-dolor" };
+
+  return request<ShareCart>(url, options);
+};

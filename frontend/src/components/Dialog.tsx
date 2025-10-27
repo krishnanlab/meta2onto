@@ -3,15 +3,17 @@ import { Dialog as _Dialog } from "@base-ui-components/react/dialog";
 import { X } from "lucide-react";
 
 type Props = {
+  trigger: ReactElement<Record<string, unknown>>;
   title: ReactNode;
   content: ReactNode;
-  children: ReactElement<Record<string, unknown>>;
+  onOpen?: () => void;
+  onClose?: () => void;
 };
 
-const Dialog = ({ title, content, children }: Props) => {
+const Dialog = ({ trigger, title, content, onOpen, onClose }: Props) => {
   return (
-    <_Dialog.Root>
-      <_Dialog.Trigger render={children} />
+    <_Dialog.Root onOpenChange={(open) => (open ? onOpen?.() : onClose?.())}>
+      <_Dialog.Trigger render={trigger} />
       <_Dialog.Portal>
         <_Dialog.Backdrop className="fixed inset-0 z-10 bg-black/50" />
         <_Dialog.Popup className="pointer-events-none fixed inset-0 z-20 grid place-items-center p-4">

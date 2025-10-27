@@ -1,18 +1,21 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "react-router";
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
 import type { ColumnSort } from "@tanstack/react-table";
 import { useAtomValue } from "jotai";
-import { Download, Plus, Share2, Trash } from "lucide-react";
-import { cartLookup, studyBatchLookup } from "@/api/api";
+import { Download, Link, Plus, Share2, Trash } from "lucide-react";
+import { cartLookup, shareCart, studyBatchLookup } from "@/api/api";
 import { cartAtom, clearCart } from "@/cart";
 import Button from "@/components/Button";
+import Copy from "@/components/Copy";
 import Database from "@/components/Database";
+import Dialog from "@/components/Dialog";
 import Heading from "@/components/Heading";
 import { Meta } from "@/components/Meta";
 import Pagination, { type PerPage } from "@/components/Pagination";
 import Status, { showStatus } from "@/components/Status";
 import Table from "@/components/Table";
+import Textbox from "@/components/Textbox";
 import { formatDate, formatNumber } from "@/util/string";
 
 const Cart = () => {
@@ -42,7 +45,7 @@ const Cart = () => {
   const size = studyIds.length || 0;
 
   /** cart name */
-  const name = studyIdsQuery.data?.name ?? id;
+  const [name, setName] = useState(studyIdsQuery.data?.name || id || "");
 
   /** pagination */
   const [ordering, setOrdering] = useState<ColumnSort>({ id: "", desc: true });
@@ -69,6 +72,25 @@ const Cart = () => {
   /** page title */
   const title = shared ? `Shared cart "${name}"` : `Data Cart`;
 
+  /** share cart */
+  const shareMutation = useMutation({
+    mutationKey: ["share-cart"],
+    mutationFn: () => shareCart(name, studyIds),
+  });
+
+  /** share url */
+  const shareUrl =
+    !shared && shareMutation.data
+      ? `${window.location.origin}/cart/${shareMutation.data.id}`
+      : "";
+
+  /** reset share query state when cart changes */
+  const { reset } = shareMutation;
+  const _studyIds = JSON.stringify(studyIds);
+  useEffect(() => {
+    reset();
+  }, [reset, _studyIds]);
+
   return (
     <>
       <Meta title={title} />
@@ -92,29 +114,58 @@ const Cart = () => {
               </div>
 
               <div className="flex flex-wrap gap-2">
-                {!shared && (
-                  <Button
-                    color="accent"
-                    disabled={!size}
-                    onClick={() => {
-                      if (
-                        window.confirm(
-                          "Clear cart? This action cannot be undone.",
-                        )
-                      )
-                        clearCart();
-                    }}
-                  >
-                    <Trash />
-                    Clear
-                  </Button>
-                )}
+                {!shared && <Clear size={size} />}
 
                 {!shared && (
-                  <Button disabled={!size}>
-                    <Share2 />
-                    Share
-                  </Button>
+                  <Dialog
+                    trigger={
+                      <Button disabled={!size}>
+                        <Share2 />
+                        Share
+                      </Button>
+                    }
+                    title="Share Cart"
+                    content={
+                      <>
+                        {!shareUrl && !showStatus({ query: shareMutation }) && (
+                          <>
+                            <p>Save this cart to a public link</p>
+                            <Textbox
+                              placeholder="Cart name"
+                              value={name}
+                              onChange={(event) => setName(event.target.value)}
+                            />
+                            <Button onClick={() => shareMutation.mutate()}>
+                              <Link />
+                              Generate
+                            </Button>
+                          </>
+                        )}
+
+                        <Status query={shareMutation} />
+
+                        {shareUrl && (
+                          <>
+                            <div className="flex flex-col gap-2">
+                              Cart saved to:
+                              <div className="flex gap-2">
+                                <Textbox
+                                  readOnly
+                                  value={shareUrl}
+                                  onFocus={(event) => event.target.select()}
+                                />
+                                <Copy content={shareUrl} />
+                              </div>
+                            </div>
+                            <div className="flex flex-col gap-2">
+                              Start a fresh cart:
+                              <Clear size={size} />
+                            </div>
+                          </>
+                        )}
+                      </>
+                    }
+                  />
                 )}
 
                 <Button disabled={!size}>
@@ -186,3 +237,16 @@ const Cart = () => {
 };
 
 export default Cart;
+
+const Clear = ({ size }: { size: number }) => (
+  <Button
+    color="accent"
+    disabled={!size}
+    onClick={() => {
+      if (window.confirm("Clear cart? Cannot be undone.")) clearCart();
+    }}
+  >
+    <Trash />
+    Clear
+  </Button>
+);

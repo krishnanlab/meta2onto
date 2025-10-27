@@ -1,14 +1,18 @@
 import type { ReactNode } from "react";
-import type { UseQueryResult } from "@tanstack/react-query";
+import type { UseMutationResult, UseQueryResult } from "@tanstack/react-query";
 import clsx from "clsx";
 import { isEmpty } from "lodash";
 import { InfoIcon, LoaderCircle, TriangleAlert } from "lucide-react";
+
+type Query =
+  | Pick<UseQueryResult, "data" | "status" | "error" | "isFetching">
+  | Pick<UseMutationResult, "data" | "status" | "error">;
 
 type Props = {
   loading?: ReactNode;
   error?: ReactNode;
   empty?: ReactNode;
-  query: UseQueryResult;
+  query: Query;
   className?: string;
 };
 
@@ -25,7 +29,7 @@ const Status = ({
     className,
   );
 
-  if (query.status === "pending" || query.isFetching)
+  if (query.status === "pending" || ("isFetching" in query && query.isFetching))
     return (
       <span className={clsx(base, "text-slate-500", className)}>
         <LoaderCircle className="animate-spin" />

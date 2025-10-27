@@ -43,7 +43,7 @@ const Button = ({
   /** combine styles */
   const _class = clsx(
     className,
-    "flex items-center gap-2 rounded p-2 leading-none hover:bg-slate-500/50 hover:text-white",
+    "flex items-center justify-center gap-2 rounded p-2 leading-none hover:bg-slate-500/50 hover:text-white",
     color === "none" && "bg-transparent text-current disabled:text-slate-300",
     color === "theme" && "bg-theme text-white disabled:bg-slate-300",
     color === "accent" && "bg-accent text-white disabled:bg-slate-300",

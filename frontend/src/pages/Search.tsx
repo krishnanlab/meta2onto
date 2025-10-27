@@ -190,6 +190,12 @@ export const Search = () => {
 
               <div className="flex gap-2">
                 <Dialog
+                  trigger={
+                    <Button color="theme">
+                      <Logs />
+                      {formatNumber(samples)} Samples
+                    </Button>
+                  }
                   title={
                     <>
                       <span>
@@ -199,12 +205,7 @@ export const Search = () => {
                     </>
                   }
                   content={<Samples id={id} />}
-                >
-                  <Button color="theme">
-                    <Logs />
-                    {formatNumber(samples)} Samples
-                  </Button>
-                </Dialog>
+                />
                 <Button
                   aria-label={
                     inCart(cart, id) ? "Remove from cart" : "Add to cart"
