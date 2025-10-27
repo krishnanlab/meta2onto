@@ -1,4 +1,4 @@
-import { api, request } from "@/api";
+import { api } from "@/api";
 import {
   fakeCart,
   fakeDelay,
@@ -31,9 +31,10 @@ export const modelSearch = async (search: string) => {
 
   await fakeDelay();
   fakeError();
-  return fakeSearch(fakeModelSearch, search);
+  const data = fakeSearch(fakeModelSearch, search);
 
-  return request<ModelSearch>(url);
+  // const data = request<ModelSearch>(url);
+  return data;
 };
 
 export type StudySearch = {
@@ -142,7 +143,7 @@ export const cartLookup = async (id: string) => {
   fakeError();
   const data = fakeCart();
 
-  // const data= request<CartLookup>(url);
+  // const data = request<CartLookup>(url);
   return data;
 };
 
@@ -157,7 +158,61 @@ export const shareCart = async (cart: CartLookup) => {
 
   await fakeDelay();
   fakeError();
-  return fakeCart();
+  const data = fakeCart();
 
-  return request<CartLookup>(url, options);
+  // const data = request<CartLookup>(url, options);
+  return data;
+};
+
+/** get cart download link */
+export const getCartDownload = async (
+  ids: string[],
+  filename: string,
+  type: string,
+) => {
+  const url = new URL(`${api}/cart/download`);
+  url.searchParams.set("type", type);
+  url.searchParams.set("filename", filename);
+
+  const options = { method: "POST", body: { ids } };
+
+  await fakeDelay();
+  fakeError();
+  const data = {};
+
+  // const data = await request(url, options);
+  return data;
+};
+
+/** download links for each database */
+const downloadTemplates: Record<string, string> = {
+  "Refine.bio": "https://www.refine.bio/v1/download/$ID.zip",
+};
+
+/** get download bash script */
+export const getCartScript = (
+  { id, name, studies }: CartLookup,
+  database: string,
+) => {
+  const template = downloadTemplates[database] ?? "";
+
+  return [
+    `#!/bin/bash`,
+    `# Meta2Onto data cart download script`,
+    `# Generated: ${new Date().toISOString()}`,
+    id ? `# ID: ${id}` : "",
+    name ? `# Name: ${name}` : "",
+    `# Studies: ${studies.length}`,
+    ...studies.map(({ id }) => [
+      `# Download ${id} from ${database}`,
+      `wget "${template.replace(/\$ID/g, id)}" -O ${id}_${database}.zip`,
+    ]),
+    `# Extract`,
+    `for file in *.zip; do unzip "$file"; done`,
+    `echo "Download complete"`,
+  ]
+    .flat()
+    .map((line) => line.trimEnd())
+    .filter(Boolean)
+    .join("\n");
 };

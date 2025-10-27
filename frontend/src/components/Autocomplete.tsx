@@ -3,7 +3,6 @@ import type { ReactElement, ReactNode } from "react";
 import { Autocomplete as _Autocomplete } from "@base-ui-components/react/autocomplete";
 import clsx from "clsx";
 import { Search } from "lucide-react";
-import Textbox from "@/components/Textbox";
 
 type Props = {
   /** search value */
@@ -48,10 +47,13 @@ const Autocomplete = ({
       <div className="relative flex items-center">
         <_Autocomplete.Input
           render={
-            <Textbox
+            <input
               ref={inputRef}
               placeholder={placeholder}
-              className={clsx("w-full", className)}
+              className={clsx(
+                "border-theme-light w-full rounded border-1 p-2 leading-none disabled:border-0 disabled:bg-slate-200!",
+                className,
+              )}
             />
           }
         />
@@ -60,7 +62,7 @@ const Autocomplete = ({
 
       <_Autocomplete.Portal>
         <_Autocomplete.Positioner sideOffset={2}>
-          <_Autocomplete.Popup className="shadow-overlay flex max-h-(--available-height) w-(--anchor-width) flex-col overflow-y-auto rounded bg-white">
+          <_Autocomplete.Popup className="shadow-thick flex max-h-(--available-height) w-(--anchor-width) flex-col overflow-y-auto rounded bg-white">
             {status && (
               <_Autocomplete.Status className="flex gap-2 p-2 leading-none">
                 {status}

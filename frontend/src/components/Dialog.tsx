@@ -17,7 +17,7 @@ const Dialog = ({ trigger, title, content, onOpen, onClose }: Props) => {
       <_Dialog.Portal>
         <_Dialog.Backdrop className="fixed inset-0 z-10 bg-black/50" />
         <_Dialog.Popup className="pointer-events-none fixed inset-0 z-20 grid place-items-center p-4">
-          <div className="pointer-events-auto flex max-h-full min-h-0 flex-col gap-4 rounded bg-white p-4">
+          <div className="pointer-events-auto flex max-h-full min-h-0 max-w-full min-w-0 flex-col gap-4 rounded bg-white p-4">
             <div className="flex items-start justify-between gap-4">
               <_Dialog.Title className="flex flex-col items-start! gap-1 text-left! leading-none">
                 {title}

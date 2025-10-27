@@ -119,7 +119,7 @@ export const Search = () => {
       {query.data?.results && (
         <div className="flex flex-wrap items-center justify-between">
           <div>
-            <b>{formatNumber(query.data?.results.length)}</b> results
+            <strong>{formatNumber(query.data?.results.length)}</strong> results
           </div>
 
           <label>

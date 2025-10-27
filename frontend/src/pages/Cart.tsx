@@ -1,29 +1,57 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router";
-import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import type { ColumnSort } from "@tanstack/react-table";
 import { useAtomValue } from "jotai";
-import { Download, LinkIcon, Mail, Plus, Share2, Trash } from "lucide-react";
-import { cartLookup, shareCart, studyBatchLookup } from "@/api/api";
+import {
+  Braces,
+  Clipboard,
+  Download,
+  LinkIcon,
+  Mail,
+  Plus,
+  Share2,
+  Table2,
+  Terminal,
+  Trash,
+} from "lucide-react";
+import {
+  cartLookup,
+  getCartDownload,
+  getCartScript,
+  shareCart,
+  studyBatchLookup,
+  type CartLookup,
+} from "@/api/api";
 import {
   addCreatedCart,
   cartAtom,
   clearCart,
+  clearCreatedCarts,
   createdCartsAtom,
   removeFromCart,
 } from "@/cart";
+import ActionButton, { copy } from "@/components/ActionButton";
 import Ago from "@/components/Ago";
+import BigRadios from "@/components/BigRadios";
 import Button from "@/components/Button";
-import Copy from "@/components/Copy";
-import Database from "@/components/Database";
+import Database, { databases } from "@/components/Database";
 import Dialog from "@/components/Dialog";
 import Heading from "@/components/Heading";
 import Link from "@/components/Link";
 import { Meta } from "@/components/Meta";
 import Pagination, { type PerPage } from "@/components/Pagination";
+import Popover from "@/components/Popover";
 import Status, { showStatus } from "@/components/Status";
 import Table from "@/components/Table";
 import Textbox from "@/components/Textbox";
+import { downloadSh } from "@/util/download";
+import { highlightBash } from "@/util/highlighting";
 import { formatNumber } from "@/util/string";
 
 const Cart = () => {
@@ -76,6 +104,10 @@ const Cart = () => {
     enabled: !!size,
     placeholderData: keepPreviousData,
   });
+
+  /** reset query state on disable */
+  const queryClient = useQueryClient();
+  if (!size) queryClient.resetQueries({ queryKey: ["study-batch-lookup"] });
 
   /** full study details */
   const studyDetails = studyDetailsQuery.data?.results || [];
@@ -150,9 +182,7 @@ const Cart = () => {
                             <Textbox
                               placeholder="Cart name"
                               value={shareName}
-                              onChange={(event) =>
-                                setShareName(event.target.value)
-                              }
+                              onChange={setShareName}
                             />
                             <Button onClick={() => shareMutation.mutate()}>
                               <LinkIcon />
@@ -173,7 +203,10 @@ const Cart = () => {
                                   value={shareUrl}
                                   onFocus={(event) => event.target.select()}
                                 />
-                                <Copy content={shareUrl} />
+                                <ActionButton onClick={() => copy(shareUrl)}>
+                                  <Clipboard />
+                                  Copy
+                                </ActionButton>
                                 <Button
                                   to={`mailto:?body=${encodeURIComponent(shareUrl)}`}
                                 >
@@ -193,10 +226,50 @@ const Cart = () => {
                   />
                 )}
 
-                <Button disabled={!size}>
-                  <Download />
-                  Download
-                </Button>
+                {cart && (
+                  <Popover
+                    trigger={
+                      <Button disabled={!size}>
+                        <Download />
+                        Download
+                      </Button>
+                    }
+                    content={
+                      <>
+                        <ActionButton
+                          onClick={() =>
+                            getCartDownload(studyIds, name || "cart", "csv")
+                          }
+                        >
+                          <Table2 />
+                          CSV
+                        </ActionButton>
+
+                        <ActionButton
+                          onClick={() =>
+                            getCartDownload(studyIds, name || "cart", "json")
+                          }
+                        >
+                          <Braces />
+                          JSON
+                        </ActionButton>
+                      </>
+                    }
+                  />
+                )}
+
+                {cart && (
+                  <Dialog
+                    trigger={
+                      <Button disabled={!size}>
+                        <Terminal />
+                        Bash
+                      </Button>
+                    }
+                    title="Download Script"
+                    content={<DownloadScript name={name} cart={cart} />}
+                  />
+                )}
               </div>
             </div>
           </section>
@@ -294,7 +367,7 @@ const Cart = () => {
               Carts you've created from this device
             </p>
 
-            <div className="lg: grid max-w-max gap-4 self-center sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+            <div className="xs:grid-cols-1 grid max-w-max gap-4 self-center sm:grid-cols-2 md:grid-cols-3">
               {createdCarts.map(({ id, name, studies, created }, index) => (
                 <Link
                   key={index}
@@ -307,6 +380,19 @@ const Cart = () => {
                 </Link>
               ))}
             </div>
+
+            {!!createdCarts.length && (
+              <Button
+                className="self-center"
+                onClick={() =>
+                  window.confirm("Clear created carts? Cannot be undone.") &&
+                  clearCreatedCarts()
+                }
+              >
+                <Trash />
+                Forget
+              </Button>
+            )}
           </section>
         </>
       )}
@@ -316,6 +402,7 @@ const Cart = () => {
 
 export default Cart;
 
+/** clear cart button */
 const Clear = ({ size }: { size: number }) => (
   <Button
     color="accent"
@@ -328,3 +415,52 @@ const Clear = ({ size }: { size: number }) => (
     Clear
   </Button>
 );
+
+/** bash download script popup */
+const DownloadScript = ({ name, cart }: { name: string; cart: CartLookup }) => {
+  const [database, setDatabase] = useState(databases[0]?.id ?? "");
+
+  /** script text */
+  const script = getCartScript(cart, database);
+
+  return (
+    <>
+      <div className="flex flex-col gap-4 overflow-y-auto">
+        <BigRadios
+          className="w-200 max-w-full"
+          label={
+            <>
+              <strong>Database</strong> to download from
+            </>
+          }
+          options={databases.map(({ id }) => ({
+            value: id,
+            render: <Database database={id} full={true} />,
+          }))}
+          value={database}
+          onChange={setDatabase}
+        />
+
+        <div className="flex flex-col gap-2">
+          <span>
+            <strong>Bash script</strong> to download cart directly from database
+          </span>
+          <code>
+            <pre dangerouslySetInnerHTML={{ __html: highlightBash(script) }} />
+          </code>
+        </div>
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        <Button onClick={() => downloadSh(script, name || "cart")}>
+          <Download />
+          Download
+        </Button>
+        <ActionButton onClick={() => copy(script)}>
+          <Clipboard />
+          Copy
+        </ActionButton>
+      </div>
+    </>
+  );
+};
