@@ -6,6 +6,7 @@ import { Lightbulb } from "lucide-react";
 import { modelSearch, typeColor } from "@/api/api";
 import Autocomplete from "@/components/Autocomplete";
 import Link from "@/components/Link";
+import Logo from "@/components/Logo";
 import Status, { showStatus } from "@/components/Status";
 
 /** example searches */
@@ -17,6 +18,8 @@ export const Home = () => {
       <section className="narrow bg-theme-light py-12! text-center">
         <hgroup className="flex flex-col items-center gap-y-1">
           <h1 className="sr-only">Home</h1>
+
+          <Logo className="h-20" />
 
           <p className="text-xl font-normal tracking-wide text-balance">
             Discover Human Transcriptomics Data
