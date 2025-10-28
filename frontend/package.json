@@ -19,6 +19,7 @@
     "@tanstack/react-query": "^5.90.5",
     "@tanstack/react-table": "^8.21.3",
     "clsx": "^2.1.1",
+    "d3": "^7.9.0",
     "highlight.js": "^11.11.1",
     "javascript-time-ago": "^2.5.12",
     "jotai": "^2.15.0",
@@ -34,6 +35,7 @@
   "devDependencies": {
     "@eslint/js": "^9.36.0",
     "@ianvs/prettier-plugin-sort-imports": "^4.7.0",
+    "@types/d3": "^7.4.3",
     "@types/lodash": "^4.17.20",
     "@types/node": "^24.5.2",
     "@types/react": "^19.2.0",

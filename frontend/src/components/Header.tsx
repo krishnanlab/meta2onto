@@ -2,6 +2,7 @@ import { useAtomValue } from "jotai";
 import { ShoppingCart } from "lucide-react";
 import { cartAtom } from "@/cart";
 import Button from "@/components/Button";
+import Logo from "@/components/Logo";
 
 const { VITE_TITLE: title } = import.meta.env;
 
@@ -12,8 +13,9 @@ const Header = () => {
     <header className="bg-theme-dark flex flex-wrap items-center justify-between gap-4 p-4 text-white">
       <a
         href="/"
-        className="hover:text-theme-light! p-2 text-2xl tracking-wider text-white!"
+        className="hover:text-theme-light! flex items-center gap-2 p-2 text-2xl tracking-wider text-white!"
       >
+        <Logo />
         {title}
       </a>
 
