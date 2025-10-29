@@ -15,12 +15,12 @@ export type Option<Value = string> = {
   name?: string;
 };
 
-const Select = <O extends Option>({
+export default function <O extends Option>({
   value,
   onChange,
   options,
   ...props
-}: Props<O>) => {
+}: Props<O>) {
   return (
     <select
       className="border-theme-light rounded border-1 px-2 py-1"
@@ -35,6 +35,4 @@ const Select = <O extends Option>({
       ))}
     </select>
   );
-};
-
-export default Select;
+}

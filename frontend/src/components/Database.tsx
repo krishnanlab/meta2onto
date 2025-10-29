@@ -42,7 +42,7 @@ type Props = {
 };
 
 /** pill for database info */
-const Database = ({ database, full = false }: Props) => {
+export default function ({ database, full = false }: Props) {
   const {
     id = "",
     description = "",
@@ -68,6 +68,4 @@ const Database = ({ database, full = false }: Props) => {
       </div>
     </Tooltip>
   );
-};
-
-export default Database;
+}

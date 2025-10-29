@@ -57,7 +57,7 @@ type _Col<Datum extends object> = {
   [Key in keyof Datum]: Col<Datum, Key extends string ? Key : never>;
 }[keyof Datum];
 
-const Table = <Datum extends object>({
+export default function <Datum extends object>({
   cols,
   rows,
   sort,
@@ -66,7 +66,7 @@ const Table = <Datum extends object>({
   onPage,
   perPage,
   onPerPage,
-}: Props<Datum>) => {
+}: Props<Datum>) {
   const columnHelper = createColumnHelper<Datum>();
   /** column definitions */
   const columns = cols.map((col, index) =>
@@ -210,9 +210,7 @@ const Table = <Datum extends object>({
       </div>
     </div>
   );
-};
-
-export default Table;
+}
 
 /** default cell formatter based on detected type */
 const defaultFormat = (cell: unknown) => {

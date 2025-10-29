@@ -16,7 +16,7 @@ type _Anchor = ComponentProps<"a"> & { to: string };
 type _Router = ComponentProps<typeof RouterLink>;
 
 /** link to internal route or external url */
-const Link = ({
+export default function ({
   ref,
   to,
   children,
@@ -24,7 +24,7 @@ const Link = ({
   showArrow,
   className,
   ...props
-}: Props) => {
+}: Props) {
   /** whether link is external (some other site) or internal (within router) */
   const external = typeof to === "string" && to.match(/^(http|mailto)/);
 
@@ -56,6 +56,4 @@ const Link = ({
   );
 
   return element;
-};
-
-export default Link;
+}

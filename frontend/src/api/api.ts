@@ -1,14 +1,12 @@
-import { api } from "@/api";
-import {
-  fakeCart,
-  fakeDelay,
-  fakeError,
-  fakeModelSearch,
-  fakeSearch,
-  fakeStudySamples,
-  fakeStudySearch,
-} from "@/api/fake";
-import type { CartLookup } from "@/api/types";
+import { api, request } from "@/api";
+import type {
+  Cart,
+  CartDownload,
+  ModelSearch,
+  StudySamples,
+  StudySearch,
+} from "@/api/types";
+import type { LocalCart, ShareCart } from "@/cart";
 
 /** type to color map */
 export const typeColor: Record<string, string> = {
@@ -23,12 +21,7 @@ export const typeColor: Record<string, string> = {
 export const modelSearch = async (search: string) => {
   const url = new URL(`${api}/model`);
   url.searchParams.set("search", search);
-
-  await fakeDelay();
-  fakeError();
-  const data = fakeSearch(fakeModelSearch, search);
-
-  // const data = request<ModelSearch>(url);
+  const data = request<ModelSearch>(url);
   return data;
 };
 
@@ -47,13 +40,8 @@ export const studySearch = async ({
   url.searchParams.set("limit", String(limit));
   for (const [facet, values] of Object.entries(facets))
     for (const value of values) url.searchParams.append(facet, value);
-
-  await fakeDelay();
-  fakeError();
-  const data = fakeStudySearch();
-
-  // const data = request<StudySearch>(url);
-  return { ...data, pages: Math.ceil(data.count / limit) };
+  const data = request<StudySearch>(url);
+  return data;
 };
 
 /** batch lookup full study details by ids */
@@ -67,19 +55,13 @@ export const studyBatchLookup = async ({
   url.searchParams.set("ordering", ordering);
   url.searchParams.set("offset", String(offset));
   url.searchParams.set("limit", String(limit));
-
-  // const options = {
-  //   method: "POST",
-  //   headers: { "Content-Type": "application/json" },
-  //   body: { ids },
-  // };
-
-  await fakeDelay();
-  fakeError();
-  const data = fakeStudySearch();
-
-  // const data = request<StudySearch>(url, options);
-  return { ...data, pages: Math.ceil(data.count / limit) };
+  const options = {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: { ids },
+  };
+  const data = request<StudySearch>(url, options);
+  return data;
 };
 
 /** lookup all samples for a study */
@@ -87,41 +69,26 @@ export const studySamples = async ({ id = "", offset = 0, limit = 10 }) => {
   const url = new URL(`${api}/study/${id}/samples`);
   url.searchParams.set("offset", String(offset));
   url.searchParams.set("limit", String(limit));
-
-  await fakeDelay();
-  fakeError();
-  const data = fakeStudySamples();
-
-  // const data = request<StudySamples>(url);
-  return { ...data, pages: Math.ceil(data.count / limit) };
+  const data = request<StudySamples>(url);
+  return data;
 };
 
 /** lookup a cart by id */
 export const cartLookup = async (id: string) => {
-  // const url = new URL(`${api}/cart/${id}`);
-
-  await fakeDelay();
-  fakeError();
-  const data = fakeCart();
-
-  // const data = request<CartLookup>(url);
+  const url = new URL(`${api}/cart/${id}`);
+  const data = request<Cart>(url);
   return data;
 };
 
 /** share cart */
-export const shareCart = async (cart: CartLookup) => {
-  // const url = new URL(`${api}/cart`);
-  // const options = {
-  //   method: "POST",
-  //   headers: { "Content-Type": "application/json" },
-  //   body: cart,
-  // };
-
-  await fakeDelay();
-  fakeError();
-  const data = fakeCart();
-
-  // const data = request<CartLookup>(url, options);
+export const shareCart = async (cart: ShareCart) => {
+  const url = new URL(`${api}/cart`);
+  const options = {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: cart,
+  };
+  const data = request<Cart>(url, options);
   return data;
 };
 
@@ -134,14 +101,12 @@ export const getCartDownload = async (
   const url = new URL(`${api}/cart/download`);
   url.searchParams.set("type", type);
   url.searchParams.set("filename", filename);
-
-  // const options = { method: "POST", body: { ids } };
-
-  await fakeDelay();
-  fakeError();
-  const data = String(ids);
-
-  // const data = await request(url, options);
+  const options = {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: { ids },
+  };
+  const data = await request<CartDownload>(url, options);
   return data;
 };
 
@@ -151,20 +116,16 @@ const downloadTemplates: Record<string, string> = {
 };
 
 /** get download bash script */
-export const getCartScript = (
-  { id, name, studies }: CartLookup,
-  database: string,
-) => {
+export const getCartScript = (cart: Cart | LocalCart, database: string) => {
   const template = downloadTemplates[database] ?? "";
-
   return [
     `#!/bin/bash`,
     `# Meta2Onto data cart download script`,
     `# Generated: ${new Date().toISOString()}`,
-    id ? `# ID: ${id}` : "",
-    name ? `# Name: ${name}` : "",
-    `# Studies: ${studies.length}`,
-    ...studies.map(({ id }) => [
+    "id" in cart ? `# ID: ${cart.id}` : "",
+    "name" in cart ? `# Name: ${cart.name}` : "",
+    `# Studies: ${cart.studies.length}`,
+    ...cart.studies.map(({ id }) => [
       `# Download ${id} from ${database}`,
       `wget "${template.replace(/\$ID/g, id)}" -O ${id}_${database}.zip`,
     ]),

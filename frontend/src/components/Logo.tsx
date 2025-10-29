@@ -65,7 +65,7 @@ const arrow = [
 
 type Props = { color?: string; animate?: boolean } & ComponentProps<"svg">;
 
-const Logo = ({ color, animate, ...props }: Props) => {
+export default function ({ color, animate, ...props }: Props) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -112,6 +112,4 @@ const Logo = ({ color, animate, ...props }: Props) => {
       <path d={arrow} fill="none" stroke={color ?? accent} />
     </svg>
   );
-};
-
-export default Logo;
+}

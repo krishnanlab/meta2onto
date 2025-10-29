@@ -14,7 +14,7 @@ import Heading from "@/components/Heading";
 import Meta from "@/components/Meta";
 import Meter from "@/components/Meter";
 import Pagination from "@/components/Pagination";
-import type { PerPage } from "@/components/Pagination";
+import type { Limit } from "@/components/Pagination";
 import Select from "@/components/Select";
 import Status from "@/components/Status";
 import { SearchBox } from "@/pages/Home";
@@ -36,7 +36,7 @@ const orderingOptions = [
   { value: "samples" },
 ] as const;
 
-export const Search = () => {
+export default function () {
   const { search = "" } = useParams<{ search: string }>();
 
   /** url search params state */
@@ -119,7 +119,7 @@ export const Search = () => {
       {query.data?.results && (
         <div className="flex flex-wrap items-center justify-between">
           <div>
-            <strong>{formatNumber(query.data?.results.length)}</strong> results
+            <strong>{formatNumber(query.data?.count)}</strong> results
           </div>
 
           <label>
@@ -230,21 +230,20 @@ export const Search = () => {
       {/* pagination */}
       <Pagination
         count={query.data?.count ?? 0}
-        page={offset}
-        setPage={(page) =>
+        offset={offset}
+        setOffset={(page) =>
           setParams((params) => {
             params.set("offset", String(page));
             return params;
           })
         }
-        perPage={limit}
-        setPerPage={(limit) =>
+        limit={limit}
+        setLimit={(limit) =>
           setParams((params) => {
             params.set("limit", limit);
             return params;
           })
         }
-        pages={query.data?.pages ?? 1}
       />
     </div>
   );
@@ -265,15 +264,13 @@ export const Search = () => {
       </section>
     </>
   );
-};
-
-export default Search;
+}
 
 /** samples popup */
 const Samples = ({ id }: { id: string }) => {
   /** pagination */
   const [offset, setOffset] = useState(0);
-  const [limit, setLimit] = useState<PerPage>("10");
+  const [limit, setLimit] = useState<Limit>("10");
 
   const query = useQuery({
     queryKey: ["study-samples", id, offset, limit],
@@ -287,8 +284,8 @@ const Samples = ({ id }: { id: string }) => {
         <Status query={query} />
 
         {query.data?.results.map((sample) => (
-          <div key={sample.name} className="flex flex-col gap-1">
-            <strong>{sample.name}</strong>
+          <div key={sample.id} className="flex flex-col gap-1">
+            <strong>{sample.id}</strong>
             <p dangerouslySetInnerHTML={{ __html: sample.description }} />
           </div>
         ))}
@@ -297,11 +294,10 @@ const Samples = ({ id }: { id: string }) => {
       {/* pagination */}
       <Pagination
         count={query.data?.count ?? 0}
-        page={offset}
-        setPage={setOffset}
-        perPage={limit}
-        setPerPage={setLimit}
-        pages={query.data?.pages ?? 1}
+        offset={offset}
+        setOffset={setOffset}
+        limit={limit}
+        setLimit={setLimit}
       />
     </>
   );

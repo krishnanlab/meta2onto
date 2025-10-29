@@ -1,21 +1,26 @@
-export type ModelSearch = {
+export type Model = {
   type: string;
+  id: string;
   name: string;
   description: string;
-}[];
+};
+
+export type ModelSearch = Model[];
+
+export type Study = {
+  id: string;
+  name: string;
+  description: string;
+  confidence: { name: string; value: number };
+  date: string;
+  platform: string;
+  database: string[];
+  samples: number;
+};
 
 export type StudySearch = {
   count: number;
-  results: {
-    id: string;
-    name: string;
-    confidence: { name: string; value: number };
-    description: string;
-    date: string;
-    platform: string;
-    database: string[];
-    samples: number;
-  }[];
+  results: Study[];
   facets: {
     [facet: string]: {
       [value: string]: number;
@@ -23,17 +28,22 @@ export type StudySearch = {
   };
 };
 
-export type StudySamples = {
-  count: number;
-  results: {
-    name: string;
-    description: string;
-  }[];
+export type Sample = {
+  id: string;
+  description: string;
 };
 
-export type CartLookup = {
+export type StudySamples = {
+  count: number;
+  results: Sample[];
+};
+
+export type Cart = {
   id: string;
   name: string;
   studies: { id: string; added: string }[];
-  created: string;
+};
+
+export type CartDownload = {
+  link: string;
 };

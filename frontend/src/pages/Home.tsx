@@ -12,7 +12,7 @@ import Status, { showStatus } from "@/components/Status";
 /** example searches */
 const examples = ["Hepatocyte", "Breast cancer", "Alzheimer's disease"];
 
-export const Home = () => {
+export default function () {
   return (
     <>
       <section className="narrow bg-theme-light relative z-0 overflow-hidden py-20! text-center">
@@ -73,9 +73,7 @@ export const Home = () => {
       </section>
     </>
   );
-};
-
-export default Home;
+}
 
 export const SearchBox = () => {
   const navigate = useNavigate();
@@ -101,10 +99,10 @@ export const SearchBox = () => {
       setSearch={setSearch}
       placeholder="Search..."
       options={
-        query.data?.map(({ type, name, description }) => ({
-          id: name,
+        query.data?.map(({ id, name, description, type }) => ({
+          value: id,
           content: (
-            <Link to={`/search/${name}`}>
+            <>
               <span
                 className={clsx(
                   "rounded px-1 py-0.5 text-sm leading-none text-white",
@@ -113,12 +111,15 @@ export const SearchBox = () => {
               >
                 {type}
               </span>
-              <span className="truncate leading-none font-normal">{name}</span>
+              <span
+                className="truncate leading-none font-normal"
+                dangerouslySetInnerHTML={{ __html: name }}
+              />
               <span
                 className="truncate leading-none text-slate-500"
                 dangerouslySetInnerHTML={{ __html: description }}
               />
-            </Link>
+            </>
           ),
         })) ?? []
       }

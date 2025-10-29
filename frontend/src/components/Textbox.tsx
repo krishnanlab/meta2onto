@@ -5,7 +5,7 @@ type Props = {
   onChange?: (value: string) => void;
 } & Omit<ComponentPropsWithRef<"input">, "onChange">;
 
-const Textbox = ({ className, onChange, ...props }: Props) => {
+export default function ({ className, onChange, ...props }: Props) {
   return (
     <input
       className={clsx(
@@ -16,6 +16,4 @@ const Textbox = ({ className, onChange, ...props }: Props) => {
       {...props}
     />
   );
-};
-
-export default Textbox;
+}

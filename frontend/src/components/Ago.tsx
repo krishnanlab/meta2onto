@@ -16,7 +16,7 @@ type Props = {
 TimeAgo.addDefaultLocale(en);
 
 /** show datetime in "ago" format, e.g. "20 min ago" */
-const Ago = ({ date, className }: Props) => {
+export default function ({ date, className }: Props) {
   /** parse arg as date */
   const parsed = parseDate(date);
   if (!parsed) return <span>???</span>;
@@ -34,6 +34,4 @@ const Ago = ({ date, className }: Props) => {
       />
     </Tooltip>
   );
-};
-
-export default Ago;
+}

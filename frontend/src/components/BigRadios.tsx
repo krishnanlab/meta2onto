@@ -23,13 +23,13 @@ export type Option<Value = string> = {
   render: ReactElement<Record<string, unknown>>;
 };
 
-const BigRadios = <O extends Option>({
+export default function <O extends Option>({
   label,
   options,
   value,
   onChange,
   className,
-}: Props<O>) => {
+}: Props<O>) {
   const id = useId();
 
   return (
@@ -64,6 +64,4 @@ const BigRadios = <O extends Option>({
       </div>
     </RadioGroup>
   );
-};
-
-export default BigRadios;
+}

@@ -10,7 +10,7 @@ import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import About from "@/pages/About";
 import Cart from "@/pages/Cart";
-import { Home } from "@/pages/Home";
+import Home from "@/pages/Home";
 import NotFound from "@/pages/NotFound";
 import Search from "@/pages/Search";
 import Testbed from "@/pages/Testbed";
@@ -20,13 +20,13 @@ import { sleep, waitFor, waitForStable } from "@/util/misc";
 import { redirectPath, redirectState } from "@/util/url";
 
 /** app entrypoint */
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <RouterProvider router={router} />
-  </QueryClientProvider>
-);
-
-export default App;
+export default function () {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <RouterProvider router={router} />
+    </QueryClientProvider>
+  );
+}
 
 /** route layout */
 const Layout = () => {

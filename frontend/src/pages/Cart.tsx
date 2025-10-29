@@ -10,6 +10,7 @@ import type { ColumnSort } from "@tanstack/react-table";
 import clsx from "clsx";
 import { useAtomValue } from "jotai";
 import {
+  ArrowRight,
   Braces,
   Clipboard,
   Download,
@@ -28,7 +29,7 @@ import {
   shareCart,
   studyBatchLookup,
 } from "@/api/api";
-import type { CartLookup } from "@/api/types";
+import type { Cart } from "@/api/types";
 import {
   addCreatedCart,
   cartAtom,
@@ -36,6 +37,7 @@ import {
   clearCreatedCarts,
   createdCartsAtom,
   removeFromCart,
+  type LocalCart,
 } from "@/cart";
 import ActionButton, { copy } from "@/components/ActionButton";
 import Ago from "@/components/Ago";
@@ -45,8 +47,8 @@ import Database, { databases } from "@/components/Database";
 import Dialog from "@/components/Dialog";
 import Heading from "@/components/Heading";
 import Link from "@/components/Link";
-import { Meta } from "@/components/Meta";
-import Pagination, { type PerPage } from "@/components/Pagination";
+import Meta from "@/components/Meta";
+import Pagination, { type Limit } from "@/components/Pagination";
 import Popover from "@/components/Popover";
 import Status, { showStatus } from "@/components/Status";
 import Table from "@/components/Table";
@@ -55,7 +57,7 @@ import { downloadSh } from "@/util/download";
 import { highlightBash } from "@/util/highlighting";
 import { formatNumber } from "@/util/string";
 
-const Cart = () => {
+export default function () {
   /** local, current cart */
   const localCart = useAtomValue(cartAtom);
 
@@ -72,11 +74,13 @@ const Cart = () => {
     enabled: shared,
   });
 
-  /** cart definition */
-  const cart = shared ? studyIdsQuery.data : localCart;
+  /** remote, shared cart */
+  const sharedCart = studyIdsQuery.data;
 
   /** cart study ids */
-  const studyIds = (cart?.studies || []).map((study) => study.id);
+  const studyIds = ((localCart || sharedCart).studies || []).map(
+    (study) => study.id,
+  );
 
   /** cart size */
   const size = studyIds.length || 0;
@@ -90,7 +94,7 @@ const Cart = () => {
   /** pagination */
   const [ordering, setOrdering] = useState<ColumnSort>({ id: "", desc: true });
   const [offset, setOffset] = useState(0);
-  const [limit, setLimit] = useState<PerPage>("10");
+  const [limit, setLimit] = useState<Limit>("10");
 
   /** look up study details from study ids */
   const studyDetailsQuery = useQuery({
@@ -118,15 +122,15 @@ const Cart = () => {
 
   /** share cart */
   const shareMutation = useMutation({
-    mutationKey: ["share-cart", cart],
-    mutationFn: async () => (cart ? await shareCart(cart) : null),
-    onSuccess: (cart) => cart && addCreatedCart(cart),
+    mutationKey: ["share-cart", localCart],
+    mutationFn: () => shareCart({ ...localCart, name: shareName }),
+    onSuccess: addCreatedCart,
   });
 
   /** share url */
   const shareUrl =
     !shared && shareMutation.data
-      ? `${window.location.origin}/cart/${shareMutation.data.id}`
+      ? new URL(`${window.location.origin}/cart/${shareMutation.data.id}`)
       : "";
 
   /** reset share query state when cart changes */
@@ -179,7 +183,7 @@ const Cart = () => {
                       <>
                         {!shareUrl && !showStatus({ query: shareMutation }) && (
                           <>
-                            <p>Save this cart to a public link</p>
+                            <div>Save this cart to a public link</div>
                             <Textbox
                               placeholder="Cart name"
                               value={shareName}
@@ -197,27 +201,34 @@ const Cart = () => {
                         {shareUrl && (
                           <>
                             <div className="flex flex-col gap-2">
-                              Cart saved to:
-                              <div className="flex items-center gap-2">
-                                <Textbox
-                                  readOnly
-                                  value={shareUrl}
-                                  onFocus={(event) => event.target.select()}
-                                />
-                                <ActionButton onClick={() => copy(shareUrl)}>
+                              <p>Cart saved to:</p>
+                              <Textbox
+                                readOnly
+                                value={String(shareUrl)}
+                                onFocus={(event) => event.target.select()}
+                              />
+                              <div className="flex flex-wrap items-center gap-2">
+                                <ActionButton
+                                  onClick={() => copy(String(shareUrl))}
+                                >
                                   <Clipboard />
                                   Copy
                                 </ActionButton>
+
                                 <Button
-                                  to={`mailto:?body=${encodeURIComponent(shareUrl)}`}
+                                  to={`mailto:?body=${encodeURIComponent(String(shareUrl))}`}
                                 >
                                   <Mail />
                                   Email
                                 </Button>
+                                <Button to={shareUrl.pathname}>
+                                  <ArrowRight />
+                                  View
+                                </Button>
                               </div>
                             </div>
                             <div className="flex flex-col gap-2">
-                              Start a fresh cart:
+                              <p>Start fresh cart:</p>
                               <Clear size={size} />
                             </div>
                           </>
@@ -227,49 +238,54 @@ const Cart = () => {
                   />
                 )}
 
-                {cart && (
-                  <Popover
-                    trigger={
-                      <Button disabled={!size}>
-                        <Download />
-                        Download
-                      </Button>
-                    }
-                    content={
-                      <>
-                        <ActionButton
-                          onClick={() =>
-                            getCartDownload(studyIds, name || "cart", "csv")
-                          }
-                        >
-                          <Table2 />
-                          CSV
-                        </ActionButton>
+                {(localCart || sharedCart) && (
+                  <>
+                    <Popover
+                      trigger={
+                        <Button disabled={!size}>
+                          <Download />
+                          Download
+                        </Button>
+                      }
+                      content={
+                        <>
+                          <ActionButton
+                            onClick={() =>
+                              getCartDownload(studyIds, name || "cart", "csv")
+                            }
+                          >
+                            <Table2 />
+                            CSV
+                          </ActionButton>
 
-                        <ActionButton
-                          onClick={() =>
-                            getCartDownload(studyIds, name || "cart", "json")
-                          }
-                        >
-                          <Braces />
-                          JSON
-                        </ActionButton>
-                      </>
-                    }
-                  />
-                )}
+                          <ActionButton
+                            onClick={() =>
+                              getCartDownload(studyIds, name || "cart", "json")
+                            }
+                          >
+                            <Braces />
+                            JSON
+                          </ActionButton>
+                        </>
+                      }
+                    />
 
-                {cart && (
-                  <Dialog
-                    trigger={
-                      <Button disabled={!size}>
-                        <Terminal />
-                        Bash
-                      </Button>
-                    }
-                    title="Download Script"
-                    content={<DownloadScript name={name} cart={cart} />}
-                  />
+                    <Dialog
+                      trigger={
+                        <Button disabled={!size}>
+                          <Terminal />
+                          Bash
+                        </Button>
+                      }
+                      title="Download Script"
+                      content={
+                        <DownloadScript
+                          name={name}
+                          cart={localCart || sharedCart}
+                        />
+                      }
+                    />
+                  </>
                 )}
               </div>
             </div>
@@ -350,11 +366,10 @@ const Cart = () => {
                 />
                 <Pagination
                   count={studyDetails.length}
-                  page={offset}
-                  setPage={setOffset}
-                  perPage={limit}
-                  setPerPage={setLimit}
-                  pages={studyDetailsQuery.data?.pages ?? 0}
+                  offset={offset}
+                  setOffset={setOffset}
+                  limit={limit}
+                  setLimit={setLimit}
                 />
               </>
             )}
@@ -375,15 +390,14 @@ const Cart = () => {
                 createdCarts.length === 2 && "grid-cols-2!",
               )}
             >
-              {createdCarts.map(({ id, name, studies, created }, index) => (
+              {createdCarts.map(({ id, name, studies }, index) => (
                 <Link
                   key={index}
                   to={`/cart/${id}`}
                   className="border-theme-light flex flex-col items-start gap-2 rounded border-1 p-2 leading-none"
                 >
                   <strong>{name || id}</strong>
-                  <span>{formatNumber(studies.length)} items</span>
-                  <Ago date={created} />
+                  <span>{formatNumber(studies.length)} studies</span>
                 </Link>
               ))}
             </div>
@@ -405,9 +419,7 @@ const Cart = () => {
       )}
     </>
   );
-};
-
-export default Cart;
+}
 
 /** clear cart button */
 const Clear = ({ size }: { size: number }) => (
@@ -424,7 +436,13 @@ const Clear = ({ size }: { size: number }) => (
 );
 
 /** bash download script popup */
-const DownloadScript = ({ name, cart }: { name: string; cart: CartLookup }) => {
+const DownloadScript = ({
+  name,
+  cart,
+}: {
+  name: string;
+  cart: LocalCart | Cart;
+}) => {
   const [database, setDatabase] = useState(databases[0]?.id ?? "");
 
   /** script text */

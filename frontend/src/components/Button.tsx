@@ -33,13 +33,13 @@ type _Button = { ref?: Ref<HTMLButtonElement> } & Pick<
  * looks like a button and either goes somewhere (link) or does something
  * (button)
  */
-const Button = ({
+export default function ({
   ref,
   color = "theme",
   className,
   children,
   ...props
-}: Props) => {
+}: Props) {
   /** combine styles */
   const _class = clsx(
     className,
@@ -72,6 +72,4 @@ const Button = ({
         {children}
       </button>
     );
-};
-
-export default Button;
+}

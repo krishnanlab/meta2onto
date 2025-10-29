@@ -1,8 +1,9 @@
 import { useRef } from "react";
 import type { ReactElement, ReactNode } from "react";
-import { Autocomplete as _Autocomplete } from "@base-ui-components/react/autocomplete";
+import { Autocomplete } from "@base-ui-components/react/autocomplete";
 import clsx from "clsx";
 import { Search } from "lucide-react";
+import { padding } from "@/components/Popover";
 
 type Props = {
   /** search value */
@@ -13,7 +14,7 @@ type Props = {
   placeholder: string;
   /** dropdown options */
   options: {
-    id: string;
+    value: string;
     content: ReactElement<{ className?: string }>;
   }[];
   /** on option select */
@@ -25,7 +26,7 @@ type Props = {
 };
 
 /** textbox box with dropdown */
-const Autocomplete = ({
+export default function ({
   search,
   setSearch,
   options,
@@ -33,11 +34,11 @@ const Autocomplete = ({
   placeholder,
   status,
   className,
-}: Props) => {
+}: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
 
   return (
-    <_Autocomplete.Root
+    <Autocomplete.Root
       value={search}
       onValueChange={setSearch}
       items={options}
@@ -45,7 +46,7 @@ const Autocomplete = ({
       openOnInputClick
     >
       <div className="relative flex items-center">
-        <_Autocomplete.Input
+        <Autocomplete.Input
           render={
             <input
               ref={inputRef}
@@ -60,38 +61,37 @@ const Autocomplete = ({
         <Search className="text-theme absolute right-0 px-2" />
       </div>
 
-      <_Autocomplete.Portal>
-        <_Autocomplete.Positioner sideOffset={2}>
-          <_Autocomplete.Popup className="shadow-thick flex max-h-(--available-height) w-(--anchor-width) flex-col overflow-y-auto rounded bg-white">
+      <Autocomplete.Portal>
+        <Autocomplete.Positioner collisionPadding={padding}>
+          <Autocomplete.Popup className="shadow-thick flex max-h-(--available-height) w-(--anchor-width) flex-col overflow-y-auto rounded bg-white">
             {status && (
-              <_Autocomplete.Status className="flex gap-2 p-2 leading-none">
+              <Autocomplete.Status className="flex gap-2 p-2 leading-none">
                 {status}
-              </_Autocomplete.Status>
+              </Autocomplete.Status>
             )}
             {!status && (
-              <_Autocomplete.List>
-                {(tag: (typeof options)[number]) => (
-                  <_Autocomplete.Item
-                    key={tag.id}
-                    value={tag.id}
+              <Autocomplete.List>
+                {(tag: (typeof options)[number], index: number) => (
+                  <Autocomplete.Item
+                    key={index}
+                    value={tag.value}
                     className="data-highlighted:bg-theme/10 flex cursor-pointer gap-2 p-2 leading-none"
-                    onClick={() => {
+                    onClick={(event) => {
+                      event.preventDefault();
                       /** select option */
-                      onSelect?.(tag.id);
+                      onSelect?.(tag.value);
                       /** close dropdown */
                       inputRef.current?.blur();
                     }}
                   >
                     {tag.content}
-                  </_Autocomplete.Item>
+                  </Autocomplete.Item>
                 )}
-              </_Autocomplete.List>
+              </Autocomplete.List>
             )}
-          </_Autocomplete.Popup>
-        </_Autocomplete.Positioner>
-      </_Autocomplete.Portal>
-    </_Autocomplete.Root>
+          </Autocomplete.Popup>
+        </Autocomplete.Positioner>
+      </Autocomplete.Portal>
+    </Autocomplete.Root>
   );
-};
-
-export default Autocomplete;
+}

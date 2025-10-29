@@ -6,7 +6,7 @@ import Logo from "@/components/Logo";
 
 const { VITE_TITLE: title } = import.meta.env;
 
-const Header = () => {
+export default function () {
   const cart = useAtomValue(cartAtom);
 
   return (
@@ -43,6 +43,4 @@ const Header = () => {
       </nav>
     </header>
   );
-};
-
-export default Header;
+}

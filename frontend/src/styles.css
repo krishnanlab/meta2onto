@@ -100,7 +100,7 @@ b {
 }
 
 mark {
-  @apply bg-orange-100 font-normal;
+  @apply bg-orange-100;
 }
 
 label {

@@ -7,9 +7,10 @@ import {
 import Button from "@/components/Button";
 import Select from "@/components/Select";
 import Tooltip from "@/components/Tooltip";
+import { sleep } from "@/util/misc";
 import { formatNumber } from "@/util/string";
 
-export const perPageOptions = [
+const limitOptions = [
   { value: "5" },
   { value: "10" },
   { value: "20" },
@@ -17,30 +18,26 @@ export const perPageOptions = [
   { value: "100" },
 ] as const;
 
-export type PerPage = (typeof perPageOptions)[number]["value"];
+export type Limit = (typeof limitOptions)[number]["value"];
 
 type Props = {
   count: number;
-  page: number;
-  setPage: (page: number) => void;
-  perPage: PerPage;
-  setPerPage: (perPage: PerPage) => void;
-  pages: number;
+  offset: number;
+  setOffset: (offset: number) => void;
+  limit: Limit;
+  setLimit: (limit: Limit) => void;
 };
 
 /** pagination controls */
-const Pagination = ({
-  count,
-  page,
-  setPage,
-  perPage,
-  setPerPage,
-  pages,
-}: Props) => {
-  if (!count || !pages) return null;
+export default function ({ count, offset, setOffset, limit, setLimit }: Props) {
+  if (!count) return null;
 
-  const startItem = page * Number(perPage) + 1;
-  const endItem = Math.min((page + 1) * Number(perPage), count);
+  const _limit = Number(limit);
+  const pages = Math.ceil(count / _limit);
+
+  /** ensure offset is a multiple of limit */
+  if (Math.round(offset / _limit) !== offset / _limit)
+    sleep().then(() => setOffset(Math.floor(offset / _limit) * _limit));
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-2">
@@ -48,16 +45,16 @@ const Pagination = ({
       <div className="flex items-center">
         <Button
           color="none"
-          onClick={() => setPage(0)}
-          disabled={page < 1}
+          onClick={() => setOffset(0)}
+          disabled={offset - _limit <= 0}
           aria-label="First page"
         >
           <ChevronsLeft />
         </Button>
         <Button
           color="none"
-          onClick={() => setPage(page - 1)}
-          disabled={page < 1}
+          onClick={() => setOffset(offset - _limit)}
+          disabled={offset - _limit <= 0}
           aria-label="Previous page"
         >
           <ChevronLeft />
@@ -66,28 +63,31 @@ const Pagination = ({
         <Tooltip
           content={
             <>
-              Items {formatNumber(startItem)} to {formatNumber(endItem)} of{" "}
+              Items {formatNumber(offset + 1)} to{" "}
+              {formatNumber(Math.min(offset + _limit, count))} of{" "}
               {formatNumber(count)}
             </>
           }
         >
           <div className="px-2">
-            Page {formatNumber(page + 1)} of {formatNumber(pages)}
+            Page {formatNumber(offset / _limit + 1)} of {formatNumber(pages)}
           </div>
         </Tooltip>
 
         <Button
           color="none"
-          onClick={() => setPage(page + 1)}
-          disabled={page >= pages - 1}
+          onClick={() => setOffset(offset + _limit)}
+          disabled={offset + _limit >= count}
           aria-label="Next page"
         >
           <ChevronRight />
         </Button>
         <Button
           color="none"
-          onClick={() => setPage(pages - 1)}
-          disabled={page >= pages - 1}
+          onClick={() =>
+            setOffset(Math.ceil((count - _limit) / _limit) * _limit)
+          }
+          disabled={offset + _limit >= count}
           aria-label="Last page"
         >
           <ChevronsRight />
@@ -101,16 +101,14 @@ const Pagination = ({
           Per page
           <Select
             value={
-              perPageOptions.find((option) => option.value === perPage)
-                ?.value ?? perPageOptions[1].value
+              limitOptions.find((option) => option.value === limit)?.value ??
+              limitOptions[1].value
             }
-            options={perPageOptions}
-            onChange={(value) => setPerPage(value)}
+            options={limitOptions}
+            onChange={(value) => setLimit(value)}
           />
         </label>
       </div>
     </div>
   );
-};
-
-export default Pagination;
+}

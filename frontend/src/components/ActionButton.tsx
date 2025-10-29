@@ -16,7 +16,7 @@ type Props = {
 export const copy = (content: string) => navigator.clipboard.writeText(content);
 
 /** button that does async action on click and shows status */
-const ActionButton = ({
+export default function ({
   onClick,
   running = (
     <>
@@ -37,7 +37,7 @@ const ActionButton = ({
     </>
   ),
   children,
-}: Props) => {
+}: Props) {
   const [status, setStatus] = useState<"" | "running" | "success" | "error">(
     "",
   );
@@ -63,6 +63,4 @@ const ActionButton = ({
       {status === "error" && error}
     </Button>
   );
-};
-
-export default ActionButton;
+}
