@@ -102,7 +102,10 @@ export const router = createBrowserRouter(routes, {
 
 /** network request client */
 const queryClient = new QueryClient({
-  defaultOptions: { queries: { retry: 2 } },
+  defaultOptions: {
+    queries: { retry: 2, retryDelay: (retry) => 200 * retry },
+    mutations: { retry: 2, retryDelay: (retry) => 200 * retry },
+  },
 });
 
 /** scroll to target of url hash on page */

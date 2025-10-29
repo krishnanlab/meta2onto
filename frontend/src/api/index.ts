@@ -37,7 +37,7 @@ export async function request<Response>(
   /** capture error for throwing later */
   let error = "";
   /** check status code */
-  if (!response.ok) error = "Response not OK";
+  if (!response.ok) error = `${response.status}: ${response.statusText}`;
   /** parse response */
   let parsed: Response | undefined;
   try {

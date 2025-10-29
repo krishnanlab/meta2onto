@@ -3,6 +3,7 @@ import type { UseMutationResult, UseQueryResult } from "@tanstack/react-query";
 import clsx from "clsx";
 import { isEmpty } from "lodash";
 import { InfoIcon, LoaderCircle, TriangleAlert } from "lucide-react";
+import Tooltip from "@/components/Tooltip";
 
 type Query =
   | Pick<UseQueryResult, "data" | "status" | "error" | "isFetching">
@@ -40,7 +41,11 @@ const Status = ({
     return (
       <span className={clsx(base, "text-red-500", className)}>
         <TriangleAlert />
-        {error}
+        <Tooltip content={query.error?.message}>
+          <span className="underline decoration-dashed underline-offset-2">
+            {error}
+          </span>
+        </Tooltip>
       </span>
     );
   else if (query.status === "success" && isEmpty(query.data))

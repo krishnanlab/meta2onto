@@ -9,7 +9,7 @@ import globals from "globals";
 import typescriptEslint from "typescript-eslint";
 
 export default defineConfig([
-  globalIgnores(["dist"]),
+  globalIgnores(["dist", "public"]),
   {
     files: ["**/*.{ts,tsx}"],
     extends: [

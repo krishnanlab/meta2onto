@@ -28,9 +28,9 @@ const handler = <Method extends keyof typeof http>(
   http[method](url, async ({ request, params }) => {
     const url = new URL(request.url);
     const body = request.body ? await (await request.clone()).json() : {};
-    await sleep(random(100, 500));
-    if (Math.random() < 0.1)
-      return new HttpResponse(null, { status: 500, statusText: "fake error" });
+    await sleep(100);
+    if (Math.random() < 0.5)
+      return HttpResponse.json(null, { status: 500, statusText: "fake error" });
     return HttpResponse.json(func({ url, body, params }));
   });
 

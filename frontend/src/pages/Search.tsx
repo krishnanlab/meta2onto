@@ -18,7 +18,7 @@ import type { Limit } from "@/components/Pagination";
 import Select from "@/components/Select";
 import Status from "@/components/Status";
 import { SearchBox } from "@/pages/Home";
-import { formatNumber } from "@/util/string";
+import { formatDate, formatNumber } from "@/util/string";
 
 /** per page select options */
 const limitOptions = [
@@ -108,7 +108,7 @@ export default function () {
   );
 
   const resultsPanel = (
-    <div className="flex grow-1 basis-0 flex-col gap-4">
+    <div className="flex grow basis-0 flex-col gap-4">
       {/* search box */}
       <SearchBox />
 
@@ -163,7 +163,7 @@ export default function () {
               {(
                 [
                   [Hash, id],
-                  [Calendar, date],
+                  [Calendar, formatDate(date)],
                   [Dna, platform],
                 ] as const
               ).map(([Icon, text], index) => (
