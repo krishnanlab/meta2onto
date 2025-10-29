@@ -57,7 +57,7 @@ export default function () {
 
   /** selected facets state from url params */
   const facets = Object.fromEntries(
-    params.keys().map((key) => [key, params.getAll(key)]),
+    [...params.keys()].map((key) => [key, params.getAll(key)]),
   );
   /** exclude param keywords */
   delete facets.ordering;
