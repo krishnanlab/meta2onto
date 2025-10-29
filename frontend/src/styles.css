@@ -1,15 +1,21 @@
 @import "tailwindcss";
 
 @theme {
+  --breakpoint-xs: 20rem;
+  --breakpoint-sm: 35rem;
+  --breakpoint-md: 50rem;
+  --breakpoint-lg: 65rem;
+
   --font-sans: "Outfit", sans-serif;
   --font-mono: "Sometype Mono", monospace;
 
-  --color-theme-light: hsl(230, 80%, 90%);
-  --color-theme: hsl(230, 30%, 50%);
-  --color-theme-dark: hsl(230, 30%, 30%);
+  --color-theme-light: hsl(220, 80%, 90%);
+  --color-theme: hsl(220, 30%, 50%);
+  --color-theme-dark: hsl(220, 30%, 30%);
   --color-accent: hsl(0, 60%, 60%);
 
-  --shadow-overlay: 0 0 5px #00000020, 0 2px 10px #00000020;
+  --shadow-thick: 0 0 5px #00000020, 0 2px 10px #00000020;
+  --shadow-overlay: 0 0 0 9999px #00000040;
 }
 
 * {
@@ -94,7 +100,7 @@ b {
 }
 
 mark {
-  @apply bg-orange-100 font-normal;
+  @apply bg-orange-100;
 }
 
 label {
@@ -106,7 +112,7 @@ label:has(input[type="checkbox"]) {
 }
 
 input[type="checkbox"] {
-  @apply cursor-pointer;
+  @apply accent-theme cursor-pointer;
 }
 
 select {
@@ -114,7 +120,32 @@ select {
 }
 
 [disabled] {
-  @apply pointer-events-none brightness-150 grayscale;
+  @apply pointer-events-none;
+}
+
+code:not(:has(pre)) {
+  @apply rounded bg-slate-200 px-1 font-mono;
+}
+
+code > pre {
+  @apply overflow-x-auto rounded bg-slate-700 p-4 font-mono text-slate-300;
+}
+
+[class^="hljs-"] {
+  @apply font-mono;
+}
+
+.hljs-meta,
+.hljs-comment {
+  @apply text-slate-500;
+}
+
+.hljs-string {
+  @apply text-green-300;
+}
+
+.hljs-keyword {
+  @apply text-orange-300;
 }
 
 .truncate-lines:not(:focus) {

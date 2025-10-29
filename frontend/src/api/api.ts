@@ -1,18 +1,12 @@
 import { api, request } from "@/api";
-import {
-  fakeDelay,
-  fakeError,
-  fakeFull,
-  fakeQuick,
-  fakeSamples,
-  fakeSearch,
-} from "@/api/fake";
-
-export type QuickSearch = {
-  type: string;
-  name: string;
-  description: string;
-}[];
+import type {
+  Cart,
+  CartDownload,
+  ModelSearch,
+  StudySamples,
+  StudySearch,
+} from "@/api/types";
+import type { LocalCart, ShareCart } from "@/cart";
 
 /** type to color map */
 export const typeColor: Record<string, string> = {
@@ -23,76 +17,124 @@ export const typeColor: Record<string, string> = {
   default: "bg-gray-700/70",
 };
 
-export const quickSearch = async (search: string) => {
-  const url = new URL(`${api}/api/quick-search`);
+/** search for models */
+export const modelSearch = async (search: string) => {
+  const url = new URL(`${api}/model`);
   url.searchParams.set("search", search);
-
-  await fakeDelay();
-  fakeError();
-  return fakeSearch(fakeQuick, search);
-
-  return request<QuickSearch>(url);
+  const data = request<ModelSearch>(url);
+  return data;
 };
 
-export type FullSearch = {
-  meta: {
-    total: number;
-    pages: number;
-    limit: number;
-  };
-  results: {
-    id: string;
-    name: string;
-    confidence: { name: string; value: number };
-    description: string;
-    date: string;
-    platform: string;
-    database: string[];
-    samples: number;
-  }[];
-  facets: {
-    [facet: string]: {
-      [value: string]: number;
-    };
-  };
-};
-
-type FullSearchParams = {
-  search: string;
-  sort?: string;
-  page?: number;
-  facets?: Record<string, string[]>;
-};
-
-export const fullSearch = async ({
-  search,
-  sort = "",
-  page = 0,
-  facets = {},
-}: FullSearchParams) => {
-  const url = new URL(`${api}/api/full-search`);
+/** search for studies and get full details */
+export const studySearch = async ({
+  search = "",
+  ordering = "",
+  offset = 0,
+  limit = 100,
+  facets = {} as Record<string, string[]>,
+}) => {
+  const url = new URL(`${api}/study`);
   url.searchParams.set("search", search);
-  url.searchParams.set("sort", sort);
-  url.searchParams.set("page", String(page));
+  url.searchParams.set("ordering", ordering);
+  url.searchParams.set("offset", String(offset));
+  url.searchParams.set("limit", String(limit));
   for (const [facet, values] of Object.entries(facets))
     for (const value of values) url.searchParams.append(facet, value);
-
-  await fakeDelay();
-  fakeError();
-  return fakeFull;
-
-  return request<FullSearch>(url);
+  const data = request<StudySearch>(url);
+  return data;
 };
 
-export type SamplesLookup = {
-  name: string;
-  description: string;
-}[];
+/** batch lookup full study details by ids */
+export const studyBatchLookup = async ({
+  ids = [] as string[],
+  ordering = "",
+  offset = 0,
+  limit = 100,
+}) => {
+  const url = new URL(`${api}/study/lookup`);
+  url.searchParams.set("ordering", ordering);
+  url.searchParams.set("offset", String(offset));
+  url.searchParams.set("limit", String(limit));
+  const options = {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: { ids },
+  };
+  const data = request<StudySearch>(url, options);
+  return data;
+};
 
-export const sampleLookup = async (id: string) => {
-  await fakeDelay();
-  fakeError();
-  return fakeSamples(id);
+/** lookup all samples for a study */
+export const studySamples = async ({ id = "", offset = 0, limit = 10 }) => {
+  const url = new URL(`${api}/study/${id}/samples`);
+  url.searchParams.set("offset", String(offset));
+  url.searchParams.set("limit", String(limit));
+  const data = request<StudySamples>(url);
+  return data;
+};
 
-  return request<SamplesLookup>(`${api}/api/sample/${id}`);
+/** lookup a cart by id */
+export const cartLookup = async (id: string) => {
+  const url = new URL(`${api}/cart/${id}`);
+  const data = request<Cart>(url);
+  return data;
+};
+
+/** share cart */
+export const shareCart = async (cart: ShareCart) => {
+  const url = new URL(`${api}/cart`);
+  const options = {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: cart,
+  };
+  const data = request<Cart>(url, options);
+  return data;
+};
+
+/** get cart download link */
+export const getCartDownload = async (
+  ids: string[],
+  filename: string,
+  type: string,
+) => {
+  const url = new URL(`${api}/cart/download`);
+  url.searchParams.set("type", type);
+  url.searchParams.set("filename", filename);
+  const options = {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: { ids },
+  };
+  const data = await request<CartDownload>(url, options);
+  return data;
+};
+
+/** download links for each database */
+const downloadTemplates: Record<string, string> = {
+  "Refine.bio": "https://www.refine.bio/v1/download/$ID.zip",
+};
+
+/** get download bash script */
+export const getCartScript = (cart: Cart | LocalCart, database: string) => {
+  const template = downloadTemplates[database] ?? "";
+  return [
+    `#!/bin/bash`,
+    `# Meta2Onto data cart download script`,
+    `# Generated: ${new Date().toISOString()}`,
+    "id" in cart ? `# ID: ${cart.id}` : "",
+    "name" in cart ? `# Name: ${cart.name}` : "",
+    `# Studies: ${cart.studies.length}`,
+    ...cart.studies.map(({ id }) => [
+      `# Download ${id} from ${database}`,
+      `wget "${template.replace(/\$ID/g, id)}" -O ${id}_${database}.zip`,
+    ]),
+    `# Extract`,
+    `for file in *.zip; do unzip "$file"; done`,
+    `echo "Download complete"`,
+  ]
+    .flat()
+    .map((line) => line.trimEnd())
+    .filter(Boolean)
+    .join("\n");
 };

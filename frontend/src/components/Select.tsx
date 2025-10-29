@@ -1,39 +1,38 @@
 import type { ComponentProps } from "react";
+import { startCase } from "lodash";
 
 type Props<O extends Option> = {
   /** pass with "as const" */
   options: readonly O[];
   /** selected option state */
-  value?: O["id"];
+  value?: O["value"];
   /** on selected option state change */
-  onChange?: (value: O["id"]) => void;
+  onChange?: (value: O["value"]) => void;
 } & Omit<ComponentProps<"select">, "value" | "onChange">;
 
-export type Option<ID = string> = {
-  id: ID;
-  value: string;
+export type Option<Value = string> = {
+  value: Value;
+  name?: string;
 };
 
-const Select = <O extends Option>({
+export default function <O extends Option>({
   value,
   onChange,
   options,
   ...props
-}: Props<O>) => {
+}: Props<O>) {
   return (
     <select
-      className="border-theme-light rounded border-1 px-2 py-1"
+      className="border-theme-light rounded border px-2 py-1"
       value={value}
-      onChange={(event) => onChange?.(event.target.value as O["id"])}
+      onChange={(event) => onChange?.(event.currentTarget.value)}
       {...props}
     >
       {options.map((option) => (
-        <option key={option.id} value={option.id}>
-          {option.value}
+        <option key={option.value} value={option.value}>
+          {option.name ?? startCase(option.value)}
         </option>
       ))}
     </select>
   );
-};
-
-export default Select;
+}

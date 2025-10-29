@@ -6,18 +6,16 @@ type Props = {
   children: ReactNode;
 };
 
-const Checkbox = ({ value, onChange, children }: Props) => {
+export default function ({ value, onChange, children }: Props) {
   return (
     <label>
       <input
         className="size-4"
         type="checkbox"
         checked={value}
-        onChange={(e) => onChange?.(e.target.checked)}
+        onChange={(event) => onChange?.(event.currentTarget.checked)}
       />
       {children}
     </label>
   );
-};
-
-export default Checkbox;
+}

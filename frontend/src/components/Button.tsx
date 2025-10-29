@@ -1,4 +1,4 @@
-import type { ComponentProps, ReactNode, Ref } from "react";
+import type { ComponentProps, Ref } from "react";
 import clsx from "clsx";
 import Link from "@/components/Link";
 
@@ -7,20 +7,18 @@ type Props = Base & (_Link | _Button);
 type Base = {
   /** color */
   color?: "none" | "theme" | "accent";
-  /** class on button */
-  className?: string;
-  /** content */
-  children: ReactNode;
 };
 
 type _Link = { ref?: Ref<HTMLAnchorElement> } & Pick<
   ComponentProps<typeof Link>,
-  "to" | "style"
+  "children" | "to" | "className" | "style"
 >;
 
 type _Button = { ref?: Ref<HTMLButtonElement> } & Pick<
   ComponentProps<"button">,
+  | "children"
   | "type"
+  | "className"
   | "style"
   | "disabled"
   | "onClick"
@@ -35,20 +33,20 @@ type _Button = { ref?: Ref<HTMLButtonElement> } & Pick<
  * looks like a button and either goes somewhere (link) or does something
  * (button)
  */
-const Button = ({
+export default function ({
   ref,
   color = "theme",
   className,
   children,
   ...props
-}: Props) => {
+}: Props) {
   /** combine styles */
   const _class = clsx(
     className,
-    "flex items-center gap-2 rounded p-2 leading-none hover:bg-slate-500/50 hover:text-white",
-    color === "none" && "bg-transparent text-current!",
-    color === "theme" && "bg-theme text-white",
-    color === "accent" && "bg-accent text-white",
+    "flex items-center justify-center gap-2 rounded p-2 leading-none hover:bg-slate-500 hover:text-white",
+    color === "none" && "text-theme bg-transparent disabled:text-slate-300",
+    color === "theme" && "bg-theme text-white disabled:bg-slate-300",
+    color === "accent" && "bg-accent text-white disabled:bg-slate-300",
   );
 
   /** if "to", render as link */
@@ -74,6 +72,4 @@ const Button = ({
         {children}
       </button>
     );
-};
-
-export default Button;
+}
