@@ -1,7 +1,7 @@
 import { getDefaultStore } from "jotai";
 import { atomWithStorage } from "jotai/utils";
 import { isEqual, uniqBy, uniqWith } from "lodash";
-import type { CartLookup } from "@/api/api";
+import type { CartLookup } from "@/api/types";
 
 const defaultCart: CartLookup = {
   id: "",

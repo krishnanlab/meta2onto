@@ -27,8 +27,8 @@ import {
   getCartScript,
   shareCart,
   studyBatchLookup,
-  type CartLookup,
 } from "@/api/api";
+import type { CartLookup } from "@/api/types";
 import {
   addCreatedCart,
   cartAtom,

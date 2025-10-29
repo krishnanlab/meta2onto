@@ -1,5 +1,5 @@
 import { random, range, sample, uniq } from "lodash";
-import type { ModelSearch, StudySamples, StudySearch } from "@/api/api";
+import type { ModelSearch, StudySamples, StudySearch } from "@/api/types";
 import { sleep } from "@/util/misc";
 
 export const words =
@@ -70,8 +70,8 @@ const fakeStudy = () => ({
 
 const totalStudies = random(10, 50);
 
-export const fakeStudySearch: StudySearch = {
-  count: totalStudies,
+export const fakeStudySearch = (ids?: string[]): StudySearch => ({
+  count: ids?.length ?? totalStudies,
   results: range(totalStudies).map(fakeStudy),
   facets: {
     Platform: {
@@ -89,7 +89,7 @@ export const fakeStudySearch: StudySearch = {
       Low: random(0, 200),
     },
   },
-};
+});
 
 export const fakeSample = (index = 1) => ({
   name: `${fakeId()}_${index}`,
@@ -103,8 +103,8 @@ export const fakeStudySamples = (): StudySamples => ({
   results: range(1, totalSamples).map(fakeSample),
 });
 
-export const fakeCart = () => ({
-  id: fakeId(),
+export const fakeCart = (id?: string) => ({
+  id: id ?? fakeId(),
   name: phrase(2, 5),
   studies: range(random(1, 10)).map(() => ({
     id: fakeId(),
