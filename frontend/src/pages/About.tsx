@@ -1,6 +1,4 @@
-import Button from "@/components/Button";
 import Heading from "@/components/Heading";
-import Link from "@/components/Link";
 import Meta from "@/components/Meta";
 
 export const About = () => (
@@ -12,10 +10,6 @@ export const About = () => (
     </section>
 
     <section>
-      <Heading level={2}>Heading 2</Heading>
-      <Heading level={3}>Heading 3</Heading>
-      <Heading level={4}>Heading 4</Heading>
-
       <p>
         Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
         tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim
@@ -35,35 +29,6 @@ export const About = () => (
         occaecat cupidatat non proident, sunt in culpa qui officia deserunt
         mollit anim id est laborum.
       </p>
-    </section>
-
-    <section>
-      <div className="flex flex-wrap justify-center gap-4">
-        <Link to="/">Link</Link>
-        <Link to="https://google.com">Link</Link>
-      </div>
-      <div className="flex flex-wrap justify-center gap-4">
-        <Button to="" color="none">
-          Button
-        </Button>
-        <Button to="" color="theme">
-          Button
-        </Button>
-        <Button to="" color="accent">
-          Button
-        </Button>
-      </div>
-      <div className="flex flex-wrap justify-center gap-4">
-        <Button onClick={() => null} color="none">
-          Button
-        </Button>
-        <Button onClick={() => null} color="theme">
-          Button
-        </Button>
-        <Button onClick={() => null} color="accent">
-          Button
-        </Button>
-      </div>
     </section>
   </>
 );

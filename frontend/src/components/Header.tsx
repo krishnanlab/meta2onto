@@ -15,7 +15,7 @@ const Header = () => {
         href="/"
         className="hover:text-theme-light! flex items-center gap-2 p-2 text-2xl tracking-wider text-white!"
       >
-        <Logo color="currentColor" className="h-10" />
+        <Logo color="currentColor" className="h-8" />
         {title}
       </a>
 

@@ -1,127 +1,115 @@
 import type { ComponentProps } from "react";
-import { arc } from "d3-shape";
 import { range } from "lodash";
-import { parseSVG } from "svg-path-parser";
 
-const radius = 58;
+/** params */
+const bounds = 56;
+const size = 48;
 const sides = 3;
 const layers = 3;
 const thickness = 4;
-const gap = 10;
-const arrow = 16;
+const spacing = 12;
+const head = 12;
 
+/** hardcoded colors */
 const theme = "hsl(220, 30%, 50%)";
 const accent = "hsl(0, 60%, 60%)";
 
+/** 2 pi */
 const tau = 2 * Math.PI;
 
-const segmentPaths = range(layers)
+/** arc segments */
+const segments = range(layers)
   .map((layer) =>
     range(sides).map((side) => {
-      const outerRadius = radius - layer * (thickness + gap);
-      const innerRadius = outerRadius - thickness;
+      /** layer radius */
+      const radius = size - layer * spacing;
 
-      side += 0.25;
+      /** stagger rotations */
       side += layer % 2 === 0 ? 0 : 0.5;
 
-      const startAngle = side / sides;
-      const endAngle = (side + 1) / sides;
+      /** start/end angles */
+      let startAngle = tau * (side / sides);
+      let endAngle = tau * ((side + 1) / sides);
 
-      const path = arc<null>()
-        .innerRadius(innerRadius)
-        .outerRadius(outerRadius)
-        .startAngle(tau * startAngle)
-        .endAngle(tau * endAngle)
-        .padAngle(1)
-        .padRadius(gap)
-        .cornerRadius(999)(null)!;
+      /** add gap */
+      startAngle += (0.5 * spacing) / radius;
+      endAngle -= (0.5 * spacing) / radius;
 
-      return { path };
+      /** start/end points */
+      const start = {
+        x: radius * Math.cos(-startAngle),
+        y: radius * -Math.sin(-startAngle),
+      };
+      const end = {
+        x: radius * Math.cos(-endAngle),
+        y: radius * -Math.sin(-endAngle),
+      };
+
+      return { layer, side, radius, start, end };
     }),
   )
   .flat();
 
-const points = segmentPaths.map(({ path }) => {
-  const points = parseSVG(path).filter((point) => "x" in point && "y" in point);
-  return {
-    start: {
-      x: (points.at(1)!.x + points.at(6)!.x) / 2,
-      y: (points.at(1)!.y + points.at(6)!.y) / 2,
-    },
-    end: {
-      x: (points.at(2)!.x + points.at(5)!.x) / 2,
-      y: (points.at(2)!.y + points.at(5)!.y) / 2,
-    },
-  };
-});
-
-const shaftPath = [`M ${0.666 * arrow} 0`, `H ${-radius}`].join(" ");
-
-const arrowPath = [
-  shaftPath,
-  `M ${0.666 * arrow} 0`,
-  `m ${-arrow} ${-arrow}`,
-  `l ${arrow} ${arrow}`,
-  `l ${-arrow} ${arrow}`,
+/** arrow shape */
+const arrow = [
+  `M ${0.666 * head} 0`,
+  `H ${-size + 0.5 * head}`,
+  `m 0 0`,
+  `a ${-0.5 * head} ${0.5 * head} 0 0 0 ${-head} 0`,
+  `a ${-0.5 * head} ${0.5 * head} 0 0 0 ${head} 0`,
+  `M ${0.666 * head} 0`,
+  `m ${-head} ${-head}`,
+  `l ${head} ${head}`,
+  `l ${-head} ${head}`,
 ].join(" ");
 
-const Logo = ({
-  color,
-  ...props
-}: { color?: string } & ComponentProps<"svg">) => {
+type Props = { color?: string; animate?: boolean } & ComponentProps<"svg">;
+
+const Logo = ({ color, animate, ...props }: Props) => {
   return (
     <svg
-      ref={(el) => {
-        if (!el) return;
-        const { x, y, width, height } = el.getBBox();
-        el.setAttribute(
-          "viewBox",
-          [x, y, width, height].map(Math.round).join(" "),
-        );
-      }}
       xmlns="http://www.w3.org/2000/svg"
+      viewBox={[-bounds, -bounds, 2 * bounds, 2 * bounds].join(" ")}
+      strokeWidth={thickness}
+      strokeLinecap="round"
+      strokeLinejoin="round"
       {...props}
     >
       <mask id="clip">
         <rect
-          x={-radius}
-          y={-radius}
-          width={2 * radius}
-          height={2 * radius}
+          x={-bounds}
+          y={-bounds}
+          width={2 * bounds}
+          height={2 * bounds}
           fill="white"
         />
         <path
-          d={shaftPath}
-          fill="none"
+          d={arrow}
+          fill="black"
           stroke="black"
-          strokeWidth={6 * thickness}
-          strokeLinecap="round"
-          strokeLinejoin="round"
+          strokeWidth={4.5 * thickness}
         />
       </mask>
 
-      {segmentPaths.map(({ path }, index) => (
-        <path key={index} d={path} fill={color ?? theme} mask="url(#clip)" />
-      ))}
-      {points.map(({ end }, index) => (
-        <circle
-          key={index}
-          cx={end.x}
-          cy={end.y}
-          r={thickness}
-          fill={color ?? theme}
-          mask="url(#clip)"
-        />
-      ))}
+      <g mask="url(#clip)" fill="none" stroke={color ?? theme}>
+        {segments.map(({ layer, radius, start, end }, index) => (
+          <path
+            key={index}
+            d={`M ${start.x} ${start.y} A ${radius} ${radius} 0 0 1 ${end.x} ${end.y}`}
+            className={animate ? "animate-spin" : undefined}
+            style={
+              animate
+                ? {
+                    animationDuration: "10s",
+                    animationDirection: layer % 2 === 0 ? "normal" : "reverse",
+                  }
+                : undefined
+            }
+          />
+        ))}
+      </g>
 
-      <path
-        d={arrowPath}
-        fill="none"
-        stroke={color ?? accent}
-        strokeWidth={thickness}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
+      <path d={arrow} fill="none" stroke={color ?? accent} />
     </svg>
   );
 };

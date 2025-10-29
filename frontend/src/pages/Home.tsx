@@ -15,11 +15,15 @@ const examples = ["Hepatocyte", "Breast cancer", "Alzheimer's disease"];
 export const Home = () => {
   return (
     <>
-      <section className="narrow bg-theme-light py-12! text-center">
+      <section className="narrow bg-theme-light relative z-0 overflow-hidden py-20! text-center">
+        <Logo
+          color="white"
+          animate
+          className="absolute top-1/2 left-1/2 -z-10 size-100 -translate-x-1/2 -translate-y-1/2 opacity-25"
+        />
+
         <hgroup className="flex flex-col items-center gap-y-1">
           <h1 className="sr-only">Home</h1>
-
-          <Logo className="h-20" />
 
           <p className="text-xl font-normal tracking-wide text-balance">
             Discover Human Transcriptomics Data

@@ -331,7 +331,7 @@ const Cart = () => {
                       name: "",
                       sortable: false,
                       render: (id) => (
-                        <Button onClick={() => removeFromCart(id)}>
+                        <Button onClick={() => removeFromCart(id)} color="none">
                           <Trash />
                         </Button>
                       ),

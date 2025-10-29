@@ -18,9 +18,7 @@
     "@tailwindcss/vite": "^4.1.13",
     "@tanstack/react-query": "^5.90.5",
     "@tanstack/react-table": "^8.21.3",
-    "@types/svg-path-parser": "^1.1.6",
     "clsx": "^2.1.1",
-    "d3": "^7.9.0",
     "highlight.js": "^11.11.1",
     "javascript-time-ago": "^2.5.12",
     "jotai": "^2.15.0",
@@ -31,7 +29,6 @@
     "react-dom": "^19.2.0",
     "react-router": "^7.9.2",
     "react-time-ago": "^7.3.5",
-    "svg-path-parser": "^1.1.0",
     "tailwindcss": "^4.1.13"
   },
   "devDependencies": {

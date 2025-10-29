@@ -13,6 +13,7 @@ import Cart from "@/pages/Cart";
 import { Home } from "@/pages/Home";
 import NotFound from "@/pages/NotFound";
 import Search from "@/pages/Search";
+import Testbed from "@/pages/Testbed";
 import { getDocBbox, glow, scrollTo } from "@/util/dom";
 import { useChanged } from "@/util/hooks";
 import { sleep, waitFor, waitForStable } from "@/util/misc";
@@ -81,6 +82,11 @@ export const routes = [
         path: "cart/:id?",
         element: <Cart />,
       },
+      {
+        path: "testbed",
+        element: <Testbed />,
+      },
+
       {
         path: "*",
         element: <NotFound />,
