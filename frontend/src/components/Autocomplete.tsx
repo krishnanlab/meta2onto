@@ -52,7 +52,7 @@ export default function ({
               ref={inputRef}
               placeholder={placeholder}
               className={clsx(
-                "border-theme-light w-full rounded border-1 p-2 leading-none disabled:border-0 disabled:bg-slate-200!",
+                "border-theme-light w-full rounded border p-2 leading-none disabled:border-0 disabled:bg-slate-200!",
                 className,
               )}
             />

@@ -78,7 +78,7 @@ export default function () {
   const cart = useAtomValue(cartAtom);
 
   const filtersPanel = (
-    <div className="flex min-w-20 flex-col gap-4 rounded bg-slate-100 p-4">
+    <div className="flex w-full flex-row flex-wrap gap-4 rounded bg-slate-100 p-4 sm:w-auto sm:flex-col">
       {/* facets */}
       {isEmpty(query.data?.facets) && (
         <span className="text-slate-500">Filters</span>
@@ -108,7 +108,7 @@ export default function () {
   );
 
   const resultsPanel = (
-    <div className="flex grow basis-0 flex-col gap-4">
+    <div className="flex w-full grow basis-0 flex-col gap-4">
       {/* search box */}
       <SearchBox />
 
@@ -184,14 +184,14 @@ export default function () {
               dangerouslySetInnerHTML={{ __html: description }}
             />
 
-            <div className="flex items-end justify-between gap-2">
+            <div className="flex flex-wrap items-end justify-between gap-2">
               <div className="flex flex-wrap gap-2">
                 {database.map((database, index) => (
                   <Database key={index} database={database} />
                 ))}
               </div>
 
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <Dialog
                   trigger={
                     <Button color="theme">

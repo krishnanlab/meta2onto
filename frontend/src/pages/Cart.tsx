@@ -235,6 +235,9 @@ export default function () {
                         )}
                       </>
                     }
+                    onClose={() => {
+                      if (shareMutation.isError) reset();
+                    }}
                   />
                 )}
 
@@ -385,7 +388,7 @@ export default function () {
 
             <div
               className={clsx(
-                "xs:grid-cols-1 grid max-w-max gap-4 self-center sm:grid-cols-2 md:grid-cols-3",
+                "grid max-w-max grid-cols-1 gap-4 self-center sm:grid-cols-2 md:grid-cols-3",
                 createdCarts.length === 1 && "grid-cols-1!",
                 createdCarts.length === 2 && "grid-cols-2!",
               )}
@@ -394,7 +397,7 @@ export default function () {
                 <Link
                   key={index}
                   to={`/cart/${id}`}
-                  className="border-theme-light flex flex-col items-start gap-2 rounded border-1 p-2 leading-none"
+                  className="border-theme-light flex flex-col items-start gap-2 rounded border p-2 leading-none"
                 >
                   <strong>{name || id}</strong>
                   <span>{formatNumber(studies.length)} studies</span>

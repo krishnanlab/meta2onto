@@ -10,7 +10,7 @@ export default function () {
   const cart = useAtomValue(cartAtom);
 
   return (
-    <header className="bg-theme-dark flex flex-wrap items-center justify-between gap-4 p-4 text-white">
+    <header className="bg-theme-dark flex flex-col flex-wrap items-center justify-between gap-4 p-4 text-white sm:flex-row">
       <a
         href="/"
         className="hover:text-theme-light! flex items-center gap-2 p-2 text-2xl tracking-wider text-white!"
@@ -19,7 +19,7 @@ export default function () {
         {title}
       </a>
 
-      <nav className="flex items-center gap-4 text-xl">
+      <nav className="flex flex-wrap items-center justify-center gap-4 text-xl">
         <Button to="/about" color="none" className="text-current!">
           About
         </Button>
