@@ -70,8 +70,8 @@ const fakeStudy = () => ({
 
 const totalStudies = random(10, 50);
 
-export const fakeStudySearch = (ids?: string[]): StudySearch => ({
-  count: ids?.length ?? totalStudies,
+export const fakeStudySearch = (): StudySearch => ({
+  count: totalStudies,
   results: range(totalStudies).map(fakeStudy),
   facets: {
     Platform: {
@@ -103,8 +103,8 @@ export const fakeStudySamples = (): StudySamples => ({
   results: range(1, totalSamples).map(fakeSample),
 });
 
-export const fakeCart = (id?: string) => ({
-  id: id ?? fakeId(),
+export const fakeCart = () => ({
+  id: fakeId(),
   name: phrase(2, 5),
   studies: range(random(1, 10)).map(() => ({
     id: fakeId(),

@@ -76,7 +76,7 @@ export const studyBatchLookup = async ({
 
   await fakeDelay();
   fakeError();
-  const data = fakeStudySearch(ids);
+  const data = fakeStudySearch();
 
   // const data = request<StudySearch>(url, options);
   return { ...data, pages: Math.ceil(data.count / limit) };
@@ -102,7 +102,7 @@ export const cartLookup = async (id: string) => {
 
   await fakeDelay();
   fakeError();
-  const data = fakeCart(id);
+  const data = fakeCart();
 
   // const data = request<CartLookup>(url);
   return data;
@@ -119,7 +119,7 @@ export const shareCart = async (cart: CartLookup) => {
 
   await fakeDelay();
   fakeError();
-  const data = fakeCart(cart.id);
+  const data = fakeCart();
 
   // const data = request<CartLookup>(url, options);
   return data;
