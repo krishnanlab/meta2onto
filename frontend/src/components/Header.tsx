@@ -10,10 +10,14 @@ import Tooltip from "@/components/Tooltip";
 
 const { VITE_TITLE: title } = import.meta.env;
 
-/** ref to cart button el */
-export let cartButton: HTMLAnchorElement | undefined;
+let cartRef: HTMLAnchorElement | undefined;
+let toggleRef: HTMLButtonElement | undefined;
+
+export const getCartRef = () =>
+  cartRef && cartRef.getBoundingClientRect().width ? cartRef : toggleRef;
 
 export default function () {
+  /** cart state */
   const cart = useAtomValue(cartAtom);
 
   const { y } = useWindowScroll();
@@ -50,6 +54,10 @@ export default function () {
       {/* nav toggle */}
       <Tooltip content={open ? "Collapse menu" : "Expand menu"}>
         <Button
+          ref={(el: HTMLButtonElement) => {
+            toggleRef = el;
+            return () => (toggleRef = undefined);
+          }}
           color="none"
           className="text-current! sm:hidden"
           onClick={() => setOpen(!open)}
@@ -76,7 +84,8 @@ export default function () {
         </Button>
         <Button
           ref={(el: HTMLAnchorElement) => {
-            cartButton = el ?? undefined;
+            cartRef = el;
+            return () => (cartRef = undefined);
           }}
           to="/cart"
           color="accent"

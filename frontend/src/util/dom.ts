@@ -95,15 +95,15 @@ export const elementOrSection = <El extends Element>(element: El) => {
 };
 
 /** fly one element to another */
-export const flyElement = async (
-  source?: HTMLElement,
-  target?: HTMLElement,
-) => {
-  if (!source || !target) return;
-
-  /** get element props */
+export const fly = async (source: HTMLElement, target: HTMLElement) => {
+  /** get element sizes */
   const sourceBox = source.getBoundingClientRect();
   const targetBox = target.getBoundingClientRect();
+
+  if (sourceBox.width === 0 || sourceBox.height === 0) return;
+  if (targetBox.width === 0 || targetBox.height === 0) return;
+
+  /** get element styles */
   const styles = ["color", "borderRadius", "backgroundColor"];
   const sourceStyle = pick(window.getComputedStyle(source), styles) as Keyframe;
   const targetStyle = pick(window.getComputedStyle(target), styles) as Keyframe;

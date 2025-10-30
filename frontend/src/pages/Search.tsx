@@ -10,7 +10,7 @@ import Button from "@/components/Button";
 import Checkbox from "@/components/Checkbox";
 import Database from "@/components/Database";
 import Dialog from "@/components/Dialog";
-import { cartButton } from "@/components/Header";
+import { getCartRef } from "@/components/Header";
 import Heading from "@/components/Heading";
 import Meta from "@/components/Meta";
 import Meter from "@/components/Meter";
@@ -19,7 +19,7 @@ import type { Limit } from "@/components/Pagination";
 import Select from "@/components/Select";
 import Status from "@/components/Status";
 import { SearchBox } from "@/pages/Home";
-import { flyElement } from "@/util/dom";
+import { fly } from "@/util/dom";
 import { formatDate, formatNumber } from "@/util/string";
 
 /** per page select options */
@@ -217,12 +217,13 @@ export default function () {
                   }
                   color={inCart(cart, id) ? "none" : "accent"}
                   onClick={(event) => {
+                    const cartRef = getCartRef();
                     if (inCart(cart, id)) {
-                      flyElement(cartButton, event.currentTarget);
                       removeFromCart(id);
+                      if (cartRef) fly(cartRef, event.currentTarget);
                     } else {
                       addToCart(id);
-                      flyElement(event.currentTarget, cartButton);
+                      if (cartRef) fly(event.currentTarget, cartRef);
                     }
                   }}
                 >
