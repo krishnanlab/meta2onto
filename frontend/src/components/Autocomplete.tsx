@@ -35,7 +35,7 @@ export default function ({
   status,
   className,
 }: Props) {
-  const inputRef = useRef<HTMLInputElement>(null);
+  const ref = useRef<HTMLInputElement>(null);
 
   return (
     <Autocomplete.Root
@@ -49,7 +49,7 @@ export default function ({
         <Autocomplete.Input
           render={
             <input
-              ref={inputRef}
+              ref={ref}
               placeholder={placeholder}
               className={clsx(
                 "border-theme-light w-full rounded border p-2 leading-none disabled:border-0 disabled:bg-slate-200!",
@@ -81,7 +81,7 @@ export default function ({
                       /** select option */
                       onSelect?.(tag.value);
                       /** close dropdown */
-                      inputRef.current?.blur();
+                      ref.current?.blur();
                     }}
                   >
                     {tag.content}

@@ -1,5 +1,6 @@
 import type { ComponentProps } from "react";
 import { range } from "lodash";
+import { useTheme } from "@/util/hooks";
 
 /** params */
 const bounds = 56;
@@ -9,10 +10,6 @@ const layers = 3;
 const thickness = 4;
 const spacing = 12;
 const head = 12;
-
-/** hardcoded colors */
-const theme = "hsl(220, 30%, 50%)";
-const accent = "hsl(0, 60%, 60%)";
 
 /** 2 pi */
 const tau = 2 * Math.PI;
@@ -63,9 +60,11 @@ const arrow = [
   `l ${-head} ${head}`,
 ].join(" ");
 
-type Props = { color?: string; animate?: boolean } & ComponentProps<"svg">;
+type Props = { color?: string } & ComponentProps<"svg">;
 
-export default function ({ color, animate, ...props }: Props) {
+export default function ({ color, ...props }: Props) {
+  const theme = useTheme();
+
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -91,25 +90,16 @@ export default function ({ color, animate, ...props }: Props) {
         />
       </mask>
 
-      <g mask="url(#clip)" fill="none" stroke={color ?? theme}>
-        {segments.map(({ layer, radius, start, end }, index) => (
+      <g mask="url(#clip)" fill="none" stroke={color ?? theme["--color-theme"]}>
+        {segments.map(({ radius, start, end }, index) => (
           <path
             key={index}
             d={`M ${start.x} ${start.y} A ${radius} ${radius} 0 0 1 ${end.x} ${end.y}`}
-            className={animate ? "animate-spin" : undefined}
-            style={
-              animate
-                ? {
-                    animationDuration: "10s",
-                    animationDirection: layer % 2 === 0 ? "normal" : "reverse",
-                  }
-                : undefined
-            }
           />
         ))}
       </g>
 
-      <path d={arrow} fill="none" stroke={color ?? accent} />
+      <path d={arrow} fill="none" stroke={color ?? theme["--color-accent"]} />
     </svg>
   );
 }

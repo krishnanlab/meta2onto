@@ -1,25 +1,73 @@
+import { useEffect, useRef, useState } from "react";
+import { useElementSize, useWindowScroll } from "@reactuses/core";
+import clsx from "clsx";
 import { useAtomValue } from "jotai";
-import { ShoppingCart } from "lucide-react";
+import { Menu, ShoppingCart, X } from "lucide-react";
 import { cartAtom } from "@/cart";
 import Button from "@/components/Button";
 import Logo from "@/components/Logo";
+import Tooltip from "@/components/Tooltip";
 
 const { VITE_TITLE: title } = import.meta.env;
+
+/** ref to cart button el */
+export let cartButton: HTMLAnchorElement | undefined;
 
 export default function () {
   const cart = useAtomValue(cartAtom);
 
+  const { y } = useWindowScroll();
+  /** nav menu expanded/collapsed state */
+  const [open, setOpen] = useState(false);
+
+  /** header height */
+  const ref = useRef<HTMLElement | null>(null);
+  let [, height] = useElementSize(ref, { box: "border-box" });
+  height = Math.round(height);
+
+  useEffect(() => {
+    /** make sure all scrolls take into account header height */
+    document.documentElement.style.scrollPaddingTop = height + "px";
+  }, [height]);
+
   return (
-    <header className="bg-theme-dark flex flex-col flex-wrap items-center justify-between gap-4 p-4 text-white sm:flex-row">
+    <header
+      ref={ref}
+      className={clsx(
+        "bg-theme-dark sticky top-0 z-10 flex flex-row flex-wrap items-center justify-between text-white",
+        y > 0 ? "gap-2 p-2" : "gap-4 p-4",
+      )}
+    >
+      {/* title */}
       <a
         href="/"
-        className="hover:text-theme-light! flex items-center gap-2 p-2 text-2xl tracking-wider text-white!"
+        className="hover:text-theme-light! flex items-center gap-2 text-2xl tracking-wider text-white!"
       >
         <Logo color="currentColor" className="h-8" />
         {title}
       </a>
 
-      <nav className="flex flex-wrap items-center justify-center gap-4 text-xl">
+      {/* nav toggle */}
+      <Tooltip content={open ? "Collapse menu" : "Expand menu"}>
+        <Button
+          color="none"
+          className="text-current! sm:hidden"
+          onClick={() => setOpen(!open)}
+          aria-expanded={open}
+          aria-controls="nav"
+        >
+          {open ? <X /> : <Menu />}
+        </Button>
+      </Tooltip>
+
+      {/* nav bar */}
+      <nav
+        className={clsx(
+          "max-xs:flex-col flex flex-wrap items-center justify-center gap-4 text-xl",
+          !open && "max-sm:hidden",
+          open && "max-sm:w-full",
+        )}
+      >
         <Button to="/about" color="none" className="text-current!">
           About
         </Button>
@@ -27,6 +75,9 @@ export default function () {
           Search
         </Button>
         <Button
+          ref={(el: HTMLAnchorElement) => {
+            cartButton = el ?? undefined;
+          }}
           to="/cart"
           color="accent"
           aria-label="Data cart"

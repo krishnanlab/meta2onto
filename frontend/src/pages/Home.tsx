@@ -6,7 +6,7 @@ import { Lightbulb } from "lucide-react";
 import { modelSearch, typeColor } from "@/api/api";
 import Autocomplete from "@/components/Autocomplete";
 import Link from "@/components/Link";
-import Logo from "@/components/Logo";
+import Rings from "@/components/Rings";
 import Status, { showStatus } from "@/components/Status";
 
 /** example searches */
@@ -16,11 +16,7 @@ export default function () {
   return (
     <>
       <section className="narrow bg-theme-light relative z-0 overflow-hidden py-20! text-center">
-        <Logo
-          color="white"
-          animate
-          className="absolute top-1/2 left-1/2 -z-10 size-100 -translate-x-1/2 -translate-y-1/2 opacity-25"
-        />
+        <Rings className="text-theme absolute top-1/2 left-1/2 -z-10 w-400 -translate-x-1/2 -translate-y-1/2 opacity-15" />
 
         <hgroup className="flex flex-col items-center gap-y-1">
           <h1 className="sr-only">Home</h1>

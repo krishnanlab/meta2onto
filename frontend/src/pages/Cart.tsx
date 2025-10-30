@@ -388,9 +388,12 @@ export default function () {
 
             <div
               className={clsx(
-                "grid max-w-max grid-cols-1 gap-4 self-center sm:grid-cols-2 md:grid-cols-3",
-                createdCarts.length === 1 && "grid-cols-1!",
-                createdCarts.length === 2 && "grid-cols-2!",
+                "grid max-w-max gap-4 self-center",
+                createdCarts.length === 1
+                  ? "grid-cols-1"
+                  : createdCarts.length === 2
+                    ? "grid-cols-2 max-sm:grid-cols-1"
+                    : "grid-cols-3 max-md:grid-cols-2 max-sm:grid-cols-1",
               )}
             >
               {createdCarts.map(({ id, name, studies }, index) => (

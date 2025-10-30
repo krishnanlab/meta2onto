@@ -10,6 +10,7 @@ import Button from "@/components/Button";
 import Checkbox from "@/components/Checkbox";
 import Database from "@/components/Database";
 import Dialog from "@/components/Dialog";
+import { cartButton } from "@/components/Header";
 import Heading from "@/components/Heading";
 import Meta from "@/components/Meta";
 import Meter from "@/components/Meter";
@@ -18,6 +19,7 @@ import type { Limit } from "@/components/Pagination";
 import Select from "@/components/Select";
 import Status from "@/components/Status";
 import { SearchBox } from "@/pages/Home";
+import { flyElement } from "@/util/dom";
 import { formatDate, formatNumber } from "@/util/string";
 
 /** per page select options */
@@ -78,7 +80,7 @@ export default function () {
   const cart = useAtomValue(cartAtom);
 
   const filtersPanel = (
-    <div className="flex w-full flex-row flex-wrap gap-4 rounded bg-slate-100 p-4 sm:w-auto sm:flex-col">
+    <div className="flex w-auto flex-col gap-4 rounded bg-slate-100 p-4 max-sm:w-full max-sm:flex-row max-sm:flex-wrap">
       {/* facets */}
       {isEmpty(query.data?.facets) && (
         <span className="text-slate-500">Filters</span>
@@ -214,9 +216,15 @@ export default function () {
                     inCart(cart, id) ? "Remove from cart" : "Add to cart"
                   }
                   color={inCart(cart, id) ? "none" : "accent"}
-                  onClick={() =>
-                    inCart(cart, id) ? removeFromCart(id) : addToCart(id)
-                  }
+                  onClick={(event) => {
+                    if (inCart(cart, id)) {
+                      flyElement(cartButton, event.currentTarget);
+                      removeFromCart(id);
+                    } else {
+                      addToCart(id);
+                      flyElement(event.currentTarget, cartButton);
+                    }
+                  }}
                 >
                   {inCart(cart, id) ? <Check /> : <Plus />}
                   Cart
@@ -257,7 +265,7 @@ export default function () {
       </Heading>
 
       <section>
-        <div className="flex flex-col items-start gap-4 sm:flex-row">
+        <div className="flex items-start gap-4 max-sm:flex-col">
           {filtersPanel}
           {resultsPanel}
         </div>
