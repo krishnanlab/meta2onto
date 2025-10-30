@@ -134,7 +134,7 @@ export const flyElement = async (
         height: `${targetBox.height}px`,
       },
     ],
-    { duration: 300, easing: "ease-in-out" },
+    { duration: 300, easing: "ease-in" },
   ).finished;
   /** highlight target */
   const ring = {
@@ -144,8 +144,8 @@ export const flyElement = async (
   };
   await target.animate(
     [
-      { outlineColor: "transparent", ...ring },
-      { outlineColor: targetStyle.backgroundColor, ...ring },
+      { outlineColor: "transparent", ...ring, easing: "ease-out" },
+      { outlineColor: targetStyle.backgroundColor, ...ring, easing: "ease-in" },
       { outlineColor: "transparent", ...ring },
     ],
     { duration: 500, easing: "ease-in-out" },
