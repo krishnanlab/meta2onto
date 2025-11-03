@@ -45,7 +45,7 @@ export default function () {
       {/* title */}
       <a
         href="/"
-        className="hover:text-theme-light! flex items-center gap-2 text-2xl tracking-wider text-white!"
+        className="flex items-center gap-2 text-2xl tracking-wider text-white! hover:text-slate-300!"
       >
         <Logo color="currentColor" className="h-8" />
         {title}

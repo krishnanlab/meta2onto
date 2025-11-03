@@ -9,7 +9,7 @@
   --font-sans: "Outfit", sans-serif;
   --font-mono: "Sometype Mono", monospace;
 
-  --color-theme-light: hsl(220, 80%, 90%);
+  --color-theme-light: hsl(220, 100%, 95%);
   --color-theme: hsl(220, 30%, 50%);
   --color-theme-dark: hsl(220, 30%, 30%);
   --color-accent: hsl(0, 60%, 60%);
@@ -35,7 +35,7 @@ body {
 }
 
 main {
-  @apply flex flex-grow flex-col;
+  @apply flex grow flex-col;
 }
 
 section {
@@ -56,7 +56,7 @@ section:nth-of-type(even) {
 }
 
 section:last-child {
-  @apply flex-grow;
+  @apply grow;
 }
 
 h1,
@@ -156,7 +156,7 @@ code > pre {
 }
 
 .truncate-lines:focus {
-  @apply outline-theme-light rounded outline-1 outline-offset-2;
+  @apply rounded outline-1 outline-offset-2 outline-slate-300;
 }
 
 .lucide {

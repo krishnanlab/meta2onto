@@ -154,7 +154,7 @@ export default function () {
         }) => (
           <div
             key={id}
-            className="border-theme-light flex flex-col gap-2 rounded border p-4"
+            className="flex flex-col gap-2 rounded border border-slate-300 p-4"
           >
             <div className="flex items-start justify-between gap-2">
               <strong>{name}</strong>

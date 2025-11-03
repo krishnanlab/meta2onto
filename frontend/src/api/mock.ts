@@ -203,8 +203,8 @@ export const handlers = [
   handler(
     "get",
     `${api}/cart/:id`,
-    ({ params }): Cart =>
-      fakeCarts.find((cart) => cart.id === params.id) ?? sample(fakeCarts)!,
+    ({ params }): Cart | object =>
+      fakeCarts.find((cart) => cart.id === params.id) ?? {},
   ),
 
   handler("post", `${api}/cart`, ({ body }): Cart => {

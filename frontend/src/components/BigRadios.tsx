@@ -48,7 +48,7 @@ export default function <O extends Option>({
               if (option.value === value) el?.scrollIntoView(true);
             }}
             key={index}
-            className="border-theme-light relative flex min-w-50 flex-1 cursor-pointer flex-col items-start! gap-2 rounded border p-2 transition-colors hover:bg-slate-100"
+            className="relative flex min-w-50 flex-1 cursor-pointer flex-col items-start! gap-2 rounded border border-slate-300 p-2 transition-colors hover:bg-slate-100"
           >
             <Radio.Root
               value={option.value}

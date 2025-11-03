@@ -63,7 +63,7 @@ export default function ({ database, full = false }: Props) {
 
   return (
     <Tooltip content={details}>
-      <div key={database} className="bg-theme-light rounded px-1">
+      <div key={database} className="bg-theme-light rounded px-1 text-black">
         {id}
       </div>
     </Tooltip>

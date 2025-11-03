@@ -9,7 +9,7 @@ export default function ({ className, onChange, ...props }: Props) {
   return (
     <input
       className={clsx(
-        "border-theme-light rounded border p-2 leading-none disabled:border-0 disabled:bg-slate-200!",
+        "rounded border border-slate-300 p-2 leading-none disabled:border-0 disabled:bg-slate-200!",
         className,
       )}
       onChange={(event) => onChange?.(event.currentTarget.value)}

@@ -6,7 +6,7 @@ type Props = {
   content: ReactNode;
 };
 
-export const offset = 10;
+export const offset = 5;
 export const padding = 20;
 
 export default function ({ trigger, content }: Props) {
@@ -16,7 +16,7 @@ export default function ({ trigger, content }: Props) {
       <Popover.Portal>
         <Popover.Positioner sideOffset={offset} collisionPadding={padding}>
           <Popover.Popup className="shadow-overlay flex flex-col gap-2 rounded bg-white p-2 leading-none text-white">
-            <Popover.Arrow className="data-[side=bottom]:bottom-full data-[side=bottom]:rotate-180 data-[side=top]:top-full">
+            <Popover.Arrow className="text-white data-[side=bottom]:bottom-full data-[side=bottom]:rotate-180 data-[side=top]:top-full">
               <Arrow />
             </Popover.Arrow>
             {content}
@@ -27,7 +27,7 @@ export default function ({ trigger, content }: Props) {
   );
 }
 
-const size = offset / 2;
+const size = 2 * offset;
 
 export const Arrow = () => (
   <svg viewBox={[-size, -size, 2 * size, 2 * size].join(" ")} width={size}>

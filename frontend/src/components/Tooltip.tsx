@@ -19,7 +19,7 @@ export default function ({ children, content }: Props) {
             className="z-20"
           >
             <Tooltip.Popup className="flex w-50 max-w-max flex-col gap-2 rounded bg-slate-900 p-2 leading-none text-white">
-              <Tooltip.Arrow className="data-[side=bottom]:bottom-full data-[side=bottom]:rotate-180 data-[side=top]:top-full">
+              <Tooltip.Arrow className="text-slate-900 data-[side=bottom]:bottom-full data-[side=bottom]:rotate-180 data-[side=top]:top-full">
                 <Arrow />
               </Tooltip.Arrow>
               {content}

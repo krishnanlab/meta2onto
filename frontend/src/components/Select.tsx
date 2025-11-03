@@ -23,7 +23,7 @@ export default function <O extends Option>({
 }: Props<O>) {
   return (
     <select
-      className="border-theme-light rounded border px-2 py-1"
+      className="rounded border border-slate-300 px-2 py-1"
       value={value}
       onChange={(event) => onChange?.(event.currentTarget.value)}
       {...props}

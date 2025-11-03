@@ -147,7 +147,7 @@ export default function () {
     <>
       <Meta title={title} />
 
-      <section className={"bg-theme-light"}>
+      <section className="bg-theme-light">
         <Heading level={1}>{title}</Heading>
       </section>
 
@@ -400,7 +400,7 @@ export default function () {
                 <Link
                   key={index}
                   to={`/cart/${id}`}
-                  className="border-theme-light flex flex-col items-start gap-2 rounded border p-2 leading-none"
+                  className="flex flex-col items-start gap-2 rounded border border-slate-300 p-2 leading-none"
                 >
                   <strong>{name || id}</strong>
                   <span>{formatNumber(studies.length)} studies</span>

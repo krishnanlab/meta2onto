@@ -1,10 +1,12 @@
-import type { ComponentProps } from "react";
+import type { ComponentProps, CSSProperties } from "react";
 import { range } from "lodash";
+import { lerp } from "@/util/math";
+import classes from "./Rings.module.css";
 
 /** params */
 const bounds = 50;
 const size = 48;
-let sides = 16;
+const sides = 6;
 const layers = 12;
 const thickness = 0.33;
 const spacing = 3;
@@ -15,12 +17,9 @@ const tau = 2 * Math.PI;
 /** arc segments */
 const segments = range(layers)
   .map((layer) =>
-    range(sides--).map((side) => {
+    range(sides).map((side) => {
       /** layer radius */
       const radius = size - layer * spacing;
-
-      /** stagger rotations */
-      side += (layer / layers) % 1;
 
       /** start/end angles */
       let startAngle = tau * (side / sides);
@@ -47,6 +46,8 @@ const segments = range(layers)
 
 type Props = ComponentProps<"svg">;
 
+export const pulse = () => window.dispatchEvent(new Event("pulse"));
+
 export default function (props: Props) {
   return (
     <svg
@@ -57,20 +58,23 @@ export default function (props: Props) {
       strokeLinejoin="round"
       {...props}
     >
-      <g fill="none" stroke="currentColor">
-        {segments.map(({ layer, radius, start, end }, index) => (
+      {segments.map(({ layer, radius, start, end }, index) => {
+        const d = `M ${start.x} ${start.y} A ${radius} ${radius} 0 0 1 ${end.x} ${end.y}`;
+        const style = {
+          "--percent": layer / layers,
+          "--duration": `${lerp((layer + 1) / (layers + 1), 1, 0, 20, 60)}s`,
+        } as CSSProperties;
+        return (
           <path
             key={index}
-            d={`M ${start.x} ${start.y} A ${radius} ${radius} 0 0 1 ${end.x} ${end.y}`}
-            className="animate-spin"
-            style={{
-              animationDuration: "20s",
-              opacity: 1 - layer / layers,
-              animationDirection: layer % 2 === 0 ? "normal" : "reverse",
-            }}
+            className={classes.ring}
+            style={style}
+            d={d}
+            fill="none"
+            stroke="currentColor"
           />
-        ))}
-      </g>
+        );
+      })}
     </svg>
   );
 }
