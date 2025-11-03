@@ -16,7 +16,7 @@ export default function () {
   return (
     <>
       <section className="narrow bg-theme-light relative z-0 overflow-hidden py-20! text-center">
-        <Rings className="text-theme absolute top-1/2 left-1/2 -z-10 w-full max-w-200 -translate-x-1/2 -translate-y-1/2 opacity-25" />
+        <Rings className="absolute top-1/2 left-1/2 -z-10 w-full max-w-200 -translate-x-1/2 -translate-y-1/2 opacity-25" />
 
         <hgroup className="flex flex-col items-center gap-y-1">
           <h1 className="sr-only">Home</h1>

@@ -1,80 +1,153 @@
-import type { ComponentProps, CSSProperties } from "react";
-import { range } from "lodash";
-import { lerp } from "@/util/math";
-import classes from "./Rings.module.css";
+import type { ComponentProps } from "react";
+import gsap from "gsap";
+import { random, uniqueId } from "lodash";
+import { polar, rad } from "@/util/math";
 
 /** params */
-const bounds = 50;
-const size = 48;
+const size = 1000;
+const layers = 10;
 const sides = 6;
-const layers = 12;
-const thickness = 0.33;
-const spacing = 3;
+const duration = 3;
+const tail = 50;
+const thickness = 5;
+const color = "hsl(220, 100%, 50%)";
 
-/** 2 pi */
-const tau = 2 * Math.PI;
+/** derived params */
+const angleStep = 360 / sides;
+const radiusStep = size / layers;
 
-/** arc segments */
-const segments = range(layers)
-  .map((layer) =>
-    range(sides).map((side) => {
-      /** layer radius */
-      const radius = size - layer * spacing;
+/** objects */
+let canvas: HTMLCanvasElement | null = null;
+let ctx: CanvasRenderingContext2D | null = null;
 
-      /** start/end angles */
-      let startAngle = tau * (side / sides);
-      let endAngle = tau * ((side + 1) / sides);
+type Point = { radius: number; angle: number };
 
-      /** add gap */
-      startAngle += (0.666 * spacing) / radius;
-      endAngle -= (0.666 * spacing) / radius;
+/** animation points state */
+const points: Record<string, { point: Point; history: Point[] }> = {};
 
-      /** start/end points */
-      const start = {
-        x: radius * Math.cos(-startAngle),
-        y: radius * -Math.sin(-startAngle),
-      };
-      const end = {
-        x: radius * Math.cos(-endAngle),
-        y: radius * -Math.sin(-endAngle),
-      };
+/** generate new point */
+const generate = () => {
+  const id = uniqueId();
+  /** animation */
+  const timeline = gsap.timeline();
+  /** initial */
+  const point = {
+    radius:
+      Math.floor((1 - Math.random() * Math.random()) * layers) * radiusStep,
+    angle: 90 + random(sides) * angleStep,
+  };
+  timeline.set(point, { ...point });
 
-      return { layer, side, radius, start, end };
-    }),
-  )
-  .flat();
+  /** until reaches center */
+  while (point.radius > 0) {
+    /** arc around */
+    const dAngle = random(2) * angleStep;
+    point.angle += dAngle;
+    let length = point.radius * rad(Math.abs(dAngle));
+    timeline.to(point, {
+      ...point,
+      ease: "linear",
+      duration: duration * (length / size),
+    });
+    /** line inward */
+    point.radius -= radiusStep;
+    length = radiusStep;
+    timeline.to(point, {
+      ...point,
+      ease: "linear",
+      duration: duration * (length / size),
+    });
+  }
 
-type Props = ComponentProps<"svg">;
+  /** last few points */
+  const history: Point[] = [];
+  points[id] = { point, history };
+  /** animation done */
+  let done = false;
+  /** on tick */
+  const onTick = () => {
+    /** add point */
+    if (!done) history.unshift({ ...point });
+    /** chop tail */
+    if (history.length > tail || done) history.pop();
+    /** if no more tail */
+    if (history.length === 0) {
+      gsap.ticker.remove(onTick);
+      delete points[id];
+    }
+  };
+  gsap.ticker.add(onTick);
+  timeline.add(() => {
+    done = true;
+  });
+};
 
-export const pulse = () => window.dispatchEvent(new Event("pulse"));
+/** generate new point every so often */
+window.setInterval(generate, 100);
+
+/** draw frame */
+const draw = () => {
+  if (!ctx) return;
+
+  /** reset */
+  ctx.clearRect(-size, -size, 2 * size, 2 * size);
+  ctx.lineWidth = thickness;
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  ctx.strokeStyle = color;
+
+  /** draw history path */
+  for (const { history } of Object.values(points)) {
+    for (let step = 0; step < history.length - 1; step++) {
+      /** current point */
+      const { radius, angle } = history[step]!;
+      const { x, y } = polar(radius, angle);
+
+      /** start path */
+      if (step === 0) {
+        ctx.globalAlpha = radius / size;
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+      } else {
+        /** continue point */
+        ctx.lineTo(x, y);
+      }
+    }
+    ctx.stroke();
+  }
+};
+
+/** gsap params */
+gsap.ticker.fps(60);
+gsap.ticker.add(draw);
+
+type Props = ComponentProps<"canvas">;
 
 export default function (props: Props) {
   return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox={[-bounds, -bounds, 2 * bounds, 2 * bounds].join(" ")}
-      strokeWidth={thickness}
-      strokeLinecap="round"
-      strokeLinejoin="round"
+    <canvas
+      ref={(el) => {
+        /** set elements */
+        canvas = el;
+        if (canvas) {
+          /** set size */
+          canvas.width = 2 * size;
+          canvas.height = 2 * size;
+          ctx = canvas.getContext("2d");
+          if (ctx) {
+            /** center draw coords */
+            ctx.translate(size, size);
+            /** start draw loop */
+            draw();
+          }
+        }
+        return () => {
+          /** cleanup */
+          canvas = null;
+          ctx = null;
+        };
+      }}
       {...props}
-    >
-      {segments.map(({ layer, radius, start, end }, index) => {
-        const d = `M ${start.x} ${start.y} A ${radius} ${radius} 0 0 1 ${end.x} ${end.y}`;
-        const style = {
-          "--percent": layer / layers,
-          "--duration": `${lerp((layer + 1) / (layers + 1), 1, 0, 20, 60)}s`,
-        } as CSSProperties;
-        return (
-          <path
-            key={index}
-            className={classes.ring}
-            style={style}
-            d={d}
-            fill="none"
-            stroke="currentColor"
-          />
-        );
-      })}
-    </svg>
+    />
   );
 }
