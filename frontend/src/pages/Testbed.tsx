@@ -4,7 +4,7 @@ import Link from "@/components/Link";
 import Logo from "@/components/Logo";
 import Meta from "@/components/Meta";
 
-export default function () {
+export default function Component() {
   return (
     <>
       <Meta title="Testbed" />

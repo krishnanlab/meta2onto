@@ -57,7 +57,7 @@ type _Col<Datum extends object> = {
   [Key in keyof Datum]: Col<Datum, Key extends string ? Key : never>;
 }[keyof Datum];
 
-export default function <Datum extends object>({
+export default function Component<Datum extends object>({
   cols,
   rows,
   sort,

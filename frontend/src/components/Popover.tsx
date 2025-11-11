@@ -9,7 +9,7 @@ type Props = {
 export const offset = 5;
 export const padding = 20;
 
-export default function ({ trigger, content }: Props) {
+export default function Component({ trigger, content }: Props) {
   return (
     <Popover.Root>
       <Popover.Trigger render={trigger} />

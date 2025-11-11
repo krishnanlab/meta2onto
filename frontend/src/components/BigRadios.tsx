@@ -23,7 +23,7 @@ export type Option<Value = string> = {
   render: ReactElement<Record<string, unknown>>;
 };
 
-export default function <O extends Option>({
+export default function Component<O extends Option>({
   label,
   options,
   value,

@@ -15,7 +15,7 @@ export type Option<Value = string> = {
   name?: string;
 };
 
-export default function <O extends Option>({
+export default function Component<O extends Option>({
   value,
   onChange,
   options,

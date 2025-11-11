@@ -5,7 +5,7 @@ type Props = {
   onChange?: (value: string) => void;
 } & Omit<ComponentPropsWithRef<"input">, "onChange">;
 
-export default function ({ className, onChange, ...props }: Props) {
+export default function Component({ className, onChange, ...props }: Props) {
   return (
     <input
       className={clsx(

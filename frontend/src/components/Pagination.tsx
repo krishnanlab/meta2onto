@@ -29,7 +29,13 @@ type Props = {
 };
 
 /** pagination controls */
-export default function ({ count, offset, setOffset, limit, setLimit }: Props) {
+export default function Component({
+  count,
+  offset,
+  setOffset,
+  limit,
+  setLimit,
+}: Props) {
   if (!count) return null;
 
   const _limit = Number(limit);

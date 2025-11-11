@@ -43,7 +43,7 @@ const segments = range(layers)
 
 type Props = ComponentProps<"svg">;
 
-export default function (props: Props) {
+export default function Component(props: Props) {
   return (
     <svg
       viewBox={[-bounds, -bounds, 2 * bounds, 2 * bounds].join(" ")}

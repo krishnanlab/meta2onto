@@ -7,7 +7,7 @@ type Props = {
   content: ReactNode;
 };
 
-export default function ({ children, content }: Props) {
+export default function Component({ children, content }: Props) {
   return (
     <Tooltip.Provider>
       <Tooltip.Root delay={100}>

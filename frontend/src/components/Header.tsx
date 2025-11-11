@@ -16,7 +16,7 @@ let toggleRef: HTMLButtonElement | undefined;
 export const getCartRef = () =>
   cartRef && cartRef.getBoundingClientRect().width ? cartRef : toggleRef;
 
-export default function () {
+export default function Component() {
   /** cart state */
   const cart = useAtomValue(cartAtom);
 

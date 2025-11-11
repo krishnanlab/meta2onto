@@ -62,7 +62,7 @@ const arrow = [
 
 type Props = { color?: string } & ComponentProps<"svg">;
 
-export default function ({ color, ...props }: Props) {
+export default function Component({ color, ...props }: Props) {
   const theme = useTheme();
 
   return (

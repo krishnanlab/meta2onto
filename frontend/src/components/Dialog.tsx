@@ -10,7 +10,13 @@ type Props = {
   onClose?: () => void;
 };
 
-export default function ({ trigger, title, content, onOpen, onClose }: Props) {
+export default function Component({
+  trigger,
+  title,
+  content,
+  onOpen,
+  onClose,
+}: Props) {
   return (
     <Dialog.Root onOpenChange={(open) => (open ? onOpen?.() : onClose?.())}>
       <Dialog.Trigger render={trigger} />

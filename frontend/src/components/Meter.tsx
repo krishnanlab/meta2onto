@@ -7,7 +7,12 @@ type Props = {
   max?: number;
 };
 
-export default function ({ children, value, min = 0, max = 1 }: Props) {
+export default function Component({
+  children,
+  value,
+  min = 0,
+  max = 1,
+}: Props) {
   return (
     <label
       className="flex gap-1! rounded px-1"

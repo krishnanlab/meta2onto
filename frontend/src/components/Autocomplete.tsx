@@ -26,7 +26,7 @@ type Props = {
 };
 
 /** textbox box with dropdown */
-export default function ({
+export default function Component({
   search,
   setSearch,
   options,

@@ -20,7 +20,7 @@ import { sleep, waitFor, waitForStable } from "@/util/misc";
 import { redirectPath, redirectState } from "@/util/url";
 
 /** app entrypoint */
-export default function () {
+export default function Component() {
   return (
     <QueryClientProvider client={queryClient}>
       <RouterProvider router={router} />

@@ -6,7 +6,7 @@ type Props = {
   children: ReactNode;
 };
 
-export default function ({ value, onChange, children }: Props) {
+export default function Component({ value, onChange, children }: Props) {
   return (
     <label>
       <input

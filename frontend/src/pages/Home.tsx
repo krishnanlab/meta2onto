@@ -12,7 +12,7 @@ import Status, { showStatus } from "@/components/Status";
 /** example searches */
 const examples = ["Hepatocyte", "Breast cancer", "Alzheimer's disease"];
 
-export default function () {
+export default function Component() {
   return (
     <>
       <section className="narrow bg-theme-light relative z-0 overflow-hidden py-20! text-center">
