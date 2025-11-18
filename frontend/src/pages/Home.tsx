@@ -1,13 +1,16 @@
 import { useEffect, useState } from "react";
+import type { ReactNode } from "react";
 import { useNavigate, useParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import clsx from "clsx";
-import { Lightbulb } from "lucide-react";
+import { History, Lightbulb } from "lucide-react";
 import { modelSearch, typeColor } from "@/api/api";
+import type { Model } from "@/api/types";
 import Autocomplete from "@/components/Autocomplete";
 import Link from "@/components/Link";
 import Rings from "@/components/Rings";
 import Status, { showStatus } from "@/components/Status";
+import { addSearch, getHistory } from "@/search";
 
 /** example searches */
 const examples = ["Hepatocyte", "Breast cancer", "Alzheimer's disease"];
@@ -16,7 +19,7 @@ export default function Component() {
   return (
     <>
       <section className="narrow bg-theme-light relative z-0 overflow-hidden py-20! text-center">
-        <Rings className="absolute top-1/2 left-1/2 -z-10 w-full max-w-200 -translate-x-1/2 -translate-y-1/2 text-[hsl(220,100%,50%,0.1)]" />
+        <Rings className="absolute top-1/2 left-1/2 -z-10 w-full max-w-200 -translate-x-1/2 -translate-y-1/2 text-[hsl(220,50%,50%,0.25)]" />
 
         <hgroup className="flex flex-col items-center gap-y-1">
           <h1 className="sr-only">Home</h1>
@@ -83,11 +86,19 @@ export const SearchBox = () => {
     if (params.search) setSearch(params.search);
   }, [params.search]);
 
-  /** search results */
+  /** model search results */
   const query = useQuery({
     queryKey: ["model-search", search],
     queryFn: () => modelSearch(search),
   });
+
+  /** search results */
+  const results: (Model & { icon?: ReactNode })[] = search.trim()
+    ? (query.data ?? [])
+    : getHistory().map((search) => ({
+        ...search,
+        icon: <History className="text-slate-400" />,
+      }));
 
   return (
     <Autocomplete
@@ -95,10 +106,11 @@ export const SearchBox = () => {
       setSearch={setSearch}
       placeholder="Search..."
       options={
-        query.data?.map(({ id, name, description, type }) => ({
+        results.map(({ id, name, description, type, icon }) => ({
           value: id,
           content: (
             <>
+              {icon}
               <span
                 className={clsx(
                   "rounded px-1 py-0.5 text-sm leading-none text-white",
@@ -119,7 +131,12 @@ export const SearchBox = () => {
           ),
         })) ?? []
       }
-      onSelect={(id) => id?.trim() && navigate(`/search/${id}`)}
+      onSelect={(id) => {
+        if (!id?.trim()) return;
+        const model = query.data?.find((model) => model.id === id);
+        if (model) addSearch(model);
+        navigate(`/search/${id}`);
+      }}
       status={
         showStatus({ query }) && <Status query={query} className="contents!" />
       }

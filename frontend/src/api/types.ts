@@ -1,6 +1,6 @@
 export type Model = {
-  type: string;
   id: string;
+  type: string;
   name: string;
   description: string;
 };

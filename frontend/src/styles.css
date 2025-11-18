@@ -152,6 +152,7 @@ code > pre {
   -webkit-box-orient: vertical;
   display: -webkit-box;
   -webkit-line-clamp: 3;
+  line-clamp: 3;
   @apply max-w-full cursor-zoom-in overflow-hidden;
 }
 

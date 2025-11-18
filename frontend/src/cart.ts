@@ -13,7 +13,9 @@ const defaultCart: LocalCart = {
 };
 
 /** cart state */
-export const cartAtom = atomWithStorage("cart", defaultCart);
+export const cartAtom = atomWithStorage("cart", defaultCart, undefined, {
+  getOnInit: true,
+});
 
 /** is study in cart */
 export const inCart = (cart: LocalCart, study: string) =>
