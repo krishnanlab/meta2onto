@@ -48,7 +48,11 @@ export default function BigRadios<O extends Option>({
               if (option.value === value) el?.scrollIntoView(true);
             }}
             key={index}
-            className="relative flex min-w-50 flex-1 cursor-pointer flex-col items-start! gap-2 rounded border border-slate-300 p-2 transition-colors hover:bg-slate-100"
+            className={`
+              relative flex min-w-50 flex-1 cursor-pointer flex-col items-start!
+              gap-2 rounded-sm border border-slate-300 p-2 transition-colors
+              hover:bg-slate-100
+            `}
           >
             <Radio.Root
               value={option.value}
@@ -57,7 +61,9 @@ export default function BigRadios<O extends Option>({
               nativeButton={false}
             />
             {option.value === value && (
-              <CheckCircle2 className="absolute top-2 right-2 text-xl text-green-500" />
+              <CheckCircle2
+                className={`absolute top-2 right-2 text-xl text-green-500`}
+              />
             )}
           </label>
         ))}

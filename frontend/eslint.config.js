@@ -1,4 +1,5 @@
 import eslintJs from "@eslint/js";
+import eslintPluginBetterTailwindcss from "eslint-plugin-better-tailwindcss";
 import eslintPluginJsxA11y from "eslint-plugin-jsx-a11y";
 import eslintPluginPrettier from "eslint-plugin-prettier";
 import eslintPluginPrettierRecommended from "eslint-plugin-prettier/recommended";
@@ -22,6 +23,7 @@ export default defineConfig([
     ],
     plugins: {
       prettier: eslintPluginPrettier,
+      "better-tailwindcss": eslintPluginBetterTailwindcss,
     },
     languageOptions: {
       ecmaVersion: 2020,
@@ -29,6 +31,7 @@ export default defineConfig([
     },
     rules: {
       ...eslintPluginReactHooks.configs.recommended.rules,
+      ...eslintPluginBetterTailwindcss.configs["recommended-warn"].rules,
       "prettier/prettier": "warn",
       "prefer-const": ["error", { destructuring: "all" }],
       "@typescript-eslint/no-unused-vars": ["warn", { caughtErrors: "none" }],
@@ -39,6 +42,10 @@ export default defineConfig([
         "error",
         { controlComponents: ["Select"] },
       ],
+      "better-tailwindcss/enforce-consistent-variable-syntax": "warn",
+      "better-tailwindcss/enforce-shorthand-classes": "warn",
+      "better-tailwindcss/no-deprecated-classes": "warn",
     },
+    settings: { "better-tailwindcss": { entryPoint: "src/styles.css" } },
   },
 ]);

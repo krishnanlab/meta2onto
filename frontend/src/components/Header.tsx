@@ -38,14 +38,20 @@ export default function Header() {
     <header
       ref={ref}
       className={clsx(
-        "bg-theme-dark sticky top-0 z-10 flex flex-row flex-wrap items-center justify-between text-white",
+        `
+          sticky top-0 z-10 flex flex-row flex-wrap items-center justify-between
+          bg-theme-dark text-white
+        `,
         y > 0 ? "gap-2 p-2" : "gap-4 p-4",
       )}
     >
       {/* title */}
       <a
         href="/"
-        className="flex items-center gap-2 text-2xl tracking-wider text-white! hover:text-slate-300!"
+        className={`
+          flex items-center gap-2 text-2xl tracking-wider text-white!
+          hover:text-slate-300!
+        `}
       >
         <Logo color="currentColor" className="h-8" />
         {title}
@@ -59,7 +65,10 @@ export default function Header() {
             return () => (toggleRef = undefined);
           }}
           color="none"
-          className="text-current! sm:hidden"
+          className={`
+            text-current!
+            sm:hidden
+          `}
           onClick={() => setOpen(!open)}
           aria-expanded={open}
           aria-controls="nav"
@@ -71,7 +80,10 @@ export default function Header() {
       {/* nav bar */}
       <nav
         className={clsx(
-          "max-xs:flex-col flex flex-wrap items-center justify-center gap-4 text-xl",
+          `
+            flex flex-wrap items-center justify-center gap-4 text-xl
+            max-xs:flex-col
+          `,
           !open && "max-sm:hidden",
           open && "max-sm:w-full",
         )}
@@ -95,7 +107,12 @@ export default function Header() {
           <ShoppingCart />
           Cart
           {!!cart.studies.length && (
-            <div className="bg-theme-light absolute -top-2 -right-2 grid size-5 place-items-center rounded-full text-sm leading-none text-black">
+            <div
+              className={`
+                absolute -top-2 -right-2 grid size-5 place-items-center
+                rounded-full bg-theme-light text-sm leading-none text-black
+              `}
+            >
               {cart.studies.length}
             </div>
           )}

@@ -43,12 +43,16 @@ section {
   @apply flex flex-col gap-y-4 px-[max(--spacing(8),(100%---spacing(1)*var(--width))/2)] py-8;
 }
 
-section.narrow {
-  --width: 150;
+@utility narrow {
+  &:is(section) {
+    --width: 150 !important;
+  }
 }
 
-section.full {
-  --width: 1000;
+@utility full {
+  &:is(section) {
+    --width: 1000 !important;
+  }
 }
 
 section:nth-of-type(even) {
@@ -148,32 +152,24 @@ code > pre {
   @apply text-orange-300;
 }
 
-.truncate-lines:not(:focus) {
-  -webkit-box-orient: vertical;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  line-clamp: 3;
-  @apply max-w-full cursor-zoom-in overflow-hidden;
-}
+@utility truncate-lines {
+  &:not(:focus) {
+    @apply max-w-full cursor-zoom-in overflow-hidden line-clamp-3;
+  }
 
-.truncate-lines:focus {
-  @apply rounded outline-1 outline-offset-2 outline-slate-300;
+  &:focus {
+    @apply rounded outline outline-offset-2 outline-slate-300;
+  }
 }
 
 .lucide {
-  width: unset;
-  height: 1em;
-  @apply overflow-visible;
+  @apply overflow-visible w-[unset] h-[1em];
 }
 
 :not(html) ::-webkit-scrollbar {
-  width: 7px;
-  height: 7px;
-  border-radius: 999px;
-  background-color: theme(--color-slate-200);
+  @apply size-[7px] rounded-full bg-slate-200;
 }
 
 :not(html) ::-webkit-scrollbar-thumb {
-  border-radius: 999px;
-  background-color: theme(--color-slate-400);
+  @apply rounded-full bg-slate-400;
 }

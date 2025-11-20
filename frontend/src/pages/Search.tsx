@@ -80,7 +80,12 @@ export default function Search() {
   const cart = useAtomValue(cartAtom);
 
   const filtersPanel = (
-    <div className="flex w-auto flex-col gap-4 rounded bg-slate-100 p-4 max-sm:w-full max-sm:flex-row max-sm:flex-wrap">
+    <div
+      className={`
+        flex w-auto flex-col gap-4 rounded-sm bg-slate-100 p-4
+        max-sm:w-full max-sm:flex-row max-sm:flex-wrap
+      `}
+    >
       {/* facets */}
       {isEmpty(query.data?.facets) && (
         <span className="text-slate-500">Filters</span>
@@ -154,7 +159,9 @@ export default function Search() {
         }) => (
           <div
             key={id}
-            className="flex flex-col gap-2 rounded border border-slate-300 p-4"
+            className={`
+              flex flex-col gap-2 rounded-sm border border-slate-300 p-4
+            `}
           >
             <div className="flex items-start justify-between gap-2">
               <strong>{name}</strong>
@@ -266,7 +273,12 @@ export default function Search() {
       </Heading>
 
       <section>
-        <div className="flex items-start gap-4 max-sm:flex-col">
+        <div
+          className={`
+            flex items-start gap-4
+            max-sm:flex-col
+          `}
+        >
           {filtersPanel}
           {resultsPanel}
         </div>

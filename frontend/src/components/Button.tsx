@@ -43,10 +43,25 @@ export default function Button({
   /** combine styles */
   const _class = clsx(
     className,
-    "flex items-center justify-center gap-2 rounded p-2 leading-none hover:bg-slate-500 hover:text-white",
-    color === "none" && "text-theme bg-transparent disabled:text-slate-300",
-    color === "theme" && "bg-theme text-white disabled:bg-slate-300",
-    color === "accent" && "bg-accent text-white disabled:bg-slate-300",
+    `
+      flex items-center justify-center gap-2 rounded-sm p-2 leading-none
+      hover:bg-slate-500 hover:text-white
+    `,
+    color === "none" &&
+      `
+        bg-transparent text-theme
+        disabled:text-slate-300
+      `,
+    color === "theme" &&
+      `
+        bg-theme text-white
+        disabled:bg-slate-300
+      `,
+    color === "accent" &&
+      `
+        bg-accent text-white
+        disabled:bg-slate-300
+      `,
   );
 
   /** if "to", render as link */

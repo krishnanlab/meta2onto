@@ -51,7 +51,7 @@ export default function Database({ database, full = false }: Props) {
 
   const details = (
     <div className="flex flex-col items-start gap-2">
-      <div key={database} className="bg-theme-light rounded px-1 text-black">
+      <div key={database} className="rounded-sm bg-theme-light px-1 text-black">
         {id}
       </div>
       <div className="text-balance">{description}</div>
@@ -63,7 +63,7 @@ export default function Database({ database, full = false }: Props) {
 
   return (
     <Tooltip content={details}>
-      <div key={database} className="bg-theme-light rounded px-1 text-black">
+      <div key={database} className="rounded-sm bg-theme-light px-1 text-black">
         {id}
       </div>
     </Tooltip>

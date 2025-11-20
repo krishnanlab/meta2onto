@@ -104,6 +104,7 @@ export const fly = async (source: HTMLElement, target: HTMLElement) => {
   if (targetBox.width === 0 || targetBox.height === 0) return;
 
   /** get element styles */
+  // eslint-disable-next-line
   const styles = ["color", "borderRadius", "backgroundColor"];
   const sourceStyle = pick(window.getComputedStyle(source), styles) as Keyframe;
   const targetStyle = pick(window.getComputedStyle(target), styles) as Keyframe;

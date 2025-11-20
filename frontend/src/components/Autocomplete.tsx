@@ -45,27 +45,35 @@ export default function Autocomplete({
       mode="none"
       openOnInputClick
     >
-      <div className="relative flex items-center">
+      <div className={`relative flex items-center`}>
         <_Autocomplete.Input
           render={
             <input
               ref={ref}
               placeholder={placeholder}
               className={clsx(
-                "w-full rounded border border-slate-300 p-2 leading-none disabled:border-0 disabled:bg-slate-200!",
+                `
+                  w-full rounded-sm border border-slate-300 p-2 leading-none
+                  disabled:border-0 disabled:bg-slate-200!
+                `,
                 className,
               )}
             />
           }
         />
-        <Search className="text-theme absolute right-0 px-2" />
+        <Search className={`absolute right-0 px-2 text-theme`} />
       </div>
 
       <_Autocomplete.Portal>
         <_Autocomplete.Positioner collisionPadding={padding}>
-          <_Autocomplete.Popup className="shadow-thick flex max-h-(--available-height) w-(--anchor-width) flex-col overflow-y-auto rounded bg-white">
+          <_Autocomplete.Popup
+            className={`
+              flex max-h-(--available-height) w-(--anchor-width) grow flex-col
+              overflow-y-auto rounded-sm bg-white shadow-thick
+            `}
+          >
             {status && (
-              <_Autocomplete.Status className="flex gap-2 p-2 leading-none">
+              <_Autocomplete.Status className={`flex gap-2 p-2 leading-none`}>
                 {status}
               </_Autocomplete.Status>
             )}
@@ -75,7 +83,10 @@ export default function Autocomplete({
                   <_Autocomplete.Item
                     key={index}
                     value={tag.value}
-                    className="data-highlighted:bg-theme/10 flex cursor-pointer gap-2 p-2 leading-none"
+                    className={`
+                      flex cursor-pointer gap-2 p-2 leading-none
+                      data-highlighted:bg-theme/10
+                    `}
                     onClick={(event) => {
                       event.preventDefault();
                       /** select option */

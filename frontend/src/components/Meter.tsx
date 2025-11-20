@@ -10,7 +10,7 @@ type Props = {
 export default function Meter({ children, value, min = 0, max = 1 }: Props) {
   return (
     <label
-      className="flex gap-1! rounded px-1"
+      className="flex gap-1! rounded-sm px-1"
       style={{
         backgroundColor: `color-mix(in hsl, transparent, #10b981 ${50 * value}%)`,
       }}

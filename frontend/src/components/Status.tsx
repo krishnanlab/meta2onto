@@ -26,7 +26,7 @@ const Status = ({
   className,
 }: Props) => {
   const base = clsx(
-    "flex items-center justify-center gap-2 rounded bg-current/5 p-4",
+    "flex items-center justify-center gap-2 rounded-sm bg-current/5 p-4",
     className,
   );
 

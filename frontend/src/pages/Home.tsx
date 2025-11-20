@@ -18,10 +18,19 @@ const examples = ["Hepatocyte", "Breast cancer", "Alzheimer's disease"];
 export default function Home() {
   return (
     <>
-      <section className="narrow bg-theme-light relative z-0 overflow-hidden py-20! text-center">
-        <Rings className="absolute top-1/2 left-1/2 -z-10 w-full max-w-200 -translate-x-1/2 -translate-y-1/2 text-[hsl(220,50%,50%,0.25)]" />
+      <section
+        className={`
+          relative z-0 overflow-hidden bg-theme-light py-20! text-center narrow
+        `}
+      >
+        <Rings
+          className={`
+            absolute top-1/2 left-1/2 -z-10 w-full max-w-200 -translate-1/2
+            text-[hsl(220,50%,50%,0.25)]
+          `}
+        />
 
-        <hgroup className="flex flex-col items-center gap-y-1">
+        <hgroup className="flex flex-col items-center gap-y-1 narrow">
           <h1 className="sr-only">Home</h1>
 
           <p className="text-xl font-normal tracking-wide text-balance">
@@ -36,7 +45,11 @@ export default function Home() {
         <SearchBox />
 
         {/* examples */}
-        <p className="flex flex-wrap items-center justify-center gap-4 leading-none">
+        <p
+          className={`
+            flex flex-wrap items-center justify-center gap-4 leading-none
+          `}
+        >
           <span className="flex items-center gap-1 text-slate-500">
             <Lightbulb />
             Try

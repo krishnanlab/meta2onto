@@ -9,7 +9,10 @@ export default function Textbox({ className, onChange, ...props }: Props) {
   return (
     <input
       className={clsx(
-        "rounded border border-slate-300 p-2 leading-none disabled:border-0 disabled:bg-slate-200!",
+        `
+          rounded-sm border border-slate-300 p-2 leading-none
+          disabled:border-0 disabled:bg-slate-200!
+        `,
         className,
       )}
       onChange={(event) => onChange?.(event.currentTarget.value)}

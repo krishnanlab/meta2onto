@@ -69,11 +69,16 @@ export default function Testbed() {
       </section>
 
       <section>
-        <div className="bg-theme-light size-64">
+        <div className="size-64 bg-theme-light">
           <Logo />
         </div>
 
-        <div className="bg-theme-light text-theme flex h-100 w-150 items-center justify-center gap-5 text-[50px]">
+        <div
+          className={`
+            flex h-100 w-150 items-center justify-center gap-5 bg-theme-light
+            text-[50px] text-theme
+          `}
+        >
           <Logo className="size-25" />
           <span>
             <span className="">Meta</span>
