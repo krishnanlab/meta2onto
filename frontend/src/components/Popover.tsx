@@ -1,5 +1,5 @@
 import type { ReactElement, ReactNode } from "react";
-import { Popover } from "@base-ui-components/react/popover";
+import { Popover as _Popover } from "@base-ui-components/react/popover";
 
 type Props = {
   trigger: ReactElement<Record<string, unknown>>;
@@ -9,21 +9,21 @@ type Props = {
 export const offset = 5;
 export const padding = 20;
 
-export default function Component({ trigger, content }: Props) {
+export default function Popover({ trigger, content }: Props) {
   return (
-    <Popover.Root>
-      <Popover.Trigger render={trigger} />
-      <Popover.Portal>
-        <Popover.Positioner sideOffset={offset} collisionPadding={padding}>
-          <Popover.Popup className="shadow-overlay flex flex-col gap-2 rounded bg-white p-2 leading-none text-white">
-            <Popover.Arrow className="text-white data-[side=bottom]:bottom-full data-[side=bottom]:rotate-180 data-[side=top]:top-full">
+    <_Popover.Root>
+      <_Popover.Trigger render={trigger} />
+      <_Popover.Portal>
+        <_Popover.Positioner sideOffset={offset} collisionPadding={padding}>
+          <_Popover.Popup className="shadow-overlay flex flex-col gap-2 rounded bg-white p-2 leading-none text-white">
+            <_Popover.Arrow className="text-white data-[side=bottom]:bottom-full data-[side=bottom]:rotate-180 data-[side=top]:top-full">
               <Arrow />
-            </Popover.Arrow>
+            </_Popover.Arrow>
             {content}
-          </Popover.Popup>
-        </Popover.Positioner>
-      </Popover.Portal>
-    </Popover.Root>
+          </_Popover.Popup>
+        </_Popover.Positioner>
+      </_Popover.Portal>
+    </_Popover.Root>
   );
 }
 

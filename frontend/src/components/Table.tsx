@@ -57,7 +57,7 @@ type _Col<Datum extends object> = {
   [Key in keyof Datum]: Col<Datum, Key extends string ? Key : never>;
 }[keyof Datum];
 
-export default function Component<Datum extends object>({
+export default function Table<Datum extends object>({
   cols,
   rows,
   sort,
@@ -187,7 +187,7 @@ export default function Component<Datum extends object>({
                   }
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <td key={cell.id} className="border-b-1 border-slate-100">
+                    <td key={cell.id} className="border-b border-slate-100">
                       <div className="flex flex-wrap items-center gap-2 p-2 leading-none">
                         {flexRender(
                           cell.column.columnDef.cell,

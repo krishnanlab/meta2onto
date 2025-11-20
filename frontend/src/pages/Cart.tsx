@@ -57,7 +57,7 @@ import { downloadSh } from "@/util/download";
 import { highlightBash } from "@/util/highlighting";
 import { formatNumber } from "@/util/string";
 
-export default function Component() {
+export default function Cart() {
   /** local, current cart */
   const localCart = useAtomValue(cartAtom);
 

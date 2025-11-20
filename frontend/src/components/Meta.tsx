@@ -18,7 +18,7 @@ const site = { title: VITE_TITLE, description: VITE_DESCRIPTION };
  * set specific metadata for current page (overrides site-wide metadata in.env),
  * akin to react-helmet
  */
-export default function Component(page: Props) {
+export default function Meta(page: Props) {
   /** concat title string from parts */
   const title = [page.title]
     .flat()

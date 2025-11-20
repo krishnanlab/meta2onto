@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import type { ReactElement, ReactNode } from "react";
-import { Autocomplete } from "@base-ui-components/react/autocomplete";
+import { Autocomplete as _Autocomplete } from "@base-ui-components/react/autocomplete";
 import clsx from "clsx";
 import { Search } from "lucide-react";
 import { padding } from "@/components/Popover";
@@ -26,7 +26,7 @@ type Props = {
 };
 
 /** textbox box with dropdown */
-export default function Component({
+export default function Autocomplete({
   search,
   setSearch,
   options,
@@ -38,7 +38,7 @@ export default function Component({
   const ref = useRef<HTMLInputElement>(null);
 
   return (
-    <Autocomplete.Root
+    <_Autocomplete.Root
       value={search}
       onValueChange={setSearch}
       items={options}
@@ -46,7 +46,7 @@ export default function Component({
       openOnInputClick
     >
       <div className="relative flex items-center">
-        <Autocomplete.Input
+        <_Autocomplete.Input
           render={
             <input
               ref={ref}
@@ -61,18 +61,18 @@ export default function Component({
         <Search className="text-theme absolute right-0 px-2" />
       </div>
 
-      <Autocomplete.Portal>
-        <Autocomplete.Positioner collisionPadding={padding}>
-          <Autocomplete.Popup className="shadow-thick flex max-h-(--available-height) w-(--anchor-width) flex-col overflow-y-auto rounded bg-white">
+      <_Autocomplete.Portal>
+        <_Autocomplete.Positioner collisionPadding={padding}>
+          <_Autocomplete.Popup className="shadow-thick flex max-h-(--available-height) w-(--anchor-width) flex-col overflow-y-auto rounded bg-white">
             {status && (
-              <Autocomplete.Status className="flex gap-2 p-2 leading-none">
+              <_Autocomplete.Status className="flex gap-2 p-2 leading-none">
                 {status}
-              </Autocomplete.Status>
+              </_Autocomplete.Status>
             )}
             {!status && (
-              <Autocomplete.List>
+              <_Autocomplete.List>
                 {(tag: (typeof options)[number], index: number) => (
-                  <Autocomplete.Item
+                  <_Autocomplete.Item
                     key={index}
                     value={tag.value}
                     className="data-highlighted:bg-theme/10 flex cursor-pointer gap-2 p-2 leading-none"
@@ -85,13 +85,13 @@ export default function Component({
                     }}
                   >
                     {tag.content}
-                  </Autocomplete.Item>
+                  </_Autocomplete.Item>
                 )}
-              </Autocomplete.List>
+              </_Autocomplete.List>
             )}
-          </Autocomplete.Popup>
-        </Autocomplete.Positioner>
-      </Autocomplete.Portal>
-    </Autocomplete.Root>
+          </_Autocomplete.Popup>
+        </_Autocomplete.Positioner>
+      </_Autocomplete.Portal>
+    </_Autocomplete.Root>
   );
 }

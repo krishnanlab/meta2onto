@@ -1,5 +1,5 @@
 import type { ReactElement, ReactNode } from "react";
-import { Tooltip } from "@base-ui-components/react/tooltip";
+import { Tooltip as _Tooltip } from "@base-ui-components/react/tooltip";
 import { Arrow, offset, padding } from "@/components/Popover";
 
 type Props = {
@@ -7,26 +7,26 @@ type Props = {
   content: ReactNode;
 };
 
-export default function Component({ children, content }: Props) {
+export default function Tooltip({ children, content }: Props) {
   return (
-    <Tooltip.Provider>
-      <Tooltip.Root delay={100}>
-        <Tooltip.Trigger render={children} />
-        <Tooltip.Portal>
-          <Tooltip.Positioner
+    <_Tooltip.Provider>
+      <_Tooltip.Root delay={100}>
+        <_Tooltip.Trigger render={children} />
+        <_Tooltip.Portal>
+          <_Tooltip.Positioner
             sideOffset={offset}
             collisionPadding={padding}
             className="z-20"
           >
-            <Tooltip.Popup className="flex w-50 max-w-max flex-col gap-2 rounded bg-slate-900 p-2 leading-none text-white">
-              <Tooltip.Arrow className="text-slate-900 data-[side=bottom]:bottom-full data-[side=bottom]:rotate-180 data-[side=top]:top-full">
+            <_Tooltip.Popup className="flex w-50 max-w-max flex-col gap-2 rounded bg-slate-900 p-2 leading-none text-white">
+              <_Tooltip.Arrow className="text-slate-900 data-[side=bottom]:bottom-full data-[side=bottom]:rotate-180 data-[side=top]:top-full">
                 <Arrow />
-              </Tooltip.Arrow>
+              </_Tooltip.Arrow>
               {content}
-            </Tooltip.Popup>
-          </Tooltip.Positioner>
-        </Tooltip.Portal>
-      </Tooltip.Root>
-    </Tooltip.Provider>
+            </_Tooltip.Popup>
+          </_Tooltip.Positioner>
+        </_Tooltip.Portal>
+      </_Tooltip.Root>
+    </_Tooltip.Provider>
   );
 }

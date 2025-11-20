@@ -16,7 +16,7 @@ type _Anchor = ComponentProps<"a"> & { to: string };
 type _Router = ComponentProps<typeof RouterLink>;
 
 /** link to internal route or external url */
-export default function Component({
+export default function Link({
   ref,
   to,
   children,

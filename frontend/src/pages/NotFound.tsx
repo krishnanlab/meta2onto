@@ -1,7 +1,7 @@
 import Heading from "@/components/Heading";
 import Meta from "@/components/Meta";
 
-export default function Component() {
+export default function NotFound() {
   return (
     <>
       <Meta title="Not Found" />

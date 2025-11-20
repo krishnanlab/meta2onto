@@ -15,7 +15,7 @@ import { addSearch, getHistory } from "@/search";
 /** example searches */
 const examples = ["Hepatocyte", "Breast cancer", "Alzheimer's disease"];
 
-export default function Component() {
+export default function Home() {
   return (
     <>
       <section className="narrow bg-theme-light relative z-0 overflow-hidden py-20! text-center">

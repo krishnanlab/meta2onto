@@ -16,7 +16,7 @@ type Props = {
 export const copy = (content: string) => navigator.clipboard.writeText(content);
 
 /** button that does async action on click and shows status */
-export default function Component({
+export default function ActionButton({
   onClick,
   running = (
     <>

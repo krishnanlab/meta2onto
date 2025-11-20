@@ -42,7 +42,7 @@ type Props = {
 };
 
 /** pill for database info */
-export default function Component({ database, full = false }: Props) {
+export default function Database({ database, full = false }: Props) {
   const {
     id = "",
     description = "",

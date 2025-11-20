@@ -33,7 +33,7 @@ type _Button = { ref?: Ref<HTMLButtonElement> } & Pick<
  * looks like a button and either goes somewhere (link) or does something
  * (button)
  */
-export default function Component({
+export default function Button({
   ref,
   color = "theme",
   className,

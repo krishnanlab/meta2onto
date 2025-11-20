@@ -16,7 +16,7 @@ type Props = {
 TimeAgo.addDefaultLocale(en);
 
 /** show datetime in "ago" format, e.g. "20 min ago" */
-export default function Component({ date, className }: Props) {
+export default function Ago({ date, className }: Props) {
   /** parse arg as date */
   const parsed = parseDate(date);
   if (!parsed) return <span>???</span>;

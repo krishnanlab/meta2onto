@@ -29,7 +29,7 @@ type Props = {
 };
 
 /** pagination controls */
-export default function Component({
+export default function Pagination({
   count,
   offset,
   setOffset,

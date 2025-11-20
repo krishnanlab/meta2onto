@@ -25,7 +25,6 @@ export const addSearch = (search: Model) =>
 /** get search history */
 export const getHistory = () => {
   const history = getDefaultStore().get(searchHistoryAtom);
-  console.log(history);
   const grouped = Object.entries(groupBy(history, "id"));
   /** weight searches by frequency and recency */
   const weighted = grouped.map(([id, dupes]) => ({

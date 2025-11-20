@@ -38,7 +38,7 @@ const orderingOptions = [
   { value: "samples" },
 ] as const;
 
-export default function Component() {
+export default function Search() {
   const { search = "" } = useParams<{ search: string }>();
 
   /** url search params state */

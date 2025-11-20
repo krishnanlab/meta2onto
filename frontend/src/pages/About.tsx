@@ -1,7 +1,7 @@
 import Heading from "@/components/Heading";
 import Meta from "@/components/Meta";
 
-export default function Component() {
+export default function About() {
   return (
     <>
       <Meta title="About" />
