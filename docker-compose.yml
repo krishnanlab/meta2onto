@@ -27,3 +27,4 @@ services:
       - .env
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./db-exports/:/db-exports/
