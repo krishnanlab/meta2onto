@@ -148,13 +148,13 @@ export default function Search() {
       {/* results */}
       {query.data?.results.map(
         ({
-          id,
-          name,
-          description,
+          gse: id,
+          title: name,
+          summary: description,
           confidence,
           database,
           samples,
-          date,
+          submission_date: date,
           platform,
         }) => (
           <div
@@ -305,9 +305,9 @@ const Samples = ({ id }: { id: string }) => {
         <Status query={query} />
 
         {query.data?.results.map((sample) => (
-          <div key={sample.id} className="flex flex-col gap-1">
-            <strong>{sample.id}</strong>
-            <p dangerouslySetInnerHTML={{ __html: sample.description }} />
+          <div key={sample.sample_id} className="flex flex-col gap-1">
+            <strong>{sample.sample_id}</strong>
+            <p dangerouslySetInnerHTML={{ __html: sample.doc }} />
           </div>
         ))}
       </div>
