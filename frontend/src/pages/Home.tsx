@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { useNavigate, useParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useDebounce } from "@reactuses/core";
 import clsx from "clsx";
 import { History, Lightbulb } from "lucide-react";
 import { modelSearch, typeColor } from "@/api/api";
@@ -99,10 +100,15 @@ export const SearchBox = () => {
     if (params.search) setSearch(params.search);
   }, [params.search]);
 
+  /** debounced search string, update only after 300ms of inactivity */
+  const debouncedSearch = useDebounce(search, 300);
+
   /** model search results */
   const query = useQuery({
-    queryKey: ["model-search", search],
-    queryFn: () => modelSearch(search),
+    queryKey: ["model-search", debouncedSearch],
+    queryFn: () => {
+      return debouncedSearch != "" ? modelSearch(debouncedSearch) : Promise.resolve([]);
+    },
   });
 
   /** search results */
