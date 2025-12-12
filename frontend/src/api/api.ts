@@ -19,8 +19,8 @@ export const typeColor: Record<string, string> = {
 
 /** search for models */
 export const modelSearch = async (search: string) => {
-  const url = new URL(`${api}/model`);
-  url.searchParams.set("search", search);
+  const url = new URL(`${api}/ontology-search/`);
+  url.searchParams.set("query", search);
   const data = request<ModelSearch>(url);
   return data;
 };
@@ -33,8 +33,8 @@ export const studySearch = async ({
   limit = 100,
   facets = {} as Record<string, string[]>,
 }) => {
-  const url = new URL(`${api}/study`);
-  url.searchParams.set("search", search);
+  const url = new URL(`${api}/geo-metadata/search/`);
+  url.searchParams.set("query", search);
   url.searchParams.set("ordering", ordering);
   url.searchParams.set("offset", String(offset));
   url.searchParams.set("limit", String(limit));
@@ -51,8 +51,8 @@ export const studyBatchLookup = async ({
   offset = 0,
   limit = 100,
 }) => {
-  const url = new URL(`${api}/study/lookup`);
-  url.searchParams.set("ordering", ordering);
+  const url = new URL(`${api}/geo-metadata/lookup/`);
+  // url.searchParams.set("ordering", ordering);
   url.searchParams.set("offset", String(offset));
   url.searchParams.set("limit", String(limit));
   const options = {
@@ -66,7 +66,8 @@ export const studyBatchLookup = async ({
 
 /** lookup all samples for a study */
 export const studySamples = async ({ id = "", offset = 0, limit = 10 }) => {
-  const url = new URL(`${api}/study/${id}/samples`);
+  // const url = new URL(`${api}/study/${id}/samples`);
+  const url = new URL(`${api}/series/${id}/samples/`);
   url.searchParams.set("offset", String(offset));
   url.searchParams.set("limit", String(limit));
   const data = request<StudySamples>(url);
@@ -75,14 +76,14 @@ export const studySamples = async ({ id = "", offset = 0, limit = 10 }) => {
 
 /** lookup a cart by id */
 export const cartLookup = async (id: string) => {
-  const url = new URL(`${api}/cart/${id}`);
+  const url = new URL(`${api}/cart/${id}/`);
   const data = request<Cart>(url);
   return data;
 };
 
 /** share cart */
 export const shareCart = async (cart: ShareCart) => {
-  const url = new URL(`${api}/cart`);
+  const url = new URL(`${api}/cart/`);
   const options = {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -93,12 +94,13 @@ export const shareCart = async (cart: ShareCart) => {
 };
 
 /** get cart download link */
+/*
 export const getCartDownload = async (
   ids: string[],
   filename: string,
   type: string,
 ) => {
-  const url = new URL(`${api}/cart/download`);
+  const url = new URL(`${api}/cart/download/`);
   url.searchParams.set("type", type);
   url.searchParams.set("filename", filename);
   const options = {
@@ -108,6 +110,44 @@ export const getCartDownload = async (
   };
   const data = await request<CartDownload>(url, options);
   return data;
+};
+*/
+
+export const getCartDownload = async (
+  ids: string[],
+  filename: string,
+  type: string,
+) => {
+  const url = new URL(`${api}/cart/download/`);
+  url.searchParams.set("type", type);
+  url.searchParams.set("filename", filename);
+
+  const response = await fetch(url.toString(), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ ids }),
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to download file");
+  }
+
+  // Read file data
+  const blob = await response.blob();
+
+  // Create a temporary download link
+  const downloadUrl = window.URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = downloadUrl;
+  a.download = filename; // fallback if Content-Disposition is missing
+  document.body.appendChild(a);
+  a.click();
+
+  // Cleanup
+  a.remove();
+  window.URL.revokeObjectURL(downloadUrl);
 };
 
 /** download links for each database */

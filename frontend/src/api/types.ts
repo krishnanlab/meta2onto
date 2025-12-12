@@ -3,6 +3,7 @@ export type Model = {
   type: string;
   name: string;
   description: string;
+  series_id: string;
 };
 
 export type ModelSearch = Model[];
