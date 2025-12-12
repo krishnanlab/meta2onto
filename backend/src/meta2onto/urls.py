@@ -20,7 +20,7 @@ from django.urls import path, include
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    # path("api/", include('api.urls')), # FIXME: enable once we've vetted the api code
+    path("api/", include('api.urls')),
 ]
 
 # for serving static files
