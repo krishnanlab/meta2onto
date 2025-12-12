@@ -146,6 +146,7 @@ export const SearchBox = () => {
                 className="truncate leading-none text-slate-500"
                 dangerouslySetInnerHTML={{ __html: description }}
               />
+              <span className="text-gray-400 flex-1 text-end">{id}</span>
             </>
           ),
         })) ?? []
@@ -153,8 +154,9 @@ export const SearchBox = () => {
       onSelect={(id) => {
         if (!id?.trim()) return;
         const model = query.data?.find((model) => model.id === id);
+        console.log("selected", id, model);
         if (model) addSearch(model);
-        navigate(`/search/${id}`);
+        navigate(`/search/${model.name}`);
       }}
       status={
         showStatus({ query }) && <Status query={query} className="contents!" />
