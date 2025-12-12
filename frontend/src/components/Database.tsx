@@ -32,6 +32,22 @@ export const databases = [
     description: "Supplementary files and additional study resources",
     good: "Complete study context",
   },
+  // extra databases found in the data, but not in the mockup
+  {
+    id: "BioProject",
+    description: "Collection of biological data related to a single initiative",
+    good: "Complete study context",
+  },
+  {
+    id: "ArrayExpress",
+    description: "Functional genomics data collection",
+    good: "Functional genomics focus",
+  },
+  {
+    id: "Peptidome",
+    description: "Integration of de novo sequencing, database search, and homology searchn",
+    good: "Predict aspects of modified peptides",
+  },
 ];
 
 type Props = {
