@@ -316,11 +316,11 @@ export default function Cart() {
                 <Table
                   cols={[
                     {
-                      key: "id",
+                      key: "gse",
                       name: "ID",
                     },
                     {
-                      key: "name",
+                      key: "title",
                       name: "Name",
                     },
                     {
@@ -328,7 +328,7 @@ export default function Cart() {
                       name: "Samples",
                     },
                     {
-                      key: "date",
+                      key: "submission_date",
                       name: "Date",
                       render: (date) => <Ago date={date} />,
                     },
@@ -346,7 +346,7 @@ export default function Cart() {
                       render: (added) => <Ago date={added} />,
                     },
                     {
-                      key: "id",
+                      key: "gse",
                       name: "",
                       sortable: false,
                       render: (id) => (
