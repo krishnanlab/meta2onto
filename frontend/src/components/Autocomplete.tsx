@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import type { ReactElement, ReactNode } from "react";
 import { Autocomplete as _Autocomplete } from "@base-ui-components/react/autocomplete";
-import { useDebounce } from "@reactuses/core";
+import { useDebounceFn } from "@reactuses/core";
 import clsx from "clsx";
 import { Search } from "lucide-react";
 import { padding } from "@/components/Popover";
@@ -38,12 +38,12 @@ export default function Autocomplete({
 }: Props) {
   const ref = useRef<HTMLInputElement>(null);
 
-  const onValueChange = useDebounce(setSearch, 300);
+  const onValueChange = useDebounceFn(setSearch, 300);
 
   return (
     <_Autocomplete.Root
       value={search}
-      onValueChange={onValueChange}
+      onValueChange={onValueChange.run}
       items={options}
       mode="none"
       openOnInputClick
