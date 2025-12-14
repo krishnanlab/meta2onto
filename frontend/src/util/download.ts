@@ -1,5 +1,5 @@
 /** assemble and clean full filename */
-export const getFilename = (filename: string) =>
+const getFilename = (filename: string) =>
   filename
     /** make path safe */
     .replace(/[^A-Za-z0-9]+/g, "-")
@@ -28,16 +28,22 @@ const download = (
   window.URL.revokeObjectURL(url);
 };
 
-/** make url from blob */
-export const getUrl = (
-  /** blob data to download */
-  data: BlobPart,
+/** make url from data */
+const getUrl = (
+  /** data to download */
+  data: string | BlobPart | Blob,
   /** mime type */
-  type: string,
+  type?: string,
 ) =>
   typeof data === "string" && data.startsWith("data:")
     ? data
-    : window.URL.createObjectURL(new Blob([data], { type }));
+    : window.URL.createObjectURL(
+        data instanceof Blob ? data : new Blob([data], { type }),
+      );
+
+/** download blob as file */
+export const downloadBlob = (data: Blob, filename: string, ext: string) =>
+  download(getUrl(data), filename, ext);
 
 /** download string as text file */
 export const downloadTxt = (data: string, filename: string) =>

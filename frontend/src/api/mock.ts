@@ -127,15 +127,16 @@ const fakeModels: Model[] = range(100).map(() => {
     name: id,
     description: fakeText(4, 6),
     type: fakeType(),
+    series_id: "",
   };
 });
 
 const fakeStudies: Study[] = range(100).map(() => ({
-  id: fakeId(),
-  name: fakeText(4, 20),
-  description: fakeText(10, 200),
+  gse: fakeId(),
+  title: fakeText(4, 20),
+  summary: fakeText(10, 200),
   confidence: fakeConfidence(),
-  date: fakeDate(),
+  submission_date: fakeDate(),
   platform: fakePlatform(),
   database: fakeDatabase(),
   samples: random(1, 200),
@@ -169,7 +170,7 @@ export const handlers = [
       .slice(offset, offset + limit)
       .map((study) => ({
         ...study,
-        description: fakeHighlight(study.description, search),
+        summary: fakeHighlight(study.summary, search),
       }));
     return {
       count: filteredData.length,

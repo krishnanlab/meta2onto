@@ -24,7 +24,7 @@ import {
 } from "lucide-react";
 import {
   cartLookup,
-  getCartDownload,
+  downloadCart,
   getCartScript,
   shareCart,
   studyBatchLookup,
@@ -254,7 +254,7 @@ export default function Cart() {
                         <>
                           <ActionButton
                             onClick={() =>
-                              getCartDownload(studyIds, name || "cart", "csv")
+                              downloadCart(studyIds, name || "cart", "csv")
                             }
                           >
                             <Table2 />
@@ -263,7 +263,7 @@ export default function Cart() {
 
                           <ActionButton
                             onClick={() =>
-                              getCartDownload(studyIds, name || "cart", "json")
+                              downloadCart(studyIds, name || "cart", "json")
                             }
                           >
                             <Braces />
@@ -316,11 +316,11 @@ export default function Cart() {
                 <Table
                   cols={[
                     {
-                      key: "gse",
+                      key: "id",
                       name: "ID",
                     },
                     {
-                      key: "title",
+                      key: "name",
                       name: "Name",
                     },
                     {
@@ -328,7 +328,7 @@ export default function Cart() {
                       name: "Samples",
                     },
                     {
-                      key: "submission_date",
+                      key: "date",
                       name: "Date",
                       render: (date) => <Ago date={date} />,
                     },
@@ -346,7 +346,7 @@ export default function Cart() {
                       render: (added) => <Ago date={added} />,
                     },
                     {
-                      key: "gse",
+                      key: "id",
                       name: "",
                       sortable: false,
                       render: (id) => (

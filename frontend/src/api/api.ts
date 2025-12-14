@@ -1,12 +1,13 @@
 import { api, request } from "@/api";
 import type {
   Cart,
-  CartDownload,
   ModelSearch,
+  Study,
   StudySamples,
   StudySearch,
 } from "@/api/types";
 import type { LocalCart, ShareCart } from "@/cart";
+import { downloadBlob } from "@/util/download";
 
 /** type to color map */
 export const typeColor: Record<string, string> = {
@@ -25,6 +26,18 @@ export const modelSearch = async (search: string) => {
   return data;
 };
 
+/** transform study into desired format */
+const mapStudy = (study: Study) => ({
+  id: study.gse,
+  name: study.title,
+  description: study.summary,
+  confidence: study.confidence,
+  database: study.database,
+  samples: study.samples,
+  date: study.submission_date,
+  platform: study.platform,
+});
+
 /** search for studies and get full details */
 export const studySearch = async ({
   search = "",
@@ -40,8 +53,8 @@ export const studySearch = async ({
   url.searchParams.set("limit", String(limit));
   for (const [facet, values] of Object.entries(facets))
     for (const value of values) url.searchParams.append(facet, value);
-  const data = request<StudySearch>(url);
-  return data;
+  const data = await request<StudySearch>(url);
+  return { ...data, results: data.results.map(mapStudy) };
 };
 
 /** batch lookup full study details by ids */
@@ -60,13 +73,12 @@ export const studyBatchLookup = async ({
     headers: { "Content-Type": "application/json" },
     body: { ids },
   };
-  const data = request<StudySearch>(url, options);
-  return data;
+  const data = await request<StudySearch>(url, options);
+  return { ...data, results: data.results.map(mapStudy) };
 };
 
 /** lookup all samples for a study */
 export const studySamples = async ({ id = "", offset = 0, limit = 10 }) => {
-  // const url = new URL(`${api}/study/${id}/samples`);
   const url = new URL(`${api}/series/${id}/samples/`);
   url.searchParams.set("offset", String(offset));
   url.searchParams.set("limit", String(limit));
@@ -93,9 +105,8 @@ export const shareCart = async (cart: ShareCart) => {
   return data;
 };
 
-/** get cart download link */
-/*
-export const getCartDownload = async (
+/** download cart data */
+export const downloadCart = async (
   ids: string[],
   filename: string,
   type: string,
@@ -107,47 +118,11 @@ export const getCartDownload = async (
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: { ids },
-  };
-  const data = await request<CartDownload>(url, options);
-  return data;
-};
-*/
-
-export const getCartDownload = async (
-  ids: string[],
-  filename: string,
-  type: string,
-) => {
-  const url = new URL(`${api}/cart/download/`);
-  url.searchParams.set("type", type);
-  url.searchParams.set("filename", filename);
-
-  const response = await fetch(url.toString(), {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ ids }),
-  });
-
-  if (!response.ok) {
-    throw new Error("Failed to download file");
-  }
-
-  // Read file data
-  const blob = await response.blob();
-
-  // Create a temporary download link
-  const downloadUrl = window.URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = downloadUrl;
-  a.download = filename; // fallback if Content-Disposition is missing
-  document.body.appendChild(a);
-  a.click();
-
-  // Cleanup
-  a.remove();
-  window.URL.revokeObjectURL(downloadUrl);
+    parse: "blob",
+  } as const;
+  const data = await request<Blob>(url, options);
+  if (type === "csv") downloadBlob(data, filename, "csv");
+  if (type === "json") downloadBlob(data, filename, "json");
 };
 
 /** download links for each database */

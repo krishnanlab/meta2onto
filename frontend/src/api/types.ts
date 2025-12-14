@@ -9,11 +9,11 @@ export type Model = {
 export type ModelSearch = Model[];
 
 export type Study = {
-  id: string;
-  name: string;
-  description: string;
+  gse: string;
+  title: string;
+  summary: string;
   confidence: { name: string; value: number };
-  date: string;
+  submission_date: string;
   platform: string;
   database: string[];
   samples: number;
