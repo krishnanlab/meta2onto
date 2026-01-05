@@ -24,7 +24,7 @@ import {
 } from "lucide-react";
 import {
   cartLookup,
-  getCartDownload,
+  downloadCart,
   getCartScript,
   shareCart,
   studyBatchLookup,
@@ -254,7 +254,7 @@ export default function Cart() {
                         <>
                           <ActionButton
                             onClick={() =>
-                              getCartDownload(studyIds, name || "cart", "csv")
+                              downloadCart(studyIds, name || "cart", "csv")
                             }
                           >
                             <Table2 />
@@ -263,7 +263,7 @@ export default function Cart() {
 
                           <ActionButton
                             onClick={() =>
-                              getCartDownload(studyIds, name || "cart", "json")
+                              downloadCart(studyIds, name || "cart", "json")
                             }
                           >
                             <Braces />
@@ -316,11 +316,11 @@ export default function Cart() {
                 <Table
                   cols={[
                     {
-                      key: "id",
+                      key: "gse",
                       name: "ID",
                     },
                     {
-                      key: "name",
+                      key: "title",
                       name: "Name",
                     },
                     {
@@ -328,7 +328,7 @@ export default function Cart() {
                       name: "Samples",
                     },
                     {
-                      key: "date",
+                      key: "submission_date",
                       name: "Date",
                       render: (date) => <Ago date={date} />,
                     },
@@ -346,7 +346,7 @@ export default function Cart() {
                       render: (added) => <Ago date={added} />,
                     },
                     {
-                      key: "id",
+                      key: "gse",
                       name: "",
                       sortable: false,
                       render: (id) => (
@@ -359,7 +359,7 @@ export default function Cart() {
                   rows={studyDetails.map((study) => ({
                     ...study,
                     added:
-                      localCart?.studies.find((s) => s.id === study.id)
+                      localCart?.studies.find((s) => s.id === study.gse)
                         ?.added ?? "2025-01-01T00:00:00.000Z",
                   }))}
                   sort={ordering}

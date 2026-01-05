@@ -5,21 +5,35 @@ services:
   backend:
     build: ./backend
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+      memcached:
+        condition: service_started
     env_file:
       - .env
     volumes:
       - ./backend/src:/app/src
-      - ./data/geo_metadata/:/data/geo_metadata/
+      - ./data/:/data/
 
   frontend:
     build: ./frontend
     depends_on:
       - backend
 
+  memcached:
+    image: memcached:latest
+
   db:
-    image: postgres:17
+    # image: postgres:17
+    build: ./services/postgres/
     env_file:
       - .env
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data/
+      - ./db-exports/:/db-exports/
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/healthcheck.sh || exit 1"]
+      interval: 5s
+      timeout: 60s
+      retries: 5
+      start_period: 2m

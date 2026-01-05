@@ -1,12 +1,7 @@
 import { api, request } from "@/api";
-import type {
-  Cart,
-  CartDownload,
-  ModelSearch,
-  StudySamples,
-  StudySearch,
-} from "@/api/types";
+import type { Cart, ModelSearch, StudySamples, StudySearch } from "@/api/types";
 import type { LocalCart, ShareCart } from "@/cart";
+import { downloadBlob } from "@/util/download";
 
 /** type to color map */
 export const typeColor: Record<string, string> = {
@@ -19,8 +14,8 @@ export const typeColor: Record<string, string> = {
 
 /** search for models */
 export const modelSearch = async (search: string) => {
-  const url = new URL(`${api}/model`);
-  url.searchParams.set("search", search);
+  const url = new URL(`${api}/ontology-search/`);
+  url.searchParams.set("query", search);
   const data = request<ModelSearch>(url);
   return data;
 };
@@ -33,14 +28,14 @@ export const studySearch = async ({
   limit = 100,
   facets = {} as Record<string, string[]>,
 }) => {
-  const url = new URL(`${api}/study`);
-  url.searchParams.set("search", search);
+  const url = new URL(`${api}/geo-metadata/search/`);
+  url.searchParams.set("query", search);
   url.searchParams.set("ordering", ordering);
   url.searchParams.set("offset", String(offset));
   url.searchParams.set("limit", String(limit));
   for (const [facet, values] of Object.entries(facets))
     for (const value of values) url.searchParams.append(facet, value);
-  const data = request<StudySearch>(url);
+  const data = await request<StudySearch>(url);
   return data;
 };
 
@@ -51,8 +46,8 @@ export const studyBatchLookup = async ({
   offset = 0,
   limit = 100,
 }) => {
-  const url = new URL(`${api}/study/lookup`);
-  url.searchParams.set("ordering", ordering);
+  const url = new URL(`${api}/geo-metadata/lookup/`);
+  // url.searchParams.set("ordering", ordering);
   url.searchParams.set("offset", String(offset));
   url.searchParams.set("limit", String(limit));
   const options = {
@@ -60,13 +55,13 @@ export const studyBatchLookup = async ({
     headers: { "Content-Type": "application/json" },
     body: { ids },
   };
-  const data = request<StudySearch>(url, options);
+  const data = await request<StudySearch>(url, options);
   return data;
 };
 
 /** lookup all samples for a study */
 export const studySamples = async ({ id = "", offset = 0, limit = 10 }) => {
-  const url = new URL(`${api}/study/${id}/samples`);
+  const url = new URL(`${api}/series/${id}/samples/`);
   url.searchParams.set("offset", String(offset));
   url.searchParams.set("limit", String(limit));
   const data = request<StudySamples>(url);
@@ -75,14 +70,14 @@ export const studySamples = async ({ id = "", offset = 0, limit = 10 }) => {
 
 /** lookup a cart by id */
 export const cartLookup = async (id: string) => {
-  const url = new URL(`${api}/cart/${id}`);
+  const url = new URL(`${api}/cart/${id}/`);
   const data = request<Cart>(url);
   return data;
 };
 
 /** share cart */
 export const shareCart = async (cart: ShareCart) => {
-  const url = new URL(`${api}/cart`);
+  const url = new URL(`${api}/cart/`);
   const options = {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -92,22 +87,24 @@ export const shareCart = async (cart: ShareCart) => {
   return data;
 };
 
-/** get cart download link */
-export const getCartDownload = async (
+/** download cart data */
+export const downloadCart = async (
   ids: string[],
   filename: string,
   type: string,
 ) => {
-  const url = new URL(`${api}/cart/download`);
+  const url = new URL(`${api}/cart/download/`);
   url.searchParams.set("type", type);
   url.searchParams.set("filename", filename);
   const options = {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: { ids },
-  };
-  const data = await request<CartDownload>(url, options);
-  return data;
+    parse: "blob",
+  } as const;
+  const data = await request<Blob>(url, options);
+  if (type === "csv") downloadBlob(data, filename, "csv");
+  if (type === "json") downloadBlob(data, filename, "json");
 };
 
 /** download links for each database */

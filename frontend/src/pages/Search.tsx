@@ -147,32 +147,35 @@ export default function Search() {
 
       {/* results */}
       {query.data?.results.map(
-        ({
-          id,
-          name,
-          description,
-          confidence,
-          database,
-          samples,
-          date,
-          platform,
-        }) => (
+        (
+          {
+            gse,
+            title,
+            summary,
+            confidence,
+            database,
+            samples,
+            submission_date,
+            platform,
+          },
+          index,
+        ) => (
           <div
-            key={id}
+            key={index}
             className={`
               flex flex-col gap-2 rounded-sm border border-slate-300 p-4
             `}
           >
             <div className="flex items-start justify-between gap-2">
-              <strong>{name}</strong>
+              <strong>{title}</strong>
               <Meter value={confidence.value}>{confidence.name}</Meter>
             </div>
 
             <div className="flex flex-wrap gap-x-6 gap-y-2">
               {(
                 [
-                  [Hash, id],
-                  [Calendar, formatDate(date)],
+                  [Hash, gse],
+                  [Calendar, formatDate(submission_date)],
                   [Dna, platform],
                 ] as const
               ).map(([Icon, text], index) => (
@@ -190,7 +193,7 @@ export default function Search() {
               /* eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex */
               tabIndex={0}
               className="truncate-lines"
-              dangerouslySetInnerHTML={{ __html: description }}
+              dangerouslySetInnerHTML={{ __html: summary }}
             />
 
             <div className="flex flex-wrap items-end justify-between gap-2">
@@ -211,30 +214,30 @@ export default function Search() {
                   title={
                     <>
                       <span>
-                        Samples for <strong>{id}</strong>
+                        Samples for <strong>{gse}</strong>
                       </span>
-                      <span className="text-sm text-slate-500">{name}</span>
+                      <span className="text-sm text-slate-500">{title}</span>
                     </>
                   }
-                  content={<Samples id={id} />}
+                  content={<Samples id={gse} />}
                 />
                 <Button
                   aria-label={
-                    inCart(cart, id) ? "Remove from cart" : "Add to cart"
+                    inCart(cart, gse) ? "Remove from cart" : "Add to cart"
                   }
-                  color={inCart(cart, id) ? "none" : "accent"}
+                  color={inCart(cart, gse) ? "none" : "accent"}
                   onClick={(event) => {
                     const cartRef = getCartRef();
-                    if (inCart(cart, id)) {
-                      removeFromCart(id);
+                    if (inCart(cart, gse)) {
+                      removeFromCart(gse);
                       if (cartRef) fly(cartRef, event.currentTarget);
                     } else {
-                      addToCart(id);
+                      addToCart(gse);
                       if (cartRef) fly(event.currentTarget, cartRef);
                     }
                   }}
                 >
-                  {inCart(cart, id) ? <Check /> : <Plus />}
+                  {inCart(cart, gse) ? <Check /> : <Plus />}
                   Cart
                 </Button>
               </div>
@@ -304,10 +307,10 @@ const Samples = ({ id }: { id: string }) => {
       <div className="flex flex-col gap-4 overflow-y-auto">
         <Status query={query} />
 
-        {query.data?.results.map((sample) => (
-          <div key={sample.id} className="flex flex-col gap-1">
-            <strong>{sample.id}</strong>
-            <p dangerouslySetInnerHTML={{ __html: sample.description }} />
+        {query.data?.results.map((sample, index) => (
+          <div key={index} className="flex flex-col gap-1">
+            <strong>{sample.sample_id}</strong>
+            <p dangerouslySetInnerHTML={{ __html: sample.doc }} />
           </div>
         ))}
       </div>

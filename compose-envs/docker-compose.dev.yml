@@ -13,9 +13,12 @@ services:
     volumes:
       - ./frontend/src/:/app/src/
     environment:
-      - VITE_API=http://localhost:8050
+      - VITE_API=http://localhost:8050/api
     command: bun run dev --host 0.0.0.0 --port 5173 --no-open
 
   db:
     ports:
       - "5439:5432"
+    volumes:
+      - ./services/postgres/docker-entrypoint-initdb.d/:/docker-entrypoint-initdb.d/
+      - ./services/postgres/docker-entrypoint-postinit.d/:/docker-entrypoint-postinit.d/

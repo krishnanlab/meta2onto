@@ -217,3 +217,7 @@ __marimo__/
 
 # MacOS stuff
 .DS_Store
+
+# project-specific ignores
+# ignore dumpfiles that aren't explicitly checked in
+/db-exports/*.dump

@@ -5,7 +5,7 @@ export const api = import.meta.env.VITE_API;
 type Params = URLSearchParams;
 
 /** parse response mode */
-type Parse = "json" | "text";
+type Parse = "json" | "text" | "blob";
 
 /** request body */
 type Body = Record<string, unknown>;
@@ -41,10 +41,9 @@ export async function request<Response>(
   /** parse response */
   let parsed: Response | undefined;
   try {
-    parsed =
-      parse === "text"
-        ? await response.clone().text()
-        : await response.clone().json();
+    if (parse === "blob") parsed = (await response.clone().blob()) as Response;
+    if (parse === "json") parsed = (await response.clone().json()) as Response;
+    if (parse === "text") parsed = (await response.clone().text()) as Response;
   } catch (e) {
     error = `Couldn't parse response as ${parse}`;
   }

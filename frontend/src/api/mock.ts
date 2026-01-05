@@ -127,23 +127,26 @@ const fakeModels: Model[] = range(100).map(() => {
     name: id,
     description: fakeText(4, 6),
     type: fakeType(),
+    series_id: "",
   };
 });
 
 const fakeStudies: Study[] = range(100).map(() => ({
-  id: fakeId(),
-  name: fakeText(4, 20),
-  description: fakeText(10, 200),
+  gse: fakeId(),
+  title: fakeText(4, 20),
+  summary: fakeText(10, 200),
   confidence: fakeConfidence(),
-  date: fakeDate(),
+  submission_date: fakeDate(),
   platform: fakePlatform(),
   database: fakeDatabase(),
   samples: random(1, 200),
 }));
 
 const fakeSamples: Sample[] = range(100).map(() => ({
-  id: fakeId(),
-  description: fakeText(5, 20),
+  sample_id: fakeId(),
+  doc: fakeText(5, 20),
+  created_at: fakeDate(),
+  updated_at: fakeDate(),
 }));
 
 const fakeCarts: Cart[] = [];
@@ -169,7 +172,7 @@ export const handlers = [
       .slice(offset, offset + limit)
       .map((study) => ({
         ...study,
-        description: fakeHighlight(study.description, search),
+        summary: fakeHighlight(study.summary, search),
       }));
     return {
       count: filteredData.length,
@@ -211,6 +214,7 @@ export const handlers = [
     const cart = {
       ...(body as ShareCart),
       id: fakeId(),
+      created_at: fakeDate(),
     };
     fakeCarts.push(cart);
     return cart;
