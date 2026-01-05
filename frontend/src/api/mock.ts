@@ -143,8 +143,10 @@ const fakeStudies: Study[] = range(100).map(() => ({
 }));
 
 const fakeSamples: Sample[] = range(100).map(() => ({
-  id: fakeId(),
-  description: fakeText(5, 20),
+  sample_id: fakeId(),
+  doc: fakeText(5, 20),
+  created_at: fakeDate(),
+  updated_at: fakeDate(),
 }));
 
 const fakeCarts: Cart[] = [];
@@ -212,6 +214,7 @@ export const handlers = [
     const cart = {
       ...(body as ShareCart),
       id: fakeId(),
+      created_at: fakeDate(),
     };
     fakeCarts.push(cart);
     return cart;

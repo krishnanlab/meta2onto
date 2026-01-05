@@ -1,11 +1,5 @@
 import { api, request } from "@/api";
-import type {
-  Cart,
-  ModelSearch,
-  Study,
-  StudySamples,
-  StudySearch,
-} from "@/api/types";
+import type { Cart, ModelSearch, StudySamples, StudySearch } from "@/api/types";
 import type { LocalCart, ShareCart } from "@/cart";
 import { downloadBlob } from "@/util/download";
 
@@ -26,18 +20,6 @@ export const modelSearch = async (search: string) => {
   return data;
 };
 
-/** transform study into desired format */
-const mapStudy = (study: Study) => ({
-  id: study.gse,
-  name: study.title,
-  description: study.summary,
-  confidence: study.confidence,
-  database: study.database,
-  samples: study.samples,
-  date: study.submission_date,
-  platform: study.platform,
-});
-
 /** search for studies and get full details */
 export const studySearch = async ({
   search = "",
@@ -54,7 +36,7 @@ export const studySearch = async ({
   for (const [facet, values] of Object.entries(facets))
     for (const value of values) url.searchParams.append(facet, value);
   const data = await request<StudySearch>(url);
-  return { ...data, results: data.results.map(mapStudy) };
+  return data;
 };
 
 /** batch lookup full study details by ids */
@@ -74,7 +56,7 @@ export const studyBatchLookup = async ({
     body: { ids },
   };
   const data = await request<StudySearch>(url, options);
-  return { ...data, results: data.results.map(mapStudy) };
+  return data;
 };
 
 /** lookup all samples for a study */

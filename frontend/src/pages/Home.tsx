@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { useNavigate, useParams } from "react-router";
+import { useDebounce } from "@reactuses/core";
 import { useQuery } from "@tanstack/react-query";
 import clsx from "clsx";
 import { History, Lightbulb } from "lucide-react";
@@ -90,8 +91,11 @@ export default function Home() {
 export const SearchBox = () => {
   const navigate = useNavigate();
 
-  /** search string state */
-  const [search, setSearch] = useState("");
+  /** search string state (immediate) */
+  const [_search, setSearch] = useState("");
+
+  /** search (debounced) */
+  const search = useDebounce(_search, 300);
 
   /** update search from url */
   const params = useParams();
@@ -115,11 +119,11 @@ export const SearchBox = () => {
 
   return (
     <Autocomplete
-      search={search}
+      search={_search}
       setSearch={setSearch}
       placeholder="Search..."
       options={
-        results.map(({ id, name, description, type, icon }) => ({
+        results.map(({ id, name, type, icon }) => ({
           value: id,
           content: (
             <>
@@ -133,14 +137,12 @@ export const SearchBox = () => {
                 {type}
               </span>
               <span
-                className="truncate leading-none font-normal"
+                className="grow truncate leading-none font-normal"
                 dangerouslySetInnerHTML={{ __html: name }}
               />
-              <span
-                className="truncate leading-none text-slate-500"
-                dangerouslySetInnerHTML={{ __html: description }}
-              />
-              <span className="flex-1 text-right text-gray-400">{id}</span>
+              <span className="text-right leading-none text-slate-500">
+                {id}
+              </span>
             </>
           ),
         })) ?? []

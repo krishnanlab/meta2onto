@@ -30,8 +30,10 @@ export type StudySearch = {
 };
 
 export type Sample = {
-  id: string;
-  description: string;
+  sample_id: string;
+  doc: string;
+  created_at: string;
+  updated_at: string;
 };
 
 export type StudySamples = {
@@ -42,6 +44,7 @@ export type StudySamples = {
 export type Cart = {
   id: string;
   name: string;
+  created_at: string;
   studies: { id: string; added: string }[];
 };
 

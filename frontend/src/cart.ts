@@ -4,9 +4,9 @@ import { isEqual, uniqBy, uniqWith } from "lodash";
 import type { Cart } from "@/api/types";
 
 /** cart object, minus assigned id and selected name */
-export type LocalCart = Omit<Cart, "id" | "name">;
+export type LocalCart = Omit<Cart, "id" | "name" | "created_at">;
 /** cart object, after user selects name but before they submit */
-export type ShareCart = Omit<Cart, "id">;
+export type ShareCart = Omit<Cart, "id" | "created_at">;
 
 const defaultCart: LocalCart = {
   studies: [],
