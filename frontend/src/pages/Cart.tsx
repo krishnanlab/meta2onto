@@ -244,12 +244,6 @@ export default function Cart() {
                 {(localCart || sharedCart) && (
                   <>
                     <Popover
-                      trigger={
-                        <Button disabled={!size}>
-                          <Download />
-                          Download
-                        </Button>
-                      }
                       content={
                         <>
                           <ActionButton
@@ -271,7 +265,12 @@ export default function Cart() {
                           </ActionButton>
                         </>
                       }
-                    />
+                    >
+                      <Button disabled={!size}>
+                        <Download />
+                        Download
+                      </Button>
+                    </Popover>
 
                     <Dialog
                       trigger={
@@ -407,10 +406,10 @@ export default function Cart() {
                 <Link
                   key={index}
                   to={`/cart/${id}`}
-                  className={`
+                  className="
                     flex flex-col items-start gap-2 rounded-sm border
                     border-slate-300 p-2 leading-none
-                  `}
+                  "
                 >
                   <strong>{name || id}</strong>
                   <span>{formatNumber(studies.length)} studies</span>

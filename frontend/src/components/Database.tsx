@@ -79,7 +79,12 @@ export default function Database({ database, full = false }: Props) {
 
   return (
     <Tooltip content={details}>
-      <div key={database} className="rounded-sm bg-theme-light px-1 text-black">
+      <div
+        key={database}
+        /* eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex */
+        tabIndex={0}
+        className="rounded-sm bg-theme-light px-1 text-black"
+      >
         {id}
       </div>
     </Tooltip>

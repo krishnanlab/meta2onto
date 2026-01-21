@@ -81,10 +81,10 @@ export default function Search() {
 
   const filtersPanel = (
     <div
-      className={`
+      className="
         flex w-auto flex-col gap-4 rounded-sm bg-slate-100 p-4
         max-sm:w-full max-sm:flex-row max-sm:flex-wrap
-      `}
+      "
     >
       {/* facets */}
       {isEmpty(query.data?.facets) && (
@@ -162,9 +162,9 @@ export default function Search() {
         ) => (
           <div
             key={index}
-            className={`
+            className="
               flex flex-col gap-2 rounded-sm border border-slate-300 p-4
-            `}
+            "
           >
             <div className="flex items-start justify-between gap-2">
               <strong>{title}</strong>
@@ -277,10 +277,10 @@ export default function Search() {
 
       <section>
         <div
-          className={`
+          className="
             flex items-start gap-4
             max-sm:flex-col
-          `}
+          "
         >
           {filtersPanel}
           {resultsPanel}

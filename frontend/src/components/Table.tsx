@@ -189,9 +189,9 @@ export default function Table<Datum extends object>({
                   {row.getVisibleCells().map((cell) => (
                     <td key={cell.id} className="border-b border-slate-100">
                       <div
-                        className={`
+                        className="
                           flex flex-wrap items-center gap-2 p-2 leading-none
-                        `}
+                        "
                       >
                         {flexRender(
                           cell.column.columnDef.cell,

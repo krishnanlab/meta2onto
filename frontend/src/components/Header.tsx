@@ -48,10 +48,10 @@ export default function Header() {
       {/* title */}
       <a
         href="/"
-        className={`
+        className="
           flex items-center gap-2 text-2xl tracking-wider text-white!
           hover:text-slate-300!
-        `}
+        "
       >
         <Logo color="currentColor" className="h-8" />
         {title}
@@ -65,10 +65,10 @@ export default function Header() {
             return () => (toggleRef = undefined);
           }}
           color="none"
-          className={`
+          className="
             text-current!
             sm:hidden
-          `}
+          "
           onClick={() => setOpen(!open)}
           aria-expanded={open}
           aria-controls="nav"
@@ -108,10 +108,10 @@ export default function Header() {
           Cart
           {!!cart.studies.length && (
             <div
-              className={`
+              className="
                 absolute -top-2 -right-2 grid size-5 place-items-center
                 rounded-full bg-theme-light text-sm leading-none text-black
-              `}
+              "
             >
               {cart.studies.length}
             </div>

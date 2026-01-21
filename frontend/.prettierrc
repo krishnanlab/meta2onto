@@ -1,8 +1,7 @@
 {
   "plugins": [
     "@ianvs/prettier-plugin-sort-imports",
-    "./node_modules/prettier-plugin-jsdoc/dist/index.js",
-    "prettier-plugin-css-order"
+    "./node_modules/prettier-plugin-jsdoc/dist/index.js"
   ],
   "importOrder": [
     "^react",
@@ -14,7 +13,6 @@
     "^../"
   ],
   "importOrderParserPlugins": ["typescript", "jsx", "importAssertions"],
-  "cssDeclarationSorterOrder": "smacss",
   "jsdocCapitalizeDescription": false,
   "htmlWhitespaceSensitivity": "strict"
 }

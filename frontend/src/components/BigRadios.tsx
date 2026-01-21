@@ -1,7 +1,6 @@
 import { useId } from "react";
 import type { ReactElement, ReactNode } from "react";
-import { Radio } from "@base-ui-components/react/radio";
-import { RadioGroup } from "@base-ui-components/react/radio-group";
+import { Radio, RadioGroup } from "@base-ui/react";
 import clsx from "clsx";
 import { CheckCircle2 } from "lucide-react";
 
@@ -48,11 +47,11 @@ export default function BigRadios<O extends Option>({
               if (option.value === value) el?.scrollIntoView(true);
             }}
             key={index}
-            className={`
+            className="
               relative flex min-w-50 flex-1 cursor-pointer flex-col items-start!
               gap-2 rounded-sm border border-slate-300 p-2 transition-colors
               hover:bg-slate-100
-            `}
+            "
           >
             <Radio.Root
               value={option.value}
@@ -61,9 +60,7 @@ export default function BigRadios<O extends Option>({
               nativeButton={false}
             />
             {option.value === value && (
-              <CheckCircle2
-                className={`absolute top-2 right-2 text-xl text-green-500`}
-              />
+              <CheckCircle2 className="absolute top-2 right-2 text-xl text-green-500" />
             )}
           </label>
         ))}
