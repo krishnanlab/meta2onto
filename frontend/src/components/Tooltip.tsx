@@ -1,5 +1,5 @@
 import type { ReactElement, ReactNode } from "react";
-import { Tooltip as _Tooltip } from "@base-ui-components/react/tooltip";
+import { Tooltip as _Tooltip } from "@base-ui/react";
 import { renderText } from "@/util/dom";
 
 type Props = {
@@ -12,8 +12,8 @@ export const padding = 20;
 
 export default function Tooltip({ children, content }: Props) {
   return (
-    <_Tooltip.Provider>
-      <_Tooltip.Root delay={100}>
+    <_Tooltip.Provider delay={100}>
+      <_Tooltip.Root>
         <_Tooltip.Trigger render={children} aria-label={renderText(content)} />
         <_Tooltip.Portal>
           <_Tooltip.Positioner
