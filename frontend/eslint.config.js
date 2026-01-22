@@ -1,7 +1,6 @@
 import eslintJs from "@eslint/js";
 import eslintPluginBetterTailwindcss from "eslint-plugin-better-tailwindcss";
 import eslintPluginJsxA11y from "eslint-plugin-jsx-a11y";
-import eslintPluginPrettier from "eslint-plugin-prettier";
 import eslintPluginPrettierRecommended from "eslint-plugin-prettier/recommended";
 import eslintPluginReactHooks from "eslint-plugin-react-hooks";
 import { defineConfig, globalIgnores } from "eslint/config";
@@ -17,7 +16,6 @@ export default defineConfig([
   eslintPluginJsxA11y.flatConfigs.recommended,
   {
     plugins: {
-      prettier: eslintPluginPrettier,
       "better-tailwindcss": eslintPluginBetterTailwindcss,
     },
     languageOptions: {

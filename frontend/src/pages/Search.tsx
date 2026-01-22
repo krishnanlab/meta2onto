@@ -190,7 +190,6 @@ export default function Search() {
             </div>
 
             <p
-              /* eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex */
               tabIndex={0}
               className="truncate-lines"
               dangerouslySetInnerHTML={{ __html: summary }}
