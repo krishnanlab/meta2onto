@@ -7,3 +7,6 @@ dist
 *.local
 
 !.env
+
+tsconfig.tsbuildinfo
+tsconfig.*.tsbuildinfo
