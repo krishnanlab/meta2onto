@@ -25,16 +25,30 @@ export default defineConfig([
       globals: globals.browser,
     },
     rules: {
-      "prettier/prettier": "warn",
-      ...eslintPluginBetterTailwindcss.configs["recommended-warn"].rules,
+      /** GENERAL */
       "prefer-const": ["error", { destructuring: "all" }],
+
+      /** TYPESCRIPT */
       "@typescript-eslint/no-unused-vars": ["warn", { caughtErrors: "none" }],
       "@typescript-eslint/consistent-type-definitions": ["error", "type"],
       "@typescript-eslint/consistent-type-imports": "error",
+
+      /** ACCESSIBILITY */
+      /** https://github.com/dequelabs/axe-core/issues/4566 */
+      "jsx-a11y/no-noninteractive-tabindex": ["off"],
+      /**
+       * allow <label>some text<AnyComponent/></label> but still catch
+       * <label>just text</label>
+       */
       "jsx-a11y/label-has-associated-control": [
         "error",
-        { controlComponents: ["Select"] },
+        { controlComponents: ["*"] },
       ],
+
+      /** FORMATTING */
+      "prettier/prettier": "warn",
+      ...eslintPluginBetterTailwindcss.configs["recommended-warn"].rules,
+      /** https://github.com/schoero/eslint-plugin-better-tailwindcss/issues/302 */
       "better-tailwindcss/enforce-consistent-line-wrapping": [
         "warn",
         { strictness: "loose" },
