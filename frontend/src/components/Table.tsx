@@ -67,6 +67,8 @@ export default function Table<Datum extends object>({
   perPage,
   onPerPage,
 }: Props<Datum>) {
+  "use no memo";
+
   const columnHelper = createColumnHelper<Datum>();
   /** column definitions */
   const columns = cols.map((col, index) =>
@@ -95,6 +97,8 @@ export default function Table<Datum extends object>({
   const pagination = { pageIndex: page ?? 0, pageSize: perPage ?? 10 };
 
   /** tanstack table api */
+  /** https://github.com/facebook/react/issues/33057 */
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data: rows,
     columns,
@@ -189,9 +193,9 @@ export default function Table<Datum extends object>({
                   {row.getVisibleCells().map((cell) => (
                     <td key={cell.id} className="border-b border-slate-100">
                       <div
-                        className={`
+                        className="
                           flex flex-wrap items-center gap-2 p-2 leading-none
-                        `}
+                        "
                       >
                         {flexRender(
                           cell.column.columnDef.cell,

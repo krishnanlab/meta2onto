@@ -1,28 +1,21 @@
 import eslintJs from "@eslint/js";
 import eslintPluginBetterTailwindcss from "eslint-plugin-better-tailwindcss";
 import eslintPluginJsxA11y from "eslint-plugin-jsx-a11y";
-import eslintPluginPrettier from "eslint-plugin-prettier";
 import eslintPluginPrettierRecommended from "eslint-plugin-prettier/recommended";
 import eslintPluginReactHooks from "eslint-plugin-react-hooks";
-import eslintPluginReactRefresh from "eslint-plugin-react-refresh";
 import { defineConfig, globalIgnores } from "eslint/config";
 import globals from "globals";
 import typescriptEslint from "typescript-eslint";
 
 export default defineConfig([
   globalIgnores(["dist", "public"]),
+  eslintJs.configs.recommended,
+  typescriptEslint.configs.recommended,
+  eslintPluginPrettierRecommended,
+  eslintPluginReactHooks.configs.flat.recommended,
+  eslintPluginJsxA11y.flatConfigs.recommended,
   {
-    files: ["**/*.{ts,tsx}"],
-    extends: [
-      eslintJs.configs.recommended,
-      typescriptEslint.configs.recommended,
-      eslintPluginReactHooks.configs["recommended-latest"],
-      eslintPluginReactRefresh.configs.vite,
-      eslintPluginPrettierRecommended,
-      eslintPluginJsxA11y.flatConfigs.recommended,
-    ],
     plugins: {
-      prettier: eslintPluginPrettier,
       "better-tailwindcss": eslintPluginBetterTailwindcss,
     },
     languageOptions: {
@@ -30,21 +23,34 @@ export default defineConfig([
       globals: globals.browser,
     },
     rules: {
-      ...eslintPluginReactHooks.configs.recommended.rules,
-      ...eslintPluginBetterTailwindcss.configs["recommended-warn"].rules,
-      "prettier/prettier": "warn",
+      /** GENERAL */
       "prefer-const": ["error", { destructuring: "all" }],
+
+      /** TYPESCRIPT */
       "@typescript-eslint/no-unused-vars": ["warn", { caughtErrors: "none" }],
       "@typescript-eslint/consistent-type-definitions": ["error", "type"],
       "@typescript-eslint/consistent-type-imports": "error",
-      "react-refresh/only-export-components": ["off"],
+
+      /** ACCESSIBILITY */
+      /** https://github.com/dequelabs/axe-core/issues/4566 */
+      "jsx-a11y/no-noninteractive-tabindex": ["off"],
+      /**
+       * allow <label>some text<AnyComponent/></label> but still catch
+       * <label>just text</label>
+       */
       "jsx-a11y/label-has-associated-control": [
         "error",
-        { controlComponents: ["Select"] },
+        { controlComponents: ["*"] },
       ],
-      "better-tailwindcss/enforce-consistent-variable-syntax": "warn",
-      "better-tailwindcss/enforce-shorthand-classes": "warn",
-      "better-tailwindcss/no-deprecated-classes": "warn",
+
+      /** FORMATTING */
+      "prettier/prettier": "warn",
+      ...eslintPluginBetterTailwindcss.configs["recommended-warn"].rules,
+      /** https://github.com/schoero/eslint-plugin-better-tailwindcss/issues/302 */
+      "better-tailwindcss/enforce-consistent-line-wrapping": [
+        "warn",
+        { strictness: "loose" },
+      ],
     },
     settings: { "better-tailwindcss": { entryPoint: "src/styles.css" } },
   },

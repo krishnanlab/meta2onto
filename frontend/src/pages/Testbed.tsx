@@ -74,10 +74,10 @@ export default function Testbed() {
         </div>
 
         <div
-          className={`
+          className="
             flex h-100 w-150 items-center justify-center gap-5 bg-theme-light
             text-[50px] text-theme
-          `}
+          "
         >
           <Logo className="size-25" />
           <span>

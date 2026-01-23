@@ -1,15 +1,14 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useState } from "react";
 import { useEventListener } from "@reactuses/core";
 import { isEqual } from "lodash";
 import { getTheme, type Theme } from "@/util/dom";
 
 /** check if value changed from previous render */
-export const useChanged = <Value>(value: Value, initial = true) => {
-  const prev = useRef<Value | undefined>(undefined);
-  const changed = !isEqual(value, prev.current);
-  const result = initial ? changed : changed && prev.current !== undefined;
-  prev.current = value;
-  return result;
+export const useChanged = <Value>(value: Value) => {
+  const [prev, setPrev] = useState<Value>();
+  const changed = !isEqual(prev, value);
+  if (changed) setPrev(value);
+  return changed;
 };
 
 /** use root css vars reactively */

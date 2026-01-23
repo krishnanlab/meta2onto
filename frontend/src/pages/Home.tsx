@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { ReactNode } from "react";
 import { useNavigate, useParams } from "react-router";
 import { useDebounce } from "@reactuses/core";
@@ -12,6 +12,7 @@ import Link from "@/components/Link";
 import Rings from "@/components/Rings";
 import Status, { showStatus } from "@/components/Status";
 import { addSearch, getHistory } from "@/search";
+import { useChanged } from "@/util/hooks";
 
 /** example searches */
 const examples = ["Hepatocyte", "Breast cancer", "Alzheimer's disease"];
@@ -20,15 +21,15 @@ export default function Home() {
   return (
     <>
       <section
-        className={`
+        className="
           relative z-0 overflow-hidden bg-theme-light py-20! text-center narrow
-        `}
+        "
       >
         <Rings
-          className={`
+          className="
             absolute top-1/2 left-1/2 -z-10 w-full max-w-200 -translate-1/2
             text-[hsl(220,50%,50%,0.25)]
-          `}
+          "
         />
 
         <hgroup className="flex flex-col items-center gap-y-1 narrow">
@@ -47,9 +48,9 @@ export default function Home() {
 
         {/* examples */}
         <p
-          className={`
+          className="
             flex flex-wrap items-center justify-center gap-4 leading-none
-          `}
+          "
         >
           <span className="flex items-center gap-1 text-slate-500">
             <Lightbulb />
@@ -99,9 +100,8 @@ export const SearchBox = () => {
 
   /** update search from url */
   const params = useParams();
-  useEffect(() => {
-    if (params.search) setSearch(params.search);
-  }, [params.search]);
+  const searchChanged = useChanged(params.search);
+  if (searchChanged && params.search) setSearch(params.search);
 
   /** model search results */
   const query = useQuery({

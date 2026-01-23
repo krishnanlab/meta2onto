@@ -1,9 +1,9 @@
 import { useRef } from "react";
 import type { ReactElement, ReactNode } from "react";
-import { Autocomplete as _Autocomplete } from "@base-ui-components/react/autocomplete";
+import { Autocomplete as _Autocomplete } from "@base-ui/react";
 import clsx from "clsx";
 import { Search } from "lucide-react";
-import { padding } from "@/components/Popover";
+import { padding } from "@/components/Tooltip";
 
 type Props = {
   /** search value */
@@ -45,7 +45,7 @@ export default function Autocomplete({
       mode="none"
       openOnInputClick
     >
-      <div className={`relative flex items-center`}>
+      <div className="relative flex items-center">
         <_Autocomplete.Input
           render={
             <input
@@ -61,19 +61,19 @@ export default function Autocomplete({
             />
           }
         />
-        <Search className={`absolute right-0 px-2 text-theme`} />
+        <Search className="absolute right-0 px-2 text-theme" />
       </div>
 
       <_Autocomplete.Portal>
         <_Autocomplete.Positioner collisionPadding={padding}>
           <_Autocomplete.Popup
-            className={`
+            className="
               flex max-h-(--available-height) w-(--anchor-width) grow flex-col
               overflow-y-auto rounded-sm bg-white shadow-thick
-            `}
+            "
           >
             {status && (
-              <_Autocomplete.Status className={`flex gap-2 p-2 leading-none`}>
+              <_Autocomplete.Status className="flex gap-2 p-2 leading-none">
                 {status}
               </_Autocomplete.Status>
             )}
@@ -83,10 +83,10 @@ export default function Autocomplete({
                   <_Autocomplete.Item
                     key={index}
                     value={tag.value}
-                    className={`
+                    className="
                       flex cursor-pointer gap-2 p-2 leading-none
                       data-highlighted:bg-theme/10
-                    `}
+                    "
                     onClick={(event) => {
                       event.preventDefault();
                       /** select option */
