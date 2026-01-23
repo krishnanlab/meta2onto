@@ -1,8 +1,11 @@
 import Button from "@/components/Button";
+import Dialog from "@/components/Dialog";
 import Heading from "@/components/Heading";
 import Link from "@/components/Link";
 import Logo from "@/components/Logo";
 import Meta from "@/components/Meta";
+import Popover from "@/components/Popover";
+import Textbox from "@/components/Textbox";
 
 export default function Testbed() {
   return (
@@ -39,11 +42,12 @@ export default function Testbed() {
         </p>
       </section>
 
-      <section>
+      <section className="items-center">
         <div className="flex flex-wrap justify-center gap-4">
           <Link to="/">Link</Link>
           <Link to="https://google.com">Link</Link>
         </div>
+
         <div className="flex flex-wrap justify-center gap-4">
           <Button to="" color="none">
             Button
@@ -55,6 +59,7 @@ export default function Testbed() {
             Button
           </Button>
         </div>
+
         <div className="flex flex-wrap justify-center gap-4">
           <Button onClick={() => null} color="none">
             Button
@@ -66,6 +71,25 @@ export default function Testbed() {
             Button
           </Button>
         </div>
+
+        <Dialog
+          title="Lorem ipsum dolor sit amet"
+          content={
+            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+          }
+        >
+          <Button>Dialog</Button>
+        </Dialog>
+
+        <Popover
+          content={
+            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+          }
+        >
+          <Button>Popover</Button>
+        </Popover>
+
+        <Textbox />
       </section>
 
       <section>

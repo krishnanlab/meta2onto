@@ -5,7 +5,7 @@ import { waitFor } from "@/util/misc";
 
 export type Theme = Record<`--${string}`, string>;
 
-/** https://stackoverflow.com/a/78994961/2180570 */
+/** get all css variables on root */
 export const getTheme = (): Theme => {
   const styles = window.getComputedStyle(document.documentElement);
   const vars = Object.values(
@@ -14,24 +14,6 @@ export const getTheme = (): Theme => {
   return Object.fromEntries(
     vars.map((key) => [key, styles.getPropertyValue(key).trim()]),
   );
-};
-
-/** scroll to element, optionally by selector */
-export const scrollTo = async (
-  selector?: string | Element | null,
-  options: ScrollIntoViewOptions = { behavior: "smooth" },
-) => {
-  if (!selector) return;
-
-  /** wait for element to appear */
-  const element =
-    typeof selector === "string"
-      ? await waitFor(() => document.querySelector(selector))
-      : selector;
-  if (!element) return;
-
-  /** scroll to element */
-  elementOrSection(element).scrollIntoView(options);
 };
 
 /** get text content of react node */
@@ -58,41 +40,69 @@ export const renderText = (node: ReactNode) =>
 /** get coordinates of element relative to document */
 export const getDocBbox = (element: Element) => {
   const { left, top, right, bottom } = element.getBoundingClientRect();
-  const bbox = {
+  return {
     top: top + window.scrollY,
     bottom: bottom + window.scrollY,
     left: left + window.scrollX,
     right: right + window.scrollX,
   };
-  return {
-    ...bbox,
-    width: bbox.right - bbox.left,
-    height: bbox.bottom - bbox.top,
-    x: (bbox.left + bbox.right) / 2,
-    y: (bbox.top + bbox.bottom) / 2,
-  };
 };
 
-/** glow element */
-export const glow = (element: Element) => {
-  const target = elementOrSection(element);
-  const original = window.getComputedStyle(target).backgroundColor;
-  target.animate(
-    [
-      { backgroundColor: "var(--color-theme-light)", offset: 0 },
-      { backgroundColor: original, offset: 1 },
-    ],
-    { duration: 2000 },
-  );
+/** scroll to element */
+export const scrollTo = async (
+  element: Element | null | undefined,
+  options: ScrollIntoViewOptions = { behavior: "smooth" },
+) => {
+  if (!element) return;
+  /** scroll to element */
+  elementOrSection(element).scrollIntoView(options);
+};
+
+/** check if css selector is valid */
+const validSelector = (selector: unknown) => {
+  if (typeof selector !== "string") return false;
+  try {
+    document.querySelector(selector);
+    return true;
+  } catch (e) {
+    return false;
+  }
+};
+
+/** scroll to element by selector */
+export const scrollToSelector = async (
+  selector: string,
+  options: ScrollIntoViewOptions = { behavior: "smooth" },
+) => {
+  if (!validSelector(selector)) return;
+  if (!selector) return;
+
+  /** wait for element to appear */
+  const element = await waitFor(() => document.querySelector(selector));
+  if (!element) return;
+
+  /** scroll to element */
+  scrollTo(element, options);
 };
 
 /** if element is first child of section, change element to section itself */
-export const elementOrSection = <El extends Element>(element: El) => {
-  const parent = element.parentElement;
-  return parent && element.matches("section > :first-child")
-    ? (parent as HTMLElement)
+const elementOrSection = <El extends Element>(element: El) => {
+  const section = element.closest("section");
+  return section &&
+    element.matches("section > :first-child, section > :first-child *")
+    ? section
     : element;
 };
+
+/** glow element */
+export const glow = (element: Element) =>
+  elementOrSection(element).animate(
+    [
+      { boxShadow: "inset 0 0 40px var(--color-accent)", offset: 0 },
+      { boxShadow: "inset 0 0 40px transparent", offset: 1 },
+    ],
+    { duration: 2000 },
+  );
 
 /** fly one element to another */
 export const fly = async (source: HTMLElement, target: HTMLElement) => {

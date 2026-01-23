@@ -47,11 +47,7 @@ export default function Home() {
         <SearchBox />
 
         {/* examples */}
-        <p
-          className="
-            flex flex-wrap items-center justify-center gap-4 leading-none
-          "
-        >
+        <p className="flex flex-wrap items-center justify-center gap-4">
           <span className="flex items-center gap-1 text-slate-500">
             <Lightbulb />
             Try
@@ -130,19 +126,17 @@ export const SearchBox = () => {
               {icon}
               <span
                 className={clsx(
-                  "rounded px-1 py-0.5 text-sm leading-none text-white",
+                  "rounded px-1 py-0.5 text-sm  text-white",
                   typeColor[type] ?? typeColor["default"],
                 )}
               >
                 {type}
               </span>
               <span
-                className="grow truncate leading-none font-normal"
+                className="grow truncate font-normal"
                 dangerouslySetInnerHTML={{ __html: name }}
               />
-              <span className="text-right leading-none text-slate-500">
-                {id}
-              </span>
+              <span className="text-right text-slate-500">{id}</span>
             </>
           ),
         })) ?? []

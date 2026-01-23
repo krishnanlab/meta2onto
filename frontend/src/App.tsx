@@ -1,3 +1,6 @@
+import "@/styles.css";
+import "@fontsource-variable/sometype-mono";
+import "@fontsource-variable/outfit";
 import { useEffect } from "react";
 import {
   createBrowserRouter,
@@ -49,7 +52,7 @@ const Layout = () => {
 };
 
 /** route definitions */
-export const routes = [
+const routes = [
   {
     path: "/",
     element: <Layout />,
@@ -94,7 +97,7 @@ export const routes = [
 ];
 
 /** router */
-export const router = createBrowserRouter(routes, {
+const router = createBrowserRouter(routes, {
   basename: import.meta.env.BASE_URL,
 });
 
@@ -107,17 +110,16 @@ const queryClient = new QueryClient({
 });
 
 /** scroll to target of url hash on page */
-const scrollToHash = async (hash: string) => {
+const scrollToHash = async (hash: string, waitForLayoutShift = false) => {
+  if (!hash) return;
+
   /** wait for element to appear */
   const element = await waitFor(() => document.querySelector(hash));
   if (!element) return;
 
   /** wait for layout shifts to stabilize */
-  await waitForStable(() => getDocBbox(element).top);
+  if (waitForLayoutShift) await waitForStable(() => getDocBbox(element).top);
 
-  /** scroll to element */
-  scrollTo(hash);
-
-  /** highlight element */
+  scrollTo(element);
   glow(element);
 };

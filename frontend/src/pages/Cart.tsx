@@ -172,12 +172,6 @@ export default function Cart() {
 
                 {!shared && (
                   <Dialog
-                    trigger={
-                      <Button disabled={!size}>
-                        <Share2 />
-                        Share
-                      </Button>
-                    }
                     title="Share Cart"
                     content={
                       <>
@@ -238,7 +232,12 @@ export default function Cart() {
                     onClose={() => {
                       if (shareMutation.isError) reset();
                     }}
-                  />
+                  >
+                    <Button aria-disabled={!size}>
+                      <Share2 />
+                      Share
+                    </Button>
+                  </Dialog>
                 )}
 
                 {(localCart || sharedCart) && (
@@ -266,19 +265,13 @@ export default function Cart() {
                         </>
                       }
                     >
-                      <Button disabled={!size}>
+                      <Button aria-disabled={!size}>
                         <Download />
                         Download
                       </Button>
                     </Popover>
 
                     <Dialog
-                      trigger={
-                        <Button disabled={!size}>
-                          <Terminal />
-                          Bash
-                        </Button>
-                      }
                       title="Download Script"
                       content={
                         <DownloadScript
@@ -286,7 +279,12 @@ export default function Cart() {
                           cart={localCart || sharedCart}
                         />
                       }
-                    />
+                    >
+                      <Button aria-disabled={!size}>
+                        <Terminal />
+                        Bash
+                      </Button>
+                    </Dialog>
                   </>
                 )}
               </div>
@@ -408,7 +406,7 @@ export default function Cart() {
                   to={`/cart/${id}`}
                   className="
                     flex flex-col items-start gap-2 rounded-sm border
-                    border-slate-300 p-2 leading-none
+                    border-slate-300 p-2
                   "
                 >
                   <strong>{name || id}</strong>
@@ -440,7 +438,7 @@ export default function Cart() {
 const Clear = ({ size }: { size: number }) => (
   <Button
     color="accent"
-    disabled={!size}
+    aria-disabled={!size}
     onClick={() => {
       if (window.confirm("Clear cart? Cannot be undone.")) clearCart();
     }}

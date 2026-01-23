@@ -53,7 +53,7 @@ export default function Autocomplete({
               placeholder={placeholder}
               className={clsx(
                 `
-                  w-full rounded-sm border border-slate-300 p-2 leading-none
+                  w-full rounded-sm border border-slate-300 p-2
                   disabled:border-0 disabled:bg-slate-200!
                 `,
                 className,
@@ -73,7 +73,7 @@ export default function Autocomplete({
             "
           >
             {status && (
-              <_Autocomplete.Status className="flex gap-2 p-2 leading-none">
+              <_Autocomplete.Status className="flex gap-2 p-2">
                 {status}
               </_Autocomplete.Status>
             )}
@@ -84,7 +84,7 @@ export default function Autocomplete({
                     key={index}
                     value={tag.value}
                     className="
-                      flex cursor-pointer gap-2 p-2 leading-none
+                      flex cursor-pointer gap-2 p-2
                       data-highlighted:bg-theme/10
                     "
                     onClick={(event) => {

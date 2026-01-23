@@ -1,7 +1,6 @@
 import { useRef } from "react";
 import type { JSX, ReactNode } from "react";
 import clsx from "clsx";
-import { Hash } from "lucide-react";
 import Link from "@/components/Link";
 import { renderText } from "@/util/dom";
 import { slugify } from "@/util/string";
@@ -31,24 +30,17 @@ export default function Heading({ level, anchor, className, children }: Props) {
   const id = anchor ?? slugify(renderText(children));
 
   return (
-    <Tag id={id} ref={ref} className={clsx("group", className)}>
-      {/* content */}
-      {children}
-
-      {/* link to section */}
-      {id && level !== 1 && (
-        <Link
-          to={"#" + id}
-          className="
-            -ml-2 size-0 opacity-0
-            group-hover:opacity-100
-            focus:opacity-100
-          "
-          aria-label="Heading link"
-        >
-          <Hash className="translate-x-2" />
-        </Link>
-      )}
-    </Tag>
+    <Link to={"#" + id} className={clsx("group", className)}>
+      <Tag
+        id={id}
+        ref={ref}
+        className="
+          transition-colors
+          group-hover:text-accent
+        "
+      >
+        {children}
+      </Tag>
+    </Link>
   );
 }

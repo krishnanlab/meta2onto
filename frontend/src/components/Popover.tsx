@@ -15,8 +15,8 @@ export default function Popover({ children, content }: Props) {
         <_Popover.Positioner sideOffset={offset} collisionPadding={padding}>
           <_Popover.Popup
             className="
-              flex flex-col gap-2 rounded-sm bg-white p-2 leading-none
-              text-white shadow-overlay
+              flex flex-col gap-2 rounded-sm bg-white p-2 leading-normal
+              shadow-overlay
             "
           >
             <_Popover.Arrow

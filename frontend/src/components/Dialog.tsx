@@ -3,7 +3,7 @@ import { Dialog as _Dialog } from "@base-ui/react";
 import { X } from "lucide-react";
 
 type Props = {
-  trigger: ReactElement<Record<string, unknown>>;
+  children: ReactElement<Record<string, unknown>>;
   title: ReactNode;
   content: ReactNode;
   onOpen?: () => void;
@@ -11,7 +11,7 @@ type Props = {
 };
 
 export default function Dialog({
-  trigger,
+  children,
   title,
   content,
   onOpen,
@@ -19,7 +19,7 @@ export default function Dialog({
 }: Props) {
   return (
     <_Dialog.Root onOpenChange={(open) => (open ? onOpen?.() : onClose?.())}>
-      <_Dialog.Trigger render={trigger} />
+      <_Dialog.Trigger render={children} />
       <_Dialog.Portal>
         <_Dialog.Backdrop className="fixed inset-0 z-10 bg-black/50" />
         <_Dialog.Popup
@@ -34,11 +34,7 @@ export default function Dialog({
             "
           >
             <div className="flex items-start justify-between gap-4">
-              <_Dialog.Title
-                className="
-                  flex flex-col items-start! gap-1 text-left! leading-none
-                "
-              >
+              <_Dialog.Title className="flex flex-col items-start! gap-1 text-left!">
                 {title}
               </_Dialog.Title>
               <_Dialog.Close>

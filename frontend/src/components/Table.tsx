@@ -144,7 +144,7 @@ export default function Table<Datum extends object>({
                     aria-colindex={index + 1}
                   >
                     {header.isPlaceholder ? null : (
-                      <div className="flex items-center gap-2 p-2 leading-none">
+                      <div className="flex items-center gap-2 p-2">
                         {/* header label */}
                         <span>
                           {flexRender(
@@ -192,11 +192,7 @@ export default function Table<Datum extends object>({
                 >
                   {row.getVisibleCells().map((cell) => (
                     <td key={cell.id} className="border-b border-slate-100">
-                      <div
-                        className="
-                          flex flex-wrap items-center gap-2 p-2 leading-none
-                        "
-                      >
+                      <div className="flex flex-wrap items-center gap-2 p-2">
                         {flexRender(
                           cell.column.columnDef.cell,
                           cell.getContext(),

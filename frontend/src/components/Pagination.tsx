@@ -52,7 +52,7 @@ export default function Pagination({
         <Button
           color="none"
           onClick={() => setOffset(0)}
-          disabled={offset <= 0}
+          aria-disabled={offset <= 0}
           aria-label="First page"
         >
           <ChevronsLeft />
@@ -60,7 +60,7 @@ export default function Pagination({
         <Button
           color="none"
           onClick={() => setOffset(offset - _limit)}
-          disabled={offset - _limit < 0}
+          aria-disabled={offset - _limit < 0}
           aria-label="Previous page"
         >
           <ChevronLeft />
@@ -83,7 +83,7 @@ export default function Pagination({
         <Button
           color="none"
           onClick={() => setOffset(offset + _limit)}
-          disabled={offset + _limit >= count}
+          aria-disabled={offset + _limit >= count}
           aria-label="Next page"
         >
           <ChevronRight />
@@ -91,7 +91,7 @@ export default function Pagination({
         <Button
           color="none"
           onClick={() => setOffset((Math.ceil(count / _limit) - 1) * _limit)}
-          disabled={offset + _limit >= count}
+          aria-disabled={offset + _limit >= count}
           aria-label="Last page"
         >
           <ChevronsRight />

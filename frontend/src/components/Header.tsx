@@ -82,6 +82,7 @@ export default function Header() {
         className={clsx(
           `
             flex flex-wrap items-center justify-center gap-4 text-xl
+            leading-none
             max-xs:flex-col
           `,
           !open && "max-sm:hidden",
@@ -110,7 +111,7 @@ export default function Header() {
             <div
               className="
                 absolute -top-2 -right-2 grid size-5 place-items-center
-                rounded-full bg-theme-light text-sm leading-none text-black
+                rounded-full bg-theme-light text-sm text-black
               "
             >
               {cart.studies.length}

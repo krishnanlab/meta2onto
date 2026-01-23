@@ -20,13 +20,13 @@ type _Button = { ref?: Ref<HTMLButtonElement> } & Pick<
   | "type"
   | "className"
   | "style"
-  | "disabled"
   | "onClick"
   | "onDrag"
   | "onDragEnter"
   | "onDragLeave"
   | "onDragOver"
   | "onDrop"
+  | "aria-disabled"
 >;
 
 /**
@@ -44,7 +44,7 @@ export default function Button({
   const _class = clsx(
     className,
     `
-      flex items-center justify-center gap-2 rounded-sm p-2 leading-none
+      flex items-center justify-center gap-2 rounded-sm p-2
       hover:bg-slate-500 hover:text-white
     `,
     color === "none" &&
@@ -76,15 +76,20 @@ export default function Button({
         {children}
       </Link>
     );
-  /** otherwise, render as button */ else
+  else {
+    /** otherwise, render as button */
+    const { onClick, ...rest } = props;
     return (
       <button
         ref={ref as Ref<HTMLButtonElement>}
         className={_class}
-        type="button"
-        {...props}
+        onClick={(...args) => {
+          if (!rest["aria-disabled"]) onClick?.(...args);
+        }}
+        {...rest}
       >
         {children}
       </button>
     );
+  }
 }

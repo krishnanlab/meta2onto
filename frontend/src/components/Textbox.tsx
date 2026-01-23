@@ -10,7 +10,7 @@ export default function Textbox({ className, onChange, ...props }: Props) {
     <input
       className={clsx(
         `
-          rounded-sm border border-slate-300 p-2 leading-none
+          rounded-sm border border-slate-300 p-2
           disabled:border-0 disabled:bg-slate-200!
         `,
         className,

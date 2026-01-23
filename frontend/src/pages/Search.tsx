@@ -204,12 +204,6 @@ export default function Search() {
 
               <div className="flex flex-wrap gap-2">
                 <Dialog
-                  trigger={
-                    <Button color="theme">
-                      <Logs />
-                      {formatNumber(samples)} Samples
-                    </Button>
-                  }
                   title={
                     <>
                       <span>
@@ -219,7 +213,12 @@ export default function Search() {
                     </>
                   }
                   content={<Samples id={gse} />}
-                />
+                >
+                  <Button color="theme">
+                    <Logs />
+                    {formatNumber(samples)} Samples
+                  </Button>
+                </Dialog>
                 <Button
                   aria-label={
                     inCart(cart, gse) ? "Remove from cart" : "Add to cart"
