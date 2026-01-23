@@ -24,13 +24,19 @@ services:
     image: memcached:latest
 
   db:
-    # image: postgres:17
     build: ./services/postgres/
     env_file:
       - .env
+    environment:
+      # if 1 uses the postgresql_load.conf pg config, which is optimized for bulk loading,
+      # but isn't safe for regular serving due to disabling crash recovery options
+      - PGCONFIG_LOADING=0
     volumes:
       - postgres_data:/var/lib/postgresql/data/
+      - ./services/postgres/configs/postgresql_load.conf:/tmp/postgresql.conf # copied into data on server boot
       - ./db-exports/:/db-exports/
+      - ./services/postgres/scripts/:/opt/scripts/
+      - ./data/:/data/
     healthcheck:
       test: ["CMD-SHELL", "/opt/healthcheck.sh || exit 1"]
       interval: 5s
