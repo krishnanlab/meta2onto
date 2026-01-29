@@ -27,16 +27,22 @@ export const storageAtom = <Schema extends z.ZodType>(
     initial,
     {
       /** type-safe get */
-      getItem: (key, initialValue): z.infer<Schema> => {
+      getItem: (key, initial): z.infer<Schema> => {
+        const value = localStorage.getItem(key);
+        if (!value) {
+          console.debug(`No value for storage key "${key}"`);
+          return initial;
+        }
         try {
           return schema.parse(JSON.parse(localStorage.getItem(key) ?? ""));
         } catch (error) {
-          console.groupCollapsed(`error parsing storage key "${key}"`);
-          console.warn("clearing key");
+          console.groupCollapsed(
+            `Error parsing storage key "${key}", clearing`,
+          );
           console.error(error);
           console.groupEnd();
           localStorage.removeItem(key);
-          return initialValue;
+          return initial;
         }
       },
       setItem: (key, value) => localStorage.setItem(key, JSON.stringify(value)),

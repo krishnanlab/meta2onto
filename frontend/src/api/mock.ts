@@ -7,14 +7,13 @@ import type {
 import type {
   Cart,
   CartDownload,
-  Model,
-  ModelSearch,
+  OntologyResults,
   Sample,
   Study,
   StudySamples,
   StudySearch,
 } from "@/api/types";
-import type { ShareCart } from "@/cart";
+import type { ShareCart } from "@/state/cart";
 import { random, range, sample } from "lodash";
 import { http, HttpResponse, passthrough } from "msw";
 import { api } from "@/api";
@@ -120,7 +119,7 @@ type Props = {
   params: PathParams<string>;
 };
 
-const fakeModels: Model[] = range(100).map(() => {
+const fakeOntologyResults: OntologyResults = range(100).map(() => {
   const id = fakeText(1, 4);
   return {
     id,
@@ -152,17 +151,17 @@ const fakeSamples: Sample[] = range(100).map(() => ({
 const fakeCarts: Cart[] = [];
 
 export const handlers = [
-  handler("get", `${api}/ontology-search`, ({ url }): ModelSearch => {
+  handler("get", `${api}/ontology/search`, ({ url }): OntologyResults => {
     const search = url.searchParams.get("query") || "";
-    const data = fakeModels.map((model) => ({
-      ...model,
-      name: fakeHighlight(model.name, search),
-      description: fakeHighlight(model.description, search),
+    const data = fakeOntologyResults.map((ontologyResult) => ({
+      ...ontologyResult,
+      name: fakeHighlight(ontologyResult.name, search),
+      description: fakeHighlight(ontologyResult.description, search),
     }));
     return fakeSearch(data, search);
   }),
 
-  handler("get", `${api}/geo-metadata/search`, ({ url }): StudySearch => {
+  handler("get", `${api}/study/search`, ({ url }): StudySearch => {
     let search = url.searchParams.get("query") || "";
     search = search.slice(0, search.indexOf(" "));
     const offset = Number(url.searchParams.get("offset"));

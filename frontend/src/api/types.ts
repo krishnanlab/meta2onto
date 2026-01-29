@@ -1,6 +1,6 @@
 import z from "zod";
 
-export const model = z.object({
+export const ontologyResult = z.object({
   id: z.string(),
   type: z.string(),
   name: z.string(),
@@ -8,9 +8,11 @@ export const model = z.object({
   series_id: z.string(),
 });
 
-export type Model = z.infer<typeof model>;
+export type OntologyResult = z.infer<typeof ontologyResult>;
 
-export type ModelSearch = Model[];
+export const OntologyResults = z.array(ontologyResult);
+
+export type OntologyResults = z.infer<typeof OntologyResults>;
 
 export type Study = {
   gse: string;

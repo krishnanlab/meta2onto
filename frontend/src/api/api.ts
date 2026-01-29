@@ -1,5 +1,10 @@
-import type { Cart, ModelSearch, StudySamples, StudySearch } from "@/api/types";
-import type { LocalCart, ShareCart } from "@/cart";
+import type {
+  Cart,
+  OntologyResults,
+  StudySamples,
+  StudySearch,
+} from "@/api/types";
+import type { LocalCart, ShareCart } from "@/state/cart";
 import { api, request } from "@/api";
 import { downloadBlob } from "@/util/download";
 
@@ -13,10 +18,10 @@ export const typeColor: Record<string, string> = {
 };
 
 /** search for ontologies */
-export const modelSearch = async (search: string) => {
+export const ontologySearch = async (search: string) => {
   const url = new URL(`${api}/ontology/search/`);
   url.searchParams.set("query", search);
-  const data = request<ModelSearch>(url);
+  const data = request<OntologyResults>(url);
   return data;
 };
 

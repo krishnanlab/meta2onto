@@ -3,10 +3,10 @@ import { useElementSize, useWindowScroll } from "@reactuses/core";
 import clsx from "clsx";
 import { useAtomValue } from "jotai";
 import { Menu, ShoppingCart, X } from "lucide-react";
-import { cartAtom } from "@/cart";
 import Button from "@/components/Button";
 import Logo from "@/components/Logo";
 import Tooltip from "@/components/Tooltip";
+import { cartAtom } from "@/state/cart";
 
 const { VITE_TITLE: title } = import.meta.env;
 

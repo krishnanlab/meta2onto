@@ -1,21 +1,41 @@
-import type { ReactNode } from "react";
-import type { Model } from "@/api/types";
+import type { OntologyResult } from "@/api/types";
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { useDebounce } from "@reactuses/core";
 import { useQuery } from "@tanstack/react-query";
 import clsx from "clsx";
 import { History, Lightbulb } from "lucide-react";
-import { modelSearch, typeColor } from "@/api/api";
+import { ontologySearch, typeColor } from "@/api/api";
 import Autocomplete from "@/components/Autocomplete";
-import Link from "@/components/Link";
 import Rings from "@/components/Rings";
 import Status, { showStatus } from "@/components/Status";
-import { addSearch, getHistory } from "@/search";
+import { addSearch, getHistory } from "@/state/search";
 import { useChanged } from "@/util/hooks";
 
 /** example searches */
-const examples = ["Hepatocyte", "Breast cancer", "Alzheimer's disease"];
+const examples: OntologyResult[] = [
+  {
+    id: "Hepatocyte",
+    name: "Hepatocyte",
+    type: "",
+    description: "",
+    series_id: "",
+  },
+  {
+    id: "Breast cancer",
+    name: "Breast cancer",
+    type: "",
+    description: "",
+    series_id: "",
+  },
+  {
+    id: "Alzheimer's disease",
+    name: "Alzheimer's disease",
+    type: "",
+    description: "",
+    series_id: "",
+  },
+];
 
 export default function Home() {
   return (
@@ -45,19 +65,6 @@ export default function Home() {
         </hgroup>
 
         <SearchBox />
-
-        {/* examples */}
-        <p className="flex flex-wrap items-center justify-center gap-4">
-          <span className="flex items-center gap-1 text-slate-500">
-            <Lightbulb />
-            Try
-          </span>
-          {examples.map((example) => (
-            <Link key={example} to={`/search/${example}`}>
-              {example}
-            </Link>
-          ))}
-        </p>
       </section>
 
       <section>
@@ -99,19 +106,34 @@ export const SearchBox = () => {
   const searchChanged = useChanged(params.search);
   if (searchChanged && params.search) setSearch(params.search);
 
-  /** model search results */
+  /** ontology search results */
   const query = useQuery({
-    queryKey: ["model-search", search],
-    queryFn: () => modelSearch(search),
+    queryKey: ["ontology-search", search],
+    queryFn: () => ontologySearch(search),
   });
 
   /** search results */
-  const results: (Model & { icon?: ReactNode })[] = search.trim()
-    ? (query.data ?? [])
-    : getHistory().map((search) => ({
-        ...search,
-        icon: <History className="text-slate-400" />,
-      }));
+  const results = search.trim()
+    ? /** actual search results */
+      (query.data?.map((result) => ({
+        ...result,
+        icon: <></>,
+      })) ?? [])
+    : /** if nothing typed in search box... */
+      /** show search history */
+      getHistory()
+        .map((entry) => ({
+          ...entry,
+          icon: search.trim() ? undefined : (
+            <History className="text-slate-400" />
+          ),
+        }))
+        .concat(
+          examples.map((example) => ({
+            ...example,
+            icon: <Lightbulb className="text-slate-400" />,
+          })),
+        );
 
   return (
     <Autocomplete
@@ -124,28 +146,32 @@ export const SearchBox = () => {
           content: (
             <>
               {icon}
-              <span
-                className={clsx(
-                  "rounded px-1 py-0.5 text-sm  text-white",
-                  typeColor[type] ?? typeColor["default"],
-                )}
-              >
-                {type}
-              </span>
-              <span
-                className="grow truncate font-normal"
-                dangerouslySetInnerHTML={{ __html: name }}
-              />
-              <span className="text-right text-slate-500">{id}</span>
+              {type && (
+                <span
+                  className={clsx(
+                    "rounded px-1 py-0.5 text-sm  text-white",
+                    typeColor[type] ?? typeColor["default"],
+                  )}
+                >
+                  {type}
+                </span>
+              )}
+              {name && (
+                <span
+                  className="grow truncate font-normal"
+                  dangerouslySetInnerHTML={{ __html: name }}
+                />
+              )}
+              {id && <span className="text-right text-slate-500">{id}</span>}
             </>
           ),
         })) ?? []
       }
       onSelect={(id) => {
         if (!id?.trim()) return;
-        const model = query.data?.find((model) => model.id === id);
-        if (model) addSearch(model);
-        navigate(`/search/${model?.name ?? ""}`);
+        const result = query.data?.find((result) => result.id === id);
+        if (result) addSearch(result);
+        navigate(`/search/${result?.name ?? ""}`);
       }}
       status={
         showStatus({ query }) && <Status query={query} className="contents!" />

@@ -84,7 +84,7 @@ export default function Autocomplete({
                     key={index}
                     value={tag.value}
                     className="
-                      flex cursor-pointer gap-2 p-2
+                      flex cursor-pointer items-center gap-2 p-2
                       data-highlighted:bg-theme/10
                     "
                     onClick={(event) => {

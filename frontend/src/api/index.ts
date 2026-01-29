@@ -10,7 +10,7 @@ type Parse = "json" | "text" | "blob";
 /** request body */
 type Body = Record<string, unknown>;
 
-type CombinedOptions = Omit<RequestInit, "body"> & {
+type Options = Omit<RequestInit, "body"> & {
   params?: Params;
   body?: Body;
   parse?: Parse;
@@ -21,17 +21,17 @@ export async function request<Response>(
   /** request url */
   url: URL,
   /** raw request options plus extra options */
-  combinedOptions: CombinedOptions = {},
+  options: Options = {},
 ) {
   /** extract extra options */
-  const { body, parse = "json", ...rest } = combinedOptions;
+  const { body, parse = "json", ...rest } = options;
   /** raw request options */
-  const options: RequestInit = { ...rest };
+  const rawOptions: RequestInit = { ...rest };
   /** stringify body object */
-  if (body) options.body = JSON.stringify(body);
+  if (body) rawOptions.body = JSON.stringify(body);
   /** construct request */
-  const request = new Request(url, options);
-  console.debug(`📞 Request ${url}`, { combinedOptions, request });
+  const request = new Request(url, rawOptions);
+  console.debug(`📞 Request ${url}`, { options, request });
   /** make request */
   const response = await fetch(request);
   /** capture error for throwing later */

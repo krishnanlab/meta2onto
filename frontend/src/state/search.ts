@@ -1,20 +1,20 @@
-import type { Model } from "@/api/types";
+import type { OntologyResult } from "@/api/types";
 import { findLastIndex, groupBy, orderBy } from "lodash";
-import { model } from "@/api/types";
+import { OntologyResults } from "@/api/types";
 import { getAtom, setAtom, storageAtom } from "@/util/atoms";
 
 /** search history */
 export const searchHistoryAtom = storageAtom(
   "search-history",
   [],
-  model.array(),
+  OntologyResults,
 );
 
 /** search history limit */
 const limit = 100;
 
 /** add search term to history */
-export const addSearch = (search: Model) =>
+export const addSearch = (search: OntologyResult) =>
   setAtom(searchHistoryAtom, (old) => {
     const history = [...old, search];
     if (history.length > limit) history.shift();
