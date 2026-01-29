@@ -1,10 +1,14 @@
-export type Model = {
-  id: string;
-  type: string;
-  name: string;
-  description: string;
-  series_id: string;
-};
+import z from "zod";
+
+export const model = z.object({
+  id: z.string(),
+  type: z.string(),
+  name: z.string(),
+  description: z.string(),
+  series_id: z.string(),
+});
+
+export type Model = z.infer<typeof model>;
 
 export type ModelSearch = Model[];
 
@@ -41,12 +45,19 @@ export type StudySamples = {
   results: Sample[];
 };
 
-export type Cart = {
-  id: string;
-  name: string;
-  created_at: string;
-  studies: { id: string; added: string }[];
-};
+export const cart = z.object({
+  id: z.string(),
+  name: z.string(),
+  created_at: z.string(),
+  studies: z.array(
+    z.object({
+      id: z.string(),
+      added: z.string(),
+    }),
+  ),
+});
+
+export type Cart = z.infer<typeof cart>;
 
 export type CartDownload = {
   link: string;

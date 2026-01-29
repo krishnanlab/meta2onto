@@ -1,6 +1,6 @@
-import { api, request } from "@/api";
 import type { Cart, ModelSearch, StudySamples, StudySearch } from "@/api/types";
 import type { LocalCart, ShareCart } from "@/cart";
+import { api, request } from "@/api";
 import { downloadBlob } from "@/util/download";
 
 /** type to color map */
@@ -12,9 +12,9 @@ export const typeColor: Record<string, string> = {
   default: "bg-gray-700/70",
 };
 
-/** search for models */
+/** search for ontologies */
 export const modelSearch = async (search: string) => {
-  const url = new URL(`${api}/ontology-search/`);
+  const url = new URL(`${api}/ontology/search/`);
   url.searchParams.set("query", search);
   const data = request<ModelSearch>(url);
   return data;
@@ -28,7 +28,7 @@ export const studySearch = async ({
   limit = 100,
   facets = {} as Record<string, string[]>,
 }) => {
-  const url = new URL(`${api}/geo-metadata/search/`);
+  const url = new URL(`${api}/study/search/`);
   url.searchParams.set("query", search);
   url.searchParams.set("ordering", ordering);
   url.searchParams.set("offset", String(offset));
@@ -46,8 +46,8 @@ export const studyBatchLookup = async ({
   offset = 0,
   limit = 100,
 }) => {
-  const url = new URL(`${api}/geo-metadata/lookup/`);
-  // url.searchParams.set("ordering", ordering);
+  const url = new URL(`${api}/study/lookup/`);
+  url.searchParams.set("ordering", ordering);
   url.searchParams.set("offset", String(offset));
   url.searchParams.set("limit", String(limit));
   const options = {
@@ -61,7 +61,7 @@ export const studyBatchLookup = async ({
 
 /** lookup all samples for a study */
 export const studySamples = async ({ id = "", offset = 0, limit = 10 }) => {
-  const url = new URL(`${api}/series/${id}/samples/`);
+  const url = new URL(`${api}/study/${id}/samples/`);
   url.searchParams.set("offset", String(offset));
   url.searchParams.set("limit", String(limit));
   const data = request<StudySamples>(url);

@@ -1,5 +1,5 @@
-import { useRef } from "react";
 import type { ReactElement, ReactNode } from "react";
+import { useRef } from "react";
 import { Autocomplete as _Autocomplete } from "@base-ui/react";
 import clsx from "clsx";
 import { Search } from "lucide-react";

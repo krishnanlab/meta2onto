@@ -1,4 +1,9 @@
 import type { ReactNode } from "react";
+import type {
+  NoInfer,
+  PaginationState,
+  SortingState,
+} from "@tanstack/react-table";
 import {
   createColumnHelper,
   flexRender,
@@ -11,11 +16,6 @@ import {
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
-} from "@tanstack/react-table";
-import type {
-  NoInfer,
-  PaginationState,
-  SortingState,
 } from "@tanstack/react-table";
 import { ArrowUpDown, MoveDown, MoveUp } from "lucide-react";
 import Button from "@/components/Button";

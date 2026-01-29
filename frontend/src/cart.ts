@@ -1,21 +1,23 @@
-import { getDefaultStore } from "jotai";
-import { atomWithStorage } from "jotai/utils";
-import { isEqual, uniqBy, uniqWith } from "lodash";
+import type z from "zod";
 import type { Cart } from "@/api/types";
+import { isEqual, uniqBy, uniqWith } from "lodash";
+import { cart } from "@/api/types";
+import { setAtom, storageAtom } from "@/util/atoms";
 
-/** cart object, minus assigned id and selected name */
-export type LocalCart = Omit<Cart, "id" | "name" | "created_at">;
+/** cart object, before user selects name or submits */
+export const localCart = cart.omit({ id: true, name: true, created_at: true });
 /** cart object, after user selects name but before they submit */
-export type ShareCart = Omit<Cart, "id" | "created_at">;
+export const shareCart = cart.omit({ id: true, created_at: true });
 
-const defaultCart: LocalCart = {
-  studies: [],
-};
+/** cart object, before user selects name or submits */
+export type LocalCart = z.infer<typeof localCart>;
+/** cart object, after user selects name but before they submit */
+export type ShareCart = z.infer<typeof shareCart>;
+
+const defaultCart: LocalCart = { studies: [] };
 
 /** cart state */
-export const cartAtom = atomWithStorage("cart", defaultCart, undefined, {
-  getOnInit: true,
-});
+export const cartAtom = storageAtom("cart", defaultCart, localCart);
 
 /** is study in cart */
 export const inCart = (cart: LocalCart, study: string) =>
@@ -23,7 +25,7 @@ export const inCart = (cart: LocalCart, study: string) =>
 
 /** add study id to cart */
 export const addToCart = (study: string) =>
-  getDefaultStore().set(cartAtom, (old) => ({
+  setAtom(cartAtom, (old) => ({
     ...old,
     studies: uniqBy(
       [...old.studies, { id: study, added: new Date().toISOString() }],
@@ -33,23 +35,20 @@ export const addToCart = (study: string) =>
 
 /** remove study id from cart */
 export const removeFromCart = (study: string) =>
-  getDefaultStore().set(cartAtom, (old) => ({
+  setAtom(cartAtom, (old) => ({
     ...old,
     studies: old.studies.filter((oldStudy) => oldStudy.id !== study),
   }));
 
 /** clear cart */
-export const clearCart = () => getDefaultStore().set(cartAtom, defaultCart);
+export const clearCart = () => setAtom(cartAtom, defaultCart);
 
 /** cart creation history */
-export const createdCartsAtom = atomWithStorage<Cart[]>("created-carts", []);
+export const createdCartsAtom = storageAtom("created-carts", [], cart.array());
 
 /** add cart to creation history */
 export const addCreatedCart = (cart: Cart) =>
-  getDefaultStore().set(createdCartsAtom, (old) =>
-    uniqWith([...old, cart], isEqual),
-  );
+  setAtom(createdCartsAtom, (old) => uniqWith([...old, cart], isEqual));
 
 /** clear cart creation history */
-export const clearCreatedCarts = () =>
-  getDefaultStore().set(createdCartsAtom, []);
+export const clearCreatedCarts = () => setAtom(createdCartsAtom, []);

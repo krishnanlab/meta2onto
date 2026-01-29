@@ -1,12 +1,12 @@
-import { useState } from "react";
 import type { ReactNode } from "react";
+import type { Model } from "@/api/types";
+import { useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { useDebounce } from "@reactuses/core";
 import { useQuery } from "@tanstack/react-query";
 import clsx from "clsx";
 import { History, Lightbulb } from "lucide-react";
 import { modelSearch, typeColor } from "@/api/api";
-import type { Model } from "@/api/types";
 import Autocomplete from "@/components/Autocomplete";
 import Link from "@/components/Link";
 import Rings from "@/components/Rings";

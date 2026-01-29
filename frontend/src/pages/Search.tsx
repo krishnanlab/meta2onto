@@ -1,3 +1,4 @@
+import type { Limit } from "@/components/Pagination";
 import { useState } from "react";
 import { useParams, useSearchParams } from "react-router";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
@@ -15,7 +16,6 @@ import Heading from "@/components/Heading";
 import Meta from "@/components/Meta";
 import Meter from "@/components/Meter";
 import Pagination from "@/components/Pagination";
-import type { Limit } from "@/components/Pagination";
 import Select from "@/components/Select";
 import Status from "@/components/Status";
 import { SearchBox } from "@/pages/Home";

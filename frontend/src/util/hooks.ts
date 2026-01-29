@@ -1,7 +1,8 @@
+import type { Theme } from "@/util/dom";
 import { useCallback, useState } from "react";
 import { useEventListener } from "@reactuses/core";
 import { isEqual } from "lodash";
-import { getTheme, type Theme } from "@/util/dom";
+import { getTheme } from "@/util/dom";
 
 /** check if value changed from previous render */
 export const useChanged = <Value>(value: Value) => {

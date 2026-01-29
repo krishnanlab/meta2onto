@@ -1,12 +1,9 @@
-import { random, range, sample } from "lodash";
-import { http, HttpResponse, passthrough } from "msw";
 import type {
   DefaultBodyType,
   HttpResponseResolver,
   JsonBodyType,
   PathParams,
 } from "msw";
-import { api } from "@/api";
 import type {
   Cart,
   CartDownload,
@@ -18,6 +15,9 @@ import type {
   StudySearch,
 } from "@/api/types";
 import type { ShareCart } from "@/cart";
+import { random, range, sample } from "lodash";
+import { http, HttpResponse, passthrough } from "msw";
+import { api } from "@/api";
 import { sleep } from "@/util/misc";
 
 const handler = <Method extends keyof typeof http>(
@@ -152,8 +152,8 @@ const fakeSamples: Sample[] = range(100).map(() => ({
 const fakeCarts: Cart[] = [];
 
 export const handlers = [
-  handler("get", `${api}/model`, ({ url }): ModelSearch => {
-    const search = url.searchParams.get("search") || "";
+  handler("get", `${api}/ontology-search`, ({ url }): ModelSearch => {
+    const search = url.searchParams.get("query") || "";
     const data = fakeModels.map((model) => ({
       ...model,
       name: fakeHighlight(model.name, search),
@@ -162,8 +162,8 @@ export const handlers = [
     return fakeSearch(data, search);
   }),
 
-  handler("get", `${api}/study`, ({ url }): StudySearch => {
-    let search = url.searchParams.get("search") || "";
+  handler("get", `${api}/geo-metadata/search`, ({ url }): StudySearch => {
+    let search = url.searchParams.get("query") || "";
     search = search.slice(0, search.indexOf(" "));
     const offset = Number(url.searchParams.get("offset"));
     const limit = Number(url.searchParams.get("limit"));

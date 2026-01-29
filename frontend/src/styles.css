@@ -37,15 +37,7 @@
 
   section {
     --width: 300;
-    @apply flex flex-col gap-y-4 px-[max(--spacing(8),(100%---spacing(1)*var(--width))/2)] py-8;
-  }
-
-  section:nth-of-type(even) {
-    @apply bg-slate-50;
-  }
-
-  section:last-child {
-    @apply grow;
+    @apply flex flex-col gap-y-4 bg-white px-[max(--spacing(8),(100%---spacing(1)*var(--width))/2)] py-8 last:grow even:bg-slate-50;
   }
 
   h1,
@@ -146,7 +138,7 @@
   }
 
   .lucide {
-    @apply h-[1em] w-[unset] overflow-visible;
+    @apply h-[1.1em] w-[unset];
   }
 
   [aria-disabled="true"] {
