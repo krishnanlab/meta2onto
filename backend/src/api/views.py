@@ -1,58 +1,32 @@
 import csv
-from uuid import uuid4
-
 from collections import Counter
-from django.db.models import F, Func, Subquery, CharField
 
+from django.db import models, transaction
+from django.db.models import CharField, F, Func
 from django.http import HttpResponse
-from rest_framework import viewsets, status
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.response import Response
-from rest_framework.permissions import AllowAny
-from rest_framework.decorators import action
-from rest_framework.filters import SearchFilter, OrderingFilter
-from rest_framework.pagination import LimitOffsetPagination
-from django.db import transaction
-from django_filters.rest_framework import DjangoFilterBackend
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
-
 from django.views.decorators.csrf import csrf_exempt
+from rest_framework import status, viewsets
+from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework.filters import OrderingFilter, SearchFilter
+from rest_framework.pagination import LimitOffsetPagination
+from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
 
-from django.db import models
-
-from .models import (
-    Cart,
-    CartItem,
-    GEOSampleMetadata,
-    GEOSeriesMetadata,
-    GEOPlatformMetadata,
-    GEOSeriesToPlatforms,
-    Organism,
-    Platform,
-    SearchTerm,
-    Series,
-    Sample,
-    OrganismForPairing,
-    SeriesRelations,
-    ExternalRelation,
-    OntologySearchResults,
-)
-from .serializers import (
-    CartSerializer,
-    GEOSampleMetadataSerializer,
-    GEOSeriesMetadataSerializer,
-    OrganismSerializer,
-    PlatformSerializer,
-    SearchTermSerializer,
-    SeriesSerializer,
-    SampleSerializer,
-    OrganismForPairingSerializer,
-    SeriesRelationsSerializer,
-    ExternalRelationSerializer,
-    OntologySearchResultsSerializer,
-)
-
+from .models import (Cart, CartItem, ExternalRelation, GEOPlatformMetadata,
+                     GEOSampleMetadata, GEOSeriesMetadata,
+                     GEOSeriesToPlatforms, OntologySearchResults, Organism,
+                     OrganismForPairing, Platform, SearchTerm, Series,
+                     SeriesRelations)
+from .serializers import (CartSerializer, ExternalRelationSerializer,
+                          GEOSampleMetadataSerializer,
+                          GEOSeriesMetadataSerializer,
+                          OntologySearchResultsSerializer,
+                          OrganismForPairingSerializer, OrganismSerializer,
+                          PlatformSerializer,
+                          SearchTermSerializer, SeriesRelationsSerializer,
+                          SeriesSerializer)
 
 # ===========================================================================
 # === Helpers
@@ -468,6 +442,7 @@ class GEOSeriesMetadataViewSet(viewsets.ReadOnlyModelViewSet):
 
 from rest_framework.authentication import SessionAuthentication
 
+
 class CsrfExemptSessionAuthentication(SessionAuthentication):
     def enforce_csrf(self, request):
         return  # no-op
@@ -600,75 +575,3 @@ class CartViewSet(viewsets.ModelViewSet):
                 {'error': 'Unsupported download type'},
                 status=status.HTTP_400_BAD_REQUEST
             )
-
-
-# # a POST method /cart/download that takes the following body:
-# # {ids: [
-# #   "GSE35357",
-# #   "GSE149008",
-# #   "GSE45968"
-# # ]}
-# # and takes the following query params:
-# # - type: json or csv
-# # - filename: desired filename
-# @api_view(['POST'])
-# @permission_classes([AllowAny])
-# @csrf_exempt
-# def download_cart(request):
-#     """
-#     API endpoint for downloading cart contents.
-    
-#     Expects a JSON body with the following structure:
-#     {
-#         "ids": [
-#             "GSE35357",
-#             "GSE149008",
-#             "GSE45968"
-#         ]
-#     }
-    
-#     Query parameters:
-#     - type (optional): 'json' or 'csv' (default: 'json')
-#     - filename (optional): desired filename (default: 'cart_download')
-#     """
-#     series_ids = request.data.get('ids', [])
-#     download_type = request.query_params.get('type', 'json')
-#     filename = request.query_params.get('filename', 'cart_download')
-    
-#     series_qs = Series.objects.filter(series_id__in=series_ids)
-    
-#     if download_type == 'json':
-#         # prepare JSON response
-#         data = {
-#             'studies': [
-#                 {
-#                     'id': series.series_id,
-#                     'title': series.title,
-#                     'summary': series.summary,
-#                 }
-#                 for series in series_qs
-#             ]
-#         }
-#         response = Response(data, content_type='application/json')
-#         response['Content-Disposition'] = f'attachment; filename="{filename}.json"'
-#         return response
-    
-#     elif download_type == 'csv':
-#         # prepare CSV response
-#         import csv
-#         from io import StringIO
-
-#         csv_file = StringIO()
-#         csv_writer = csv.writer(csv_file)
-#         csv_writer.writerow(['Series ID', 'Title', 'Summary'])
-#         for series in series_qs:
-#             csv_writer.writerow([series.series_id, series.title, series.summary])
-#         response = Response(csv_file.getvalue(), content_type='text/csv')
-#         response['Content-Disposition'] = f'attachment; filename="{filename}.csv"'
-#         return response
-    
-#     else:
-#         return Response(
-#             {'error': 'Unsupported download type'},
-#             status=status.HTTP_400_BAD_REQUEST
-#         )
