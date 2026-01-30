@@ -14,7 +14,7 @@ export const typeColor: Record<string, string> = {
   disease: "bg-indigo-700/70",
   anatomy: "bg-rose-700/70",
   pathway: "bg-orange-700/70",
-  default: "bg-gray-700/70",
+  default: "bg-slate-700/70",
 };
 
 /** search for ontologies */

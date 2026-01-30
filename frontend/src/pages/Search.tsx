@@ -6,6 +6,7 @@ import { useAtomValue } from "jotai";
 import { isEmpty } from "lodash";
 import { Calendar, Check, Dna, Hash, Logs, Plus } from "lucide-react";
 import { studySamples, studySearch } from "@/api/api";
+import Feedback from "@/assets/feedback.svg?react";
 import Button from "@/components/Button";
 import Checkbox from "@/components/Checkbox";
 import Database from "@/components/Database";
@@ -15,8 +16,10 @@ import Heading from "@/components/Heading";
 import Meta from "@/components/Meta";
 import Meter from "@/components/Meter";
 import Pagination from "@/components/Pagination";
+import Popover from "@/components/Popover";
 import Select from "@/components/Select";
 import Status from "@/components/Status";
+import Textbox from "@/components/Textbox";
 import { SearchBox } from "@/pages/Home";
 import { addToCart, cartAtom, inCart, removeFromCart } from "@/state/cart";
 import { fly } from "@/util/dom";
@@ -166,11 +169,13 @@ export default function Search() {
               flex flex-col gap-2 rounded-sm border border-slate-300 p-4
             "
           >
+            {/* top row */}
             <div className="flex items-start justify-between gap-2">
               <strong>{title}</strong>
               <Meter value={confidence.value}>{confidence.name}</Meter>
             </div>
 
+            {/* details */}
             <div className="flex flex-wrap gap-x-6 gap-y-2">
               {(
                 [
@@ -189,29 +194,51 @@ export default function Search() {
               ))}
             </div>
 
+            {/* description */}
             <p
               tabIndex={0}
               className="truncate-lines"
               dangerouslySetInnerHTML={{ __html: summary }}
             />
 
+            {/* bottom row */}
             <div className="flex flex-wrap items-end justify-between gap-2">
+              {/* databases */}
               <div className="flex flex-wrap gap-2">
                 {database.map((database, index) => (
                   <Database key={index} database={database} />
                 ))}
               </div>
 
+              {/* action buttons */}
               <div className="flex flex-wrap gap-2">
+                {/* feedback */}
+                {confidence.value > 0.5 && (
+                  <Popover
+                    content={(close) => (
+                      <>
+                        <b>Give us feedback on this result</b>
+                        <Checkbox>Reason 1</Checkbox>
+                        <Checkbox>Reason 2</Checkbox>
+                        <Checkbox>Reason 3</Checkbox>
+                        <Textbox placeholder="Elaborate" onSubmit={close} />
+                      </>
+                    )}
+                  >
+                    <Button color="none">
+                      <Feedback />
+                    </Button>
+                  </Popover>
+                )}
+
+                {/* samples */}
                 <Dialog
                   title={
-                    <>
-                      <span>
-                        Samples for <strong>{gse}</strong>
-                      </span>
-                      <span className="text-sm text-slate-500">{title}</span>
-                    </>
+                    <span>
+                      Samples for <strong>{gse}</strong>
+                    </span>
                   }
+                  subtitle={title}
                   content={<Samples id={gse} />}
                 >
                   <Button color="theme">
@@ -219,6 +246,8 @@ export default function Search() {
                     {formatNumber(samples)} Samples
                   </Button>
                 </Dialog>
+
+                {/* cart */}
                 <Button
                   aria-label={
                     inCart(cart, gse) ? "Remove from cart" : "Add to cart"

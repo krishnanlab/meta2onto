@@ -9,6 +9,10 @@
   --font-sans: "Outfit Variable", sans-serif;
   --font-mono: "Sometype Mono Variable", monospace;
 
+  --font-weight-normal: 300;
+  --font-weight-medium: 500;
+  --font-weight-bold: 600;
+
   --color-theme-light: hsl(220, 100%, 95%);
   --color-theme: hsl(220, 30%, 50%);
   --color-theme-dark: hsl(220, 30%, 30%);
@@ -20,7 +24,7 @@
 
 @layer components {
   html {
-    @apply font-sans leading-none font-light;
+    @apply font-sans leading-none font-normal;
   }
 
   body {

@@ -8,13 +8,7 @@ type Props = {
 export default function Textbox({ className, onChange, ...props }: Props) {
   return (
     <input
-      className={clsx(
-        `
-          rounded-sm border border-slate-300 p-2
-          disabled:border-0 disabled:bg-slate-200!
-        `,
-        className,
-      )}
+      className={clsx(`rounded-sm border border-slate-300 p-2`, className)}
       onChange={(event) => onChange?.(event.currentTarget.value)}
       {...props}
     />

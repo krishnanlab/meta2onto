@@ -1,21 +1,33 @@
 import type { ReactElement, ReactNode } from "react";
+import { useRef } from "react";
 import { Popover as _Popover } from "@base-ui/react";
 import { Arrow, offset, padding } from "@/components/Tooltip";
 
 type Props = {
   children: ReactElement<Record<string, unknown>>;
-  content: ReactNode;
+  content: ReactNode | ((close: () => void) => ReactNode);
 };
 
 export default function Popover({ children, content }: Props) {
+  const actionsRef = useRef<_Popover.Root.Actions>(null);
+
+  const close = () => actionsRef.current?.close();
+
+  /** prevent if trigger disabled */
+  if (children.props["aria-disabled"]) return children;
+
   return (
-    <_Popover.Root>
-      <_Popover.Trigger render={children} />
+    <_Popover.Root actionsRef={actionsRef}>
+      <_Popover.Trigger render={children} openOnHover />
       <_Popover.Portal>
-        <_Popover.Positioner sideOffset={offset} collisionPadding={padding}>
+        <_Popover.Positioner
+          side="top"
+          sideOffset={offset}
+          collisionPadding={padding}
+        >
           <_Popover.Popup
             className="
-              flex flex-col gap-2 rounded-sm bg-white p-2 leading-normal
+              flex flex-col gap-2 rounded-sm bg-white p-4 leading-normal
               shadow-overlay
             "
           >
@@ -28,7 +40,9 @@ export default function Popover({ children, content }: Props) {
             >
               <Arrow />
             </_Popover.Arrow>
-            {content}
+            {/* https://github.com/facebook/react/issues/34775 */}
+            {/* eslint-disable-next-line react-hooks/refs */}
+            {typeof content === "function" ? content(close) : content}
           </_Popover.Popup>
         </_Popover.Positioner>
       </_Popover.Portal>

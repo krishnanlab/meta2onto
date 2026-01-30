@@ -9,25 +9,14 @@ type Base = {
   color?: "none" | "theme" | "accent";
 };
 
-type _Link = { ref?: Ref<HTMLAnchorElement> } & Pick<
+type _Link = { ref?: Ref<HTMLAnchorElement> } & Omit<
   ComponentProps<typeof Link>,
-  "children" | "to" | "className" | "style"
+  "onClick"
 >;
 
-type _Button = { ref?: Ref<HTMLButtonElement> } & Pick<
-  ComponentProps<"button">,
-  | "children"
-  | "type"
-  | "className"
-  | "style"
-  | "onClick"
-  | "onDrag"
-  | "onDragEnter"
-  | "onDragLeave"
-  | "onDragOver"
-  | "onDrop"
-  | "aria-disabled"
->;
+type _Button = {
+  ref?: Ref<HTMLButtonElement>;
+} & ComponentProps<"button">;
 
 /**
  * looks like a button and either goes somewhere (link) or does something
@@ -47,21 +36,9 @@ export default function Button({
       flex items-center justify-center gap-2 rounded-sm p-2
       hover:bg-slate-500 hover:text-white
     `,
-    color === "none" &&
-      `
-        bg-transparent text-theme
-        disabled:text-slate-300
-      `,
-    color === "theme" &&
-      `
-        bg-theme text-white
-        disabled:bg-slate-300
-      `,
-    color === "accent" &&
-      `
-        bg-accent text-white
-        disabled:bg-slate-300
-      `,
+    color === "none" && "bg-transparent text-theme",
+    color === "theme" && "bg-theme text-white",
+    color === "accent" && "bg-accent text-white",
   );
 
   /** if "to", render as link */

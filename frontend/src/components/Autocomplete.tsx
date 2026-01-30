@@ -52,10 +52,7 @@ export default function Autocomplete({
               ref={ref}
               placeholder={placeholder}
               className={clsx(
-                `
-                  w-full rounded-sm border border-slate-300 p-2
-                  disabled:border-0 disabled:bg-slate-200!
-                `,
+                `w-full rounded-sm border border-slate-300 p-2`,
                 className,
               )}
             />

@@ -5,6 +5,7 @@ import { X } from "lucide-react";
 type Props = {
   children: ReactElement<Record<string, unknown>>;
   title: ReactNode;
+  subtitle?: ReactNode;
   content: ReactNode;
   onOpen?: () => void;
   onClose?: () => void;
@@ -13,10 +14,14 @@ type Props = {
 export default function Dialog({
   children,
   title,
+  subtitle,
   content,
   onOpen,
   onClose,
 }: Props) {
+  /** prevent if trigger disabled */
+  if (children.props["aria-disabled"]) return children;
+
   return (
     <_Dialog.Root onOpenChange={(open) => (open ? onOpen?.() : onClose?.())}>
       <_Dialog.Trigger render={children} />
@@ -33,10 +38,17 @@ export default function Dialog({
               flex-col gap-4 rounded-sm bg-white p-4
             "
           >
-            <div className="flex items-start justify-between gap-4">
-              <_Dialog.Title className="flex flex-col items-start! gap-1 text-left!">
-                {title}
-              </_Dialog.Title>
+            <div className="flex items-start gap-4">
+              <div className="flex grow flex-col justify-start">
+                <_Dialog.Title className="justify-start text-left">
+                  {title}
+                </_Dialog.Title>
+                {subtitle && (
+                  <_Dialog.Description className="text-sm text-slate-500">
+                    {subtitle}
+                  </_Dialog.Description>
+                )}
+              </div>
               <_Dialog.Close>
                 <X />
               </_Dialog.Close>
