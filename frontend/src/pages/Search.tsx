@@ -154,7 +154,7 @@ export default function Search() {
             summary,
             confidence,
             database,
-            samples,
+            samples_ct,
             submission_date,
             platform,
           },
@@ -216,7 +216,7 @@ export default function Search() {
                 >
                   <Button color="theme">
                     <Logs />
-                    {formatNumber(samples)} Samples
+                    {formatNumber(samples_ct)} Samples
                   </Button>
                 </Dialog>
                 <Button

@@ -16,7 +16,7 @@ export type Study = {
   submission_date: string;
   platform: string;
   database: string[];
-  samples: number;
+  samples_ct: number;
 };
 
 export type StudySearch = {
