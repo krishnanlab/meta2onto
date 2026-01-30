@@ -462,7 +462,7 @@ class GEOSeriesMetadataManager(models.Manager):
 
         # annotate samples count
         qs = result.annotate(
-            samples_count=Subquery(
+            samples_ct=Subquery(
                 SeriesRelations.objects
                 .filter(series_id=OuterRef("gse"))
                 .values("series_id")
@@ -477,9 +477,9 @@ class GEOSeriesMetadataManager(models.Manager):
         elif order_by == "-relevance":
             qs = qs.order_by("prob")
         elif order_by == "samples":
-            qs = qs.order_by("-samples_count")
+            qs = qs.order_by("-samples_ct")
 
-        return result
+        return qs
 
 class GEOSeriesMetadata(models.Model):
     """

@@ -373,7 +373,6 @@ class GEOSeriesMetadataViewSet(viewsets.ReadOnlyModelViewSet):
         self.pagination_class.offset = offset or 0
 
         facets = self._build_facets(results)
-        # facets = {}
 
         if self.paginator is not None:
             self.paginator.facets = facets
@@ -389,6 +388,16 @@ class GEOSeriesMetadataViewSet(viewsets.ReadOnlyModelViewSet):
                 results = results.filter(prob__lt=0.5)
             elif confidence == 'unknown':
                 results = results.filter(prob__isnull=True)
+
+        # if study_size is provided, filter results by large, medium, small
+        study_size = request.query_params.get('study_size')
+        if study_size in ['small', 'medium', 'large']:
+            if study_size == 'small':
+                results = results.filter(samples_ct__lt=10)
+            elif study_size == 'medium':
+                results = results.filter(samples_ct__gte=10, samples_ct__lte=50)
+            elif study_size == 'large':
+                results = results.filter(samples_ct__gt=50)
 
         # if platforms is provided, do the following:
         # 1. query GEOSeriesToPlatforms to get the gpl values with 'technology' equal to the passed platforms
