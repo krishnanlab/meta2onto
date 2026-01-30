@@ -1,8 +1,17 @@
 from uuid import uuid4
 import uuid
 from django.db import connection, models
+from django.db.models import CharField, FloatField, IntegerField, OuterRef, Subquery
+from django.db.models.sql.constants import INNER
+from django.db.models.expressions import RawSQL
 from django.contrib.postgres.indexes import GinIndex
 from django.contrib.postgres.search import TrigramSimilarity, SearchVector
+from django.contrib.postgres.fields import ArrayField
+
+from django_cte import CTE, with_cte
+from django_cte.raw import raw_cte_sql
+
+from api.utils.results import dictfetchall
 
 class TimeStampedModel(models.Model):
     """Abstract base with created/modified timestamps."""
@@ -209,11 +218,16 @@ class SearchTermManager(models.Manager):
             .filter(similarity__gt=0.3) 
             .order_by("-similarity")[:10]
         )
+        # reduce queryset to only what rows will match in 
         return qs
 
 class SearchTerm(models.Model):
     """
     Searchable terms extracted from the corpus for indexing and search.
+
+    This is used to populate the autocomplete search box; see 
+    backend.src.api.views.ontology_search for how the actual fetching
+    of matching Series is performed.
 
     Originates from meta2onto_example_predictions.parquet
     """
@@ -402,72 +416,170 @@ class OntologyTerms(models.Model):
 # === GEO metadata subset, from GEOmetadb, https://gbnci.cancer.gov/geo/
 # ===========================================================================
 
-def dictfetchall(cursor):
-    columns = [col[0] for col in cursor.description]
-    return [
-        dict(zip(columns, row))
-        for row in cursor.fetchall()
-    ]
+
+# old attempt:
+# with connection.cursor() as cursor:
+#     cursor.execute(
+#         """
+#         SELECT
+#         st.series_id AS gse,
+#         st.prob AS prob,
+#         (
+#             SELECT count(*) FROM api_seriesrelations_samples AS samp_rels
+#             INNER JOIN api_seriesrelations AS sr ON sr.series_id = st.series_id
+#             WHERE samp_rels.seriesrelations_id = sr.id
+#         ) AS samples,
+#         (
+#             SELECT
+#                 COALESCE(array_agg(db.database_name ORDER BY db.database_name), '{}'::text[])
+#             FROM api_seriesdatabase AS db
+#             WHERE db.series_id = st.series_id
+#         ) AS database
+#         FROM search_onto(%(query)s, %(max_results)s) AS so
+#         INNER JOIN api_searchterm AS st ON st.term = so.id
+#         LIMIT %(max_results)s
+#         """, {
+#             'query': query,
+#             'max_results': max_results,
+#         }
+#     )
+#     rows = dictfetchall(cursor)
+
+# # materialize result set
+# raw_results = list(rows)
+
+# gse_set = set(r['gse'] for r in raw_results)
+
+# query = self.get_queryset().filter(gse__in=gse_set)
+# results = list(query)
+
+# # add in the 'prob' field from the raw results
+# prob_map = {r['gse']: r for r in raw_results}
+# for r in results:
+#     r._prob = prob_map.get(r.gse, None).get('prob', None)
+#     r._samples = prob_map.get(r.gse, None).get('samples', None)
+#     r._database = prob_map.get(r.gse, None).get('database', None)
+
+# # sort the results according to the original ordering
+# sort_ascending = order_by.startswith('-')
+
+# if order_by.lstrip('-') == 'relevance':
+#     results.sort(key=lambda r: (r._prob is None, r._prob), reverse=not sort_ascending)
+# elif order_by.lstrip('-') == 'date':
+#     results.sort(key=lambda r: (r.submission_date is None, r.submission_date), reverse=not sort_ascending)
+# elif order_by.lstrip('-') == 'samples':
+#     results.sort(key=lambda r: (r._samples is None, r._samples), reverse=not sort_ascending)
+
+# return results
+
+# ---------------------------------------------------------------- 
+
+# # used to run the autocomplete search, but we just use this for
+# # retrieving GEOSeriesMetadata entries here
+# search_sql = """
+#     SELECT st.series_id
+#     FROM search_onto(%s, %s) so
+#     JOIN api_searchterm st ON st.term = so.id
+# """
+
+# prob_sql = """
+#     SELECT st.prob
+#     FROM search_onto(%s, %s) so
+#     JOIN api_searchterm st ON st.term = so.id
+#     WHERE st.series_id = api_geoseriesmetadata.gse
+# """
+
+# qs = (
+#     self.get_queryset()
+#     .filter(
+#         gse__in=RawSQL(search_sql, (query, max_results))
+#     )
+#     .annotate(
+#         # prob=search_results[OuterRef("gse")], # RawSQL(prob_sql, (query, max_results))
+#         samples_count=Subquery(
+#             SeriesRelations.objects
+#             .filter(series_id=OuterRef("gse"))
+#             .values("series_id")
+#             .annotate(c=models.Count("samples"))
+#             .values("c")[:1],
+#             output_field=IntegerField(),
+#         ),
+#     )
+# )
+
+# if order_by == "relevance":
+#     qs = qs.order_by("-prob")
+# elif order_by == "-relevance":
+#     qs = qs.order_by("prob")
+# elif order_by == "samples":
+#     qs = qs.order_by("-samples_count")
+
+# return qs
+
+def search_gse_with_prob(query: str, limit: int = 50):
+    # CTE that yields (series_id, prob)
+    hits = CTE(
+        raw_cte_sql(
+            """
+            SELECT st.series_id AS series_id, st.prob
+            FROM search_onto(%s, %s) so
+            INNER JOIN api_searchterm st ON st.term = so.id
+            LIMIT 100
+            """,
+            # params for search_onto(%s, %s)
+            [query, limit],
+            # tell django-cte the output column types
+            {
+                "series_id": CharField(),
+                "prob": FloatField(),
+            },
+        ),
+        name="hits",
+    )
+
+    # Join the CTE to your model on gse = series_id
+    qs = hits.join(
+        GEOSeriesMetadata.objects.all(),
+        gse=hits.col.series_id,
+        _join_type=INNER,  # keeps GSE rows even if no match; use INNER if you only want matches
+    ).annotate(
+        prob=hits.col.prob
+    )
+
+    return with_cte(hits, select=qs)
 
 class GEOSeriesMetadataManager(models.Manager):
     def search(self, query:str, max_results:int=50, order_by:str='relevance'):
         """
         Fetch GEO sample metadata by sample ID (GSM*).
+
+        For details about the search_onto method used here, see
+        /backend/src/api/migrations/0012_search_onto_func.py, the migration that
+        introduces the search_onto function.
         """
 
-        with connection.cursor() as cursor:
-            cursor.execute(
-                """
-                SELECT
-                st.series_id AS gse,
-                st.prob AS prob,
-                (
-                    SELECT count(*) FROM api_seriesrelations_samples AS samp_rels
-                    INNER JOIN api_seriesrelations AS sr ON sr.series_id = st.series_id
-                    WHERE samp_rels.seriesrelations_id = sr.id
-                ) AS samples,
-                (
-                    SELECT
-                        COALESCE(array_agg(db.database_name ORDER BY db.database_name), '{}'::text[])
-                    FROM api_seriesdatabase AS db
-                    WHERE db.series_id = st.series_id
-                ) AS database
-                FROM search_onto(%(query)s, %(max_results)s) AS so
-                INNER JOIN api_searchterm AS st ON st.term = so.id
-                LIMIT %(max_results)s
-                """, {
-                    'query': query,
-                    'max_results': max_results,
-                }
-            )
-            rows = dictfetchall(cursor)
+        result = search_gse_with_prob(query=query, limit=max_results)
 
-        # materialize result set
-        raw_results = list(rows)
+        # annotate samples count
+        qs = result.annotate(
+            samples_count=Subquery(
+                SeriesRelations.objects
+                .filter(series_id=OuterRef("gse"))
+                .values("series_id")
+                .annotate(c=models.Count("samples"))
+                .values("c")[:1],
+                output_field=IntegerField(),
+            ),
+        )
 
-        gse_set = set(r['gse'] for r in raw_results)
+        if order_by == "relevance":
+            qs = qs.order_by("-prob")
+        elif order_by == "-relevance":
+            qs = qs.order_by("prob")
+        elif order_by == "samples":
+            qs = qs.order_by("-samples_count")
 
-        query = self.get_queryset().filter(gse__in=gse_set)
-        results = list(query)
-
-        # add in the 'prob' field from the raw results
-        prob_map = {r['gse']: r for r in raw_results}
-        for r in results:
-            r._prob = prob_map.get(r.gse, None).get('prob', None)
-            r._samples = prob_map.get(r.gse, None).get('samples', None)
-            r._database = prob_map.get(r.gse, None).get('database', None)
-
-        # sort the results according to the original ordering
-        sort_ascending = order_by.startswith('-')
-
-        if order_by.lstrip('-') == 'relevance':
-            results.sort(key=lambda r: (r._prob is None, r._prob), reverse=not sort_ascending)
-        elif order_by.lstrip('-') == 'date':
-            results.sort(key=lambda r: (r.submission_date is None, r.submission_date), reverse=not sort_ascending)
-        elif order_by.lstrip('-') == 'samples':
-            results.sort(key=lambda r: (r._samples is None, r._samples), reverse=not sort_ascending)
-        
-        return results
+        return result
 
 class GEOSeriesMetadata(models.Model):
     """
@@ -496,20 +608,9 @@ class GEOSeriesMetadata(models.Model):
     contact = models.TextField(null=True, blank=True)
     supplementary_file = models.TextField(null=True, blank=True)
 
-    @property
-    def prob(self):
-        return getattr(self, "_prob", None)
-
-    @property
-    def samples(self):
-        inlined_samples = getattr(self, "_samples", None)
-
-        if inlined_samples is not None:
-            return inlined_samples
-        else:
-            return SeriesRelations.objects.filter(series_id=self.gse).aggregate(
-                count=models.Count('samples')
-            )['count']
+    # this is not actually a column, but will be annotated into
+    # the model instances by the custom manager's search() method
+    prob: float | None = None
 
     @property
     def database(self):
@@ -529,6 +630,139 @@ class GEOSeriesMetadata(models.Model):
 
     def __str__(self):
         return f"GEO Metadata for {self.gse}"
+    
+class GEOSampleMetadata(models.Model):
+    """
+    the "gsm" table from GEOmetadb.
+    Originally fetched from https://gbnci.cancer.gov/geo/GEOmetadb.sqlite.gz
+    on 2025-12-11.
+    """
+
+    gsm = models.CharField(primary_key=True, help_text="Sample ID")
+    title = models.TextField(null=True, blank=True)
+    # series_id = models.TextField(null=True, blank=True)
+    gpl_raw = models.TextField(null=True, blank=True, db_column="gpl", help_text="Platform ID")
+    status = models.TextField(null=True, blank=True)
+    submission_date = models.TextField(null=True, blank=True)
+    last_update_date = models.TextField(null=True, blank=True)
+    type = models.TextField(null=True, blank=True)
+    source_name_ch1 = models.TextField(null=True, blank=True)
+    organism_ch1 = models.TextField(null=True, blank=True)
+    characteristics_ch1 = models.TextField(null=True, blank=True)
+    molecule_ch1 = models.TextField(null=True, blank=True)
+    label_ch1 = models.TextField(null=True, blank=True)
+    treatment_protocol_ch1 = models.TextField(null=True, blank=True)
+    extract_protocol_ch1 = models.TextField(null=True, blank=True)
+    label_protocol_ch1 = models.TextField(null=True, blank=True)
+    source_name_ch2 = models.TextField(null=True, blank=True)
+    organism_ch2 = models.TextField(null=True, blank=True)
+    characteristics_ch2 = models.TextField(null=True, blank=True)
+    molecule_ch2 = models.TextField(null=True, blank=True)
+    label_ch2 = models.TextField(null=True, blank=True)
+    treatment_protocol_ch2 = models.TextField(null=True, blank=True)
+    extract_protocol_ch2 = models.TextField(null=True, blank=True)
+    label_protocol_ch2 = models.TextField(null=True, blank=True)
+    hyb_protocol = models.TextField(null=True, blank=True)
+    description = models.TextField(null=True, blank=True)
+    data_processing = models.TextField(null=True, blank=True)
+    contact = models.TextField(null=True, blank=True)
+    supplementary_file = models.TextField(null=True, blank=True)
+    data_row_count = models.IntegerField(null=True, blank=True)
+    channel_count = models.IntegerField(null=True, blank=True)
+
+    # series_id column in the sample table contains the GSE id, e.g. "GSE12345"
+    series = models.ForeignKey(
+        "GEOSeriesMetadata",
+        to_field="gse",
+        db_column="series_id",
+        related_name="samples",
+        on_delete=models.DO_NOTHING,
+        db_constraint=False,
+        null=True,
+        blank=True,
+    )
+
+    # # the platform to which this sample belongs
+    # platform = models.ForeignKey(
+    #     "GEOPlatformMetadata",
+    #     # to_field="gpl",
+    #     db_column="gpl",
+    #     related_name="samples",
+    #     on_delete=models.DO_NOTHING,
+    #     db_constraint=False,
+    #     null=True,
+    #     blank=True,
+    # )
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['gsm']),
+            models.Index(fields=['series']),
+            models.Index(fields=['gpl_raw']),
+        ]
+
+    def __str__(self):
+        return f"GEO Sample Metadata for {self.gsm}"
+    
+class GEOPlatformMetadata(models.Model):
+    """
+    the "gpl" table from GEOmetadb.
+    Originally fetched from https://gbnci.cancer.gov/geo/GEOmetadb.sqlite.gz
+    on 2025-12-11.
+    """
+
+    gpl = models.CharField(primary_key=True)
+    title = models.TextField(null=True, blank=True)
+    status = models.TextField(null=True, blank=True)
+    submission_date = models.TextField(null=True, blank=True)
+    last_update_date = models.TextField(null=True, blank=True)
+    technology = models.TextField(null=True, blank=True)
+    distribution = models.TextField(null=True, blank=True)
+    organism = models.TextField(null=True, blank=True)
+    manufacturer = models.TextField(null=True, blank=True)
+    manufacture_protocol = models.TextField(null=True, blank=True)
+    coating = models.TextField(null=True, blank=True)
+    catalog_number = models.TextField(null=True, blank=True)
+    support = models.TextField(null=True, blank=True)
+    description = models.TextField(null=True, blank=True)
+    web_link = models.TextField(null=True, blank=True)
+    contact = models.TextField(null=True, blank=True)
+    data_row_count = models.IntegerField(null=True, blank=True)
+    supplementary_file = models.TextField(null=True, blank=True)
+    bioc_package = models.TextField(null=True, blank=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['gpl']),
+        ]
+
+    def __str__(self):
+        return f"GEO Platform Metadata for {self.gpl}"
+    
+# ----
+# - lookup tables for GEO relations
+# ----
+
+class GEOSeriesToPlatforms(models.Model):
+    """
+    Mapping from GEO Series (GSE*) to Platforms (GPL*).
+
+    Computed via the GEOSampleMetadata table's 'gpl' column,
+    grouped by 'series_id'.
+
+    FIXME: this should eventually be a view rather than a table.
+    """
+
+    gse = models.CharField(unique=True)
+    platforms = ArrayField(models.CharField(max_length=64), blank=True, default=list)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['gse']),
+        ]
+
+    def __str__(self):
+        return f"GEO Series {self.gse} to platforms {self.platforms}"
 
 # ===========================================================================
 # === Cart server-side state

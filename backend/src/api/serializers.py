@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import (
+    GEOSampleMetadata,
     GEOSeriesMetadata,
     Organism,
     Platform,
@@ -47,10 +48,14 @@ class SeriesSerializer(serializers.ModelSerializer):
 
 class SampleSerializer(serializers.ModelSerializer):
     """Serializer for Sample model."""
+
+    id = serializers.CharField(source='gsm', read_only=True)
+    # description = serializers.CharField(source='doc', read_only=True)
     
     class Meta:
-        model = Sample
-        fields = ['sample_id', 'doc', 'created_at', 'updated_at']
+        model = GEOSampleMetadata
+        # fields = ['sample_id', 'doc', 'created_at', 'updated_at']
+        fields = ['id', 'description', 'data_processing']
 
 
 # ===========================================================================
@@ -188,10 +193,21 @@ class OntologyTermsSerializer(serializers.ModelSerializer):
 # === GEO Series Metadata
 # ===========================================================================
 
+class GEOSampleMetadataSerializer(serializers.ModelSerializer):
+    """Serializer for GEOSampleMetadata model."""
+
+    id = serializers.CharField(source='gsm', read_only=True)
+    # description = serializers.CharField(source='doc', read_only=True)
+    
+    class Meta:
+        model = GEOSampleMetadata
+        # fields = ['sample_id', 'doc', 'created_at', 'updated_at']
+        fields = ['id', 'description', 'data_processing']
+
 class GEOSeriesMetadataSerializer(serializers.ModelSerializer):
     """Serializer for GEOSeriesMetadata model."""
 
-    samples = serializers.IntegerField(read_only=True)
+    samples_ct = serializers.IntegerField(read_only=True)
 
     confidence = serializers.SerializerMethodField()
     def get_confidence(self, obj):
@@ -210,7 +226,7 @@ class GEOSeriesMetadataSerializer(serializers.ModelSerializer):
         child=serializers.CharField(),
         read_only=True
     )
-    
+
     class Meta:
         model = GEOSeriesMetadata
         fields = [
@@ -236,7 +252,7 @@ class GEOSeriesMetadataSerializer(serializers.ModelSerializer):
             'confidence',
 
             # from joining with api_sample count
-            'samples',
+            'samples_ct',
 
             # from joining with api_seriesdatabase
             'database',

@@ -1,5 +1,9 @@
 import csv
 from uuid import uuid4
+
+from collections import Counter
+from django.db.models import F, Func, Subquery, CharField
+
 from django.http import HttpResponse
 from rest_framework import viewsets, status
 from rest_framework.decorators import api_view, permission_classes
@@ -15,10 +19,15 @@ from django.views.decorators.cache import cache_page
 
 from django.views.decorators.csrf import csrf_exempt
 
+from django.db import models
+
 from .models import (
     Cart,
     CartItem,
+    GEOSampleMetadata,
     GEOSeriesMetadata,
+    GEOPlatformMetadata,
+    GEOSeriesToPlatforms,
     Organism,
     Platform,
     SearchTerm,
@@ -31,6 +40,7 @@ from .models import (
 )
 from .serializers import (
     CartSerializer,
+    GEOSampleMetadataSerializer,
     GEOSeriesMetadataSerializer,
     OrganismSerializer,
     PlatformSerializer,
@@ -55,6 +65,19 @@ class LargeEntityPagination(LimitOffsetPagination):
     default_limit = 5
 
 
+class SeriesSearchPagination(LimitOffsetPagination):
+    """Limit/offset pagination that always returns facets with page metadata."""
+
+    def get_paginated_response(self, data):  # type: ignore[override]
+        return Response({
+            'count': self.count,
+            'next': self.get_next_link(),
+            'previous': self.get_previous_link(),
+            'results': data,
+            'facets': getattr(self, 'facets', {}),
+        })
+
+
 # ===========================================================================
 # === Reference Types
 # ===========================================================================
@@ -62,6 +85,7 @@ class LargeEntityPagination(LimitOffsetPagination):
 class OrganismViewSet(viewsets.ReadOnlyModelViewSet):
     """
     ReadOnly API endpoint for viewing Organisms.
+    Accessible at /api/organisms/
     """
     queryset = Organism.objects.all()
     serializer_class = OrganismSerializer
@@ -77,6 +101,7 @@ class OrganismViewSet(viewsets.ReadOnlyModelViewSet):
 class PlatformViewSet(viewsets.ReadOnlyModelViewSet):
     """
     ReadOnly API endpoint for viewing Platforms.
+    Accessible at /api/platforms/
     """
     queryset = Platform.objects.all()
     serializer_class = PlatformSerializer
@@ -89,6 +114,7 @@ class PlatformViewSet(viewsets.ReadOnlyModelViewSet):
 class SeriesViewSet(viewsets.ReadOnlyModelViewSet):
     """
     ReadOnly API endpoint for viewing Series.
+    Accessible at /api/series/
     """
     queryset = Series.objects.all()
     serializer_class = SeriesSerializer
@@ -102,12 +128,15 @@ class SeriesViewSet(viewsets.ReadOnlyModelViewSet):
     @action(detail=True, methods=['get'], url_path='samples', permission_classes=[AllowAny])
     def samples(self, request, pk=None):
         series = self.get_object()
-        samples = series.series_relations.first().samples.all()
+        # samples = series.series_relations.first().samples.all()
+        samples = GEOSampleMetadata.objects.filter(
+            series_id=series.series_id
+        ).all()
         page = self.paginate_queryset(samples)
         if page is not None:
-            serializer = SampleSerializer(page, many=True)
+            serializer = GEOSampleMetadataSerializer(page, many=True)
             return self.get_paginated_response(serializer.data)
-        serializer = SampleSerializer(samples, many=True)
+        serializer = GEOSampleMetadataSerializer(samples, many=True)
         return Response(serializer.data)
     
     # provide a /lookup action to get series by a list of ids
@@ -116,7 +145,7 @@ class SeriesViewSet(viewsets.ReadOnlyModelViewSet):
     def lookup(self, request):
         # takes a list of series_ids in the body
         series_ids = request.data.get('ids', [])
-        queryset = self.get_queryset().filter(series_id__in=series_ids)
+        queryset = GEOSampleMetadata.objects.filter(series_id__in=series_ids)
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
@@ -128,9 +157,12 @@ class SeriesViewSet(viewsets.ReadOnlyModelViewSet):
 class SampleViewSet(viewsets.ReadOnlyModelViewSet):
     """
     ReadOnly API endpoint for viewing Samples.
+    Accessible at /api/samples/
     """
-    queryset = Sample.objects.all()
-    serializer_class = SampleSerializer
+    # queryset = Sample.objects.all()
+    # serializer_class = SampleSerializer
+    queryset = GEOSampleMetadata.objects.all()
+    serializer_class = GEOSampleMetadataSerializer
     filter_backends = [SearchFilter, OrderingFilter]
     search_fields = ['sample_id', 'doc', 'search_terms__term']
     ordering_fields = ['sample_id', 'created_at', 'updated_at']
@@ -144,6 +176,7 @@ class SampleViewSet(viewsets.ReadOnlyModelViewSet):
 class OrganismForPairingViewSet(viewsets.ReadOnlyModelViewSet):
     """
     ReadOnly API endpoint for viewing OrganismForPairing relationships.
+    Accessible at /api/organism-pairings/
     """
     queryset = OrganismForPairing.objects.select_related(
         'organism', 'series', 'sample', 'platform'
@@ -166,6 +199,7 @@ class OrganismForPairingViewSet(viewsets.ReadOnlyModelViewSet):
 class SeriesRelationsViewSet(viewsets.ReadOnlyModelViewSet):
     """
     ReadOnly API endpoint for viewing SeriesRelations.
+    Accessible at /api/series-relations/
     Cached for 5 minutes to improve performance.
     """
     queryset = SeriesRelations.objects.prefetch_related(
@@ -183,6 +217,7 @@ class SeriesRelationsViewSet(viewsets.ReadOnlyModelViewSet):
 class ExternalRelationViewSet(viewsets.ReadOnlyModelViewSet):
     """
     ReadOnly API endpoint for viewing ExternalRelations.
+    Accessible at /api/external-relations/
     """
     queryset = ExternalRelation.objects.all()
     serializer_class = ExternalRelationSerializer
@@ -202,6 +237,7 @@ class ExternalRelationViewSet(viewsets.ReadOnlyModelViewSet):
 class SearchTermViewSet(viewsets.ReadOnlyModelViewSet):
     """
     ReadOnly API endpoint for viewing SearchTerms.
+    Accessible at /api/search-terms/
     """
     queryset = SearchTerm.objects.all()
     serializer_class = SearchTermSerializer
@@ -220,6 +256,7 @@ class SearchTermViewSet(viewsets.ReadOnlyModelViewSet):
 def ontology_search(request):
     """
     API endpoint for searching ontology terms.
+    Accessible at /api/ontology-search/
     
     Query parameters:
     - query (required): The search query string
@@ -231,43 +268,6 @@ def ontology_search(request):
     if not query:
         # return an empty list if no query is provided
         return Response([])
-
-        # return Response(
-        #     {'error': 'query parameter is required'},
-        #     status=status.HTTP_400_BAD_REQUEST
-        # )
-    
-    try:
-        max_results = int(max_results)
-    except ValueError:
-        return Response(
-            {'error': 'max_results must be an integer'},
-            status=status.HTTP_400_BAD_REQUEST
-        )
-    
-    results = OntologySearchResults.objects.search(query, max_results)
-    serializer = OntologySearchResultsSerializer(results, many=True)
-    return Response(serializer.data)
-
-@api_view(['GET'])
-@permission_classes([AllowAny])
-def ontology_search_series(request):
-    """
-    API endpoint for searching ontology terms, but returns Series'
-    rather than ontology terms.
-    
-    Query parameters:
-    - query (required): The search query string
-    - max_results (optional): Maximum number of results to return (default: 50)
-    """
-    query = request.query_params.get('query')
-    max_results = request.query_params.get('max_results', 50)
-    
-    if not query:
-        return Response(
-            {'error': 'query parameter is required'},
-            status=status.HTTP_400_BAD_REQUEST
-        )
     
     try:
         max_results = int(max_results)
@@ -288,6 +288,7 @@ def ontology_search_series(request):
 class GEOSeriesMetadataViewSet(viewsets.ReadOnlyModelViewSet):
     """
     ReadOnly API endpoint for viewing GEO Series Metadata.
+    Accessible at /api/geo-metadata/
     """
     queryset = GEOSeriesMetadata.objects.all()
     serializer_class = GEOSeriesMetadataSerializer
@@ -295,6 +296,77 @@ class GEOSeriesMetadataViewSet(viewsets.ReadOnlyModelViewSet):
     search_fields = ['gse', 'title', 'summary']
     ordering_fields = ['gse', 'title']
     ordering = ['gse']
+    pagination_class = SeriesSearchPagination
+
+    def _build_facets(self, queryset):
+        """Compute facets for the search result set."""
+
+        # annotate with confidence levels
+        annotated_qs = queryset.annotate(
+            confidence_level=models.Case(
+                models.When(prob__gte=0.8, then=models.Value('high')),
+                models.When(prob__gte=0.5, then=models.Value('medium')),
+                models.When(prob__lt=0.5, then=models.Value('low')),
+                default=models.Value('unknown'),
+                output_field=models.CharField(),
+            )
+        )
+
+        # join the 'gpl' field from GEOSampleMetadata to this queryset
+        annotated_qs = annotated_qs.annotate(
+            samples_ct=models.Count('samples', distinct=True)
+        )
+
+        # annotate with study size buckets
+        # (small: <10, medium: 10-50, large: >50)
+        annotated_qs = annotated_qs.annotate(
+            study_size=models.Case(
+                models.When(samples_ct__lt=10, then=models.Value('small')),
+                models.When(samples_ct__gte=10, samples_ct__lte=50, then=models.Value('medium')),
+                models.When(samples_ct__gt=50, then=models.Value('large')),
+                default=models.Value('unknown'),
+                output_field=models.CharField(),
+            )
+        )
+
+        # 1) Get the GSEs as a plain Python list (break out of django-cte's Query object)
+        gse_list = list(queryset.values_list("gse", flat=True))
+
+        # 2) Flatten platforms arrays into one stream of GPLs
+        platform_gpls = (
+            GEOSeriesToPlatforms.objects
+            .filter(gse__in=gse_list)
+            .annotate(
+                gpl=Func(F("platforms"), function="unnest", output_field=CharField())
+            )
+            .values_list("gpl", flat=True)
+        )
+
+        # 3) Join to platform metadata + count titles
+        platforms_qs = GEOPlatformMetadata.objects.filter(gpl__in=platform_gpls)
+        platforms_dict = Counter(platforms_qs.values_list("technology", flat=True))
+
+        # compute counts for each confidence level
+        confidence_counts = annotated_qs.values('confidence_level').annotate(
+            count=models.Count('gse')
+        )
+
+        # compute counts for each study size
+        study_size_counts = annotated_qs.values('study_size').annotate(
+            count=models.Count('gse')
+        )
+        
+        return {
+            'study_size': {
+                entry['study_size']: entry['count']
+                for entry in study_size_counts
+            },
+            'confidence': {
+                entry['confidence_level']: entry['count']
+                for entry in confidence_counts
+            },
+            'platforms': dict(platforms_dict)
+        }
 
     # allow searching through an action
     @action(detail=False, methods=['get'], url_path='search', permission_classes=[AllowAny])
@@ -309,7 +381,8 @@ class GEOSeriesMetadataViewSet(viewsets.ReadOnlyModelViewSet):
                 'count': 0,
                 'next': None,
                 'previous': None,
-                'results': []
+                'results': [],
+                'facets': {}
             })
         
             # return Response(
@@ -318,23 +391,62 @@ class GEOSeriesMetadataViewSet(viewsets.ReadOnlyModelViewSet):
             # )
         
         results = GEOSeriesMetadata.objects.search(query, order_by=ordering)
-        serializer = self.get_serializer(results, many=True)
+        facets = self._build_facets(results)
 
         # paginate the response
         # use limit, offset params if provided
-        
         self.pagination_class.limit = limit or self.pagination_class.default_limit
         self.pagination_class.offset = offset or 0
 
+        facets = self._build_facets(results)
+        # facets = {}
+
+        if self.paginator is not None:
+            self.paginator.facets = facets
+
+        # if confidence is provided, filter to confidence=high
+        confidence = request.query_params.get('confidence')
+        if confidence in ['high', 'medium', 'low', 'unknown']:
+            if confidence == 'high':
+                results = results.filter(prob__gte=0.8)
+            elif confidence == 'medium':
+                results = results.filter(prob__gte=0.5, prob__lt=0.8)
+            elif confidence == 'low':
+                results = results.filter(prob__lt=0.5)
+            elif confidence == 'unknown':
+                results = results.filter(prob__isnull=True)
+
+        # if platforms is provided, do the following:
+        # 1. query GEOSeriesToPlatforms to get the gpl values with 'technology' equal to the passed platforms
+        # 2. use GEOSeriesToPlatforms to get the gse values for gpl values that occur in the 'platforms' ArrayField
+        # 3. filter results to only those gse values
+        platforms = request.query_params.getlist('platforms')
+        if platforms:
+            gpls = GEOPlatformMetadata.objects.filter(
+                technology__in=platforms
+            ).values_list('gpl', flat=True)
+
+            gse_values = GEOSeriesToPlatforms.objects.filter(
+                platforms__overlap=list(gpls)
+            ).values_list('gse', flat=True).distinct()
+
+            results = results.filter(gse__in=list(gse_values))
+
+        serializer = self.get_serializer(results, many=True)
         page = self.paginate_queryset(results)
 
         if page is not None:
             serializer = self.get_serializer(page, many=True)
             return self.get_paginated_response(serializer.data)
         
-        return Response(serializer.data)
-
-        # return Response(serializer.data)
+        serializer = self.get_serializer(results, many=True)
+        return Response({
+            'count': len(serializer.data),
+            'next': None,
+            'previous': None,
+            'results': serializer.data,
+            'facets': facets
+        })
 
     # provide a /lookup action to get series by a list of ids
     @method_decorator(csrf_exempt)
@@ -363,7 +475,8 @@ class CsrfExemptSessionAuthentication(SessionAuthentication):
 @method_decorator(csrf_exempt, name='dispatch')
 class CartViewSet(viewsets.ModelViewSet):
     """
-    ReadOnly API endpoint for viewing Carts.
+    API endpoint for viewing and managing Carts.
+    Accessible at /api/cart/
     """
     queryset = Cart.objects.all()
     serializer_class = CartSerializer
