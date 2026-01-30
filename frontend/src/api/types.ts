@@ -30,10 +30,13 @@ export type StudySearch = {
 };
 
 export type Sample = {
-  sample_id: string;
-  doc: string;
-  created_at: string;
-  updated_at: string;
+  // sample_id: string;
+  // doc: string;
+  // created_at: string;
+  // updated_at: string;
+  id: string;
+  description: string;
+  data_processing: string;
 };
 
 export type StudySamples = {

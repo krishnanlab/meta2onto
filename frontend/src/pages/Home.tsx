@@ -99,10 +99,13 @@ export const SearchBox = () => {
   const searchChanged = useChanged(params.search);
   if (searchChanged && params.search) setSearch(params.search);
 
+  /** debounced search string, update only after 300ms of inactivity */
+  const debouncedSearch = useDebounce(search, 300);
+
   /** model search results */
   const query = useQuery({
     queryKey: ["model-search", search],
-    queryFn: () => modelSearch(search),
+    queryFn: () => debouncedSearch != "" ? modelSearch(debouncedSearch) : Promise.resolve([]),
   });
 
   /** search results */
