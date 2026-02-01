@@ -1,4 +1,4 @@
-import type { ReactElement, ReactNode } from "react";
+import type { ReactElement, ReactNode, RefObject } from "react";
 import { useRef } from "react";
 import { Autocomplete as _Autocomplete } from "@base-ui/react";
 import clsx from "clsx";
@@ -6,6 +6,8 @@ import { Search } from "lucide-react";
 import { padding } from "@/components/Tooltip";
 
 type Props = {
+  /** optional input ref */
+  inputRef?: RefObject<HTMLInputElement | null>;
   /** search value */
   search: string;
   /** on input search */
@@ -27,6 +29,7 @@ type Props = {
 
 /** textbox box with dropdown */
 export default function Autocomplete({
+  inputRef,
   search,
   setSearch,
   options,
@@ -35,7 +38,8 @@ export default function Autocomplete({
   status,
   className,
 }: Props) {
-  const ref = useRef<HTMLInputElement>(null);
+  const _inputRef = useRef<HTMLInputElement>(null);
+  inputRef ??= _inputRef;
 
   return (
     <_Autocomplete.Root
@@ -45,16 +49,13 @@ export default function Autocomplete({
       mode="none"
       openOnInputClick
     >
-      <div className="relative flex items-center">
+      <div className={clsx("relative flex items-center", className)}>
         <_Autocomplete.Input
           render={
             <input
-              ref={ref}
+              ref={inputRef}
               placeholder={placeholder}
-              className={clsx(
-                `w-full rounded-sm border border-slate-300 p-2`,
-                className,
-              )}
+              className="w-full rounded-sm border border-slate-300 p-2 pr-8"
             />
           }
         />
@@ -89,7 +90,7 @@ export default function Autocomplete({
                       /** select option */
                       onSelect?.(tag.value);
                       /** close dropdown */
-                      ref.current?.blur();
+                      inputRef.current?.blur();
                     }}
                   >
                     {tag.content}

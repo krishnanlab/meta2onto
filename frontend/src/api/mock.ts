@@ -79,7 +79,7 @@ const fakeDate = () =>
   ).toISOString();
 
 const fakeConfidence = () => {
-  const value = random(0, 1, true);
+  const value = 1 - random(0, 1, true) * random(0, 1, true);
   let name = "Low";
   if (value > 0.7) name = "Medium";
   if (value > 0.9) name = "High";

@@ -1,3 +1,4 @@
+import type { RefObject } from "react";
 import type { OntologyResult } from "@/api/types";
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router";
@@ -92,7 +93,13 @@ export default function Home() {
   );
 }
 
-export const SearchBox = () => {
+export const SearchBox = ({
+  inputRef,
+  className,
+}: {
+  inputRef?: RefObject<HTMLInputElement | null>;
+  className?: string;
+}) => {
   const navigate = useNavigate();
 
   /** search string state (immediate) */
@@ -137,6 +144,7 @@ export const SearchBox = () => {
 
   return (
     <Autocomplete
+      inputRef={inputRef}
       search={_search}
       setSearch={setSearch}
       placeholder="Search..."
@@ -171,12 +179,12 @@ export const SearchBox = () => {
         if (!id?.trim()) return;
         const result = query.data?.find((result) => result.id === id);
         if (result) addSearch(result);
-        navigate(`/search/${result?.name ?? ""}`);
+        navigate(`/search/${result?.id ?? ""}?raw=${_search}`);
       }}
       status={
         showStatus({ query }) && <Status query={query} className="contents!" />
       }
-      className="bg-white"
+      className={clsx("bg-white", className)}
     />
   );
 };

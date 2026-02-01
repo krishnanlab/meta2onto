@@ -1,10 +1,19 @@
 import type { Limit } from "@/components/Pagination";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, useSearchParams } from "react-router";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
 import { isEmpty } from "lodash";
-import { Calendar, Check, Dna, Hash, Logs, Plus } from "lucide-react";
+import {
+  Calendar,
+  Check,
+  Dna,
+  Hash,
+  Logs,
+  Plus,
+  RefreshCcw,
+  SearchIcon,
+} from "lucide-react";
 import { studySamples, studySearch } from "@/api/api";
 import Feedback from "@/assets/feedback.svg?react";
 import Button from "@/components/Button";
@@ -24,6 +33,9 @@ import { SearchBox } from "@/pages/Home";
 import { addToCart, cartAtom, inCart, removeFromCart } from "@/state/cart";
 import { fly } from "@/util/dom";
 import { formatDate, formatNumber } from "@/util/string";
+
+/** don't show feedback if confidence below this */
+const feedbackThreshold = 0.75;
 
 /** per page select options */
 const limitOptions = [
@@ -46,6 +58,7 @@ export default function Search() {
 
   /** url search params state */
   const [params, setParams] = useSearchParams();
+  const raw = params.get("raw") ?? "";
 
   /** ordering state from url params */
   const ordering =
@@ -117,17 +130,39 @@ export default function Search() {
     </div>
   );
 
+  /** new search button */
+  const [newSearch, setNewSearch] = useState(false);
+  const searchRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (newSearch) searchRef.current?.focus();
+  }, [newSearch]);
+
   const resultsPanel = (
     <div className="flex w-full grow basis-0 flex-col gap-4">
-      {/* search box */}
-      <SearchBox />
+      <div className="flex flex-wrap items-center gap-4">
+        <div className="flex items-center gap-2 leading-normal">
+          <SearchIcon />
+          <span>
+            Searched <strong>{raw}</strong> and selected{" "}
+            <strong>{search}</strong>
+          </span>
+        </div>
+        {newSearch ? (
+          <SearchBox className="grow" inputRef={searchRef} />
+        ) : (
+          <Button color="none" onClick={() => setNewSearch(true)}>
+            <RefreshCcw />
+            New Search
+          </Button>
+        )}
+      </div>
 
       {/* query status */}
       <Status query={query} />
 
       {/* overview */}
       {query.data?.results && (
-        <div className="flex flex-wrap items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <strong>{formatNumber(query.data?.count)}</strong> results
           </div>
@@ -166,11 +201,11 @@ export default function Search() {
           <div
             key={index}
             className="
-              flex flex-col gap-2 rounded-sm border border-slate-300 p-4
+              flex flex-col gap-4 rounded-sm border border-slate-300 p-4
             "
           >
             {/* top row */}
-            <div className="flex items-start justify-between gap-2">
+            <div className="flex items-start justify-between gap-2 leading-normal">
               <strong>{title}</strong>
               <Meter value={confidence.value}>{confidence.name}</Meter>
             </div>
@@ -213,11 +248,11 @@ export default function Search() {
               {/* action buttons */}
               <div className="flex flex-wrap gap-2">
                 {/* feedback */}
-                {confidence.value > 0.5 && (
+                {confidence.value > feedbackThreshold && (
                   <Popover
                     content={(close) => (
                       <>
-                        <b>Give us feedback on this result</b>
+                        <strong>Give us feedback on this result</strong>
                         <Checkbox>Reason 1</Checkbox>
                         <Checkbox>Reason 2</Checkbox>
                         <Checkbox>Reason 3</Checkbox>
