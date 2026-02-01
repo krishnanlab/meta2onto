@@ -1,5 +1,5 @@
 import type { Limit } from "@/components/Pagination";
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { useParams, useSearchParams } from "react-router";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
@@ -13,6 +13,8 @@ import {
   Plus,
   RefreshCcw,
   SearchIcon,
+  ThumbsDown,
+  ThumbsUp,
 } from "lucide-react";
 import { studySamples, studySearch } from "@/api/api";
 import Feedback from "@/assets/feedback.svg?react";
@@ -195,6 +197,7 @@ export default function Search() {
             samples,
             submission_date,
             platform,
+            keywords,
           },
           index,
         ) => (
@@ -251,13 +254,58 @@ export default function Search() {
                 {confidence.value > feedbackThreshold && (
                   <Popover
                     content={(close) => (
-                      <>
-                        <strong>Give us feedback on this result</strong>
-                        <Checkbox>Reason 1</Checkbox>
-                        <Checkbox>Reason 2</Checkbox>
-                        <Checkbox>Reason 3</Checkbox>
-                        <Textbox placeholder="Elaborate" onSubmit={close} />
-                      </>
+                      <div
+                        className="
+                          grid max-h-100 max-w-100 grow grid-cols-2
+                          grid-rows-[auto_minmax(0,1fr)_auto] items-start gap-4
+                          *:max-h-full *:min-h-0 *:min-w-0
+                          max-md:grid-cols-1
+                        "
+                      >
+                        <div
+                          className="
+                            col-span-full flex items-center justify-between
+                            gap-4
+                          "
+                        >
+                          <strong>Give us feedback on this result</strong>
+                          <span className="text-sm text-gray-500">
+                            (Close to save changes)
+                          </span>
+                        </div>
+
+                        <div className="flex flex-col gap-2 overflow-y-auto">
+                          <Checkbox>Lorem ipsum dolor sit amet</Checkbox>
+                          <Checkbox>Consectetur adipiscing elit</Checkbox>
+                          <Checkbox>Sed do eiusmod tempor incididunt</Checkbox>
+                        </div>
+
+                        <div
+                          className="
+                            grid max-h-full grid-cols-[1fr_auto_auto]
+                            items-center gap-x-2 overflow-auto
+                            *:min-h-0 *:min-w-0
+                          "
+                        >
+                          {keywords.map((keyword, index) => (
+                            <Fragment key={index}>
+                              <span className="truncate py-1">{keyword}</span>
+                              <Button color="none">
+                                <ThumbsUp />
+                              </Button>
+                              <Button color="none">
+                                <ThumbsDown />
+                              </Button>
+                            </Fragment>
+                          ))}
+                        </div>
+
+                        <Textbox
+                          className="col-span-full"
+                          placeholder="Elaborate"
+                          onSubmit={close}
+                        />
+                      </div>
                     )}
                   >
                     <Button color="none">

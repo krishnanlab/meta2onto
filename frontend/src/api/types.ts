@@ -23,6 +23,7 @@ export type Study = {
   platform: string;
   database: string[];
   samples: number;
+  keywords: string[];
 };
 
 export type StudySearch = {

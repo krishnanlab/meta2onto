@@ -14,7 +14,7 @@ import type {
   StudySearch,
 } from "@/api/types";
 import type { ShareCart } from "@/state/cart";
-import { random, range, sample } from "lodash";
+import { random, range, sample, uniq } from "lodash";
 import { http, HttpResponse, passthrough } from "msw";
 import { api } from "@/api";
 import { sleep } from "@/util/misc";
@@ -139,6 +139,7 @@ const fakeStudies: Study[] = range(100).map(() => ({
   platform: fakePlatform(),
   database: fakeDatabase(),
   samples: random(1, 200),
+  keywords: [],
 }));
 
 const fakeSamples: Sample[] = range(100).map(() => ({
@@ -172,6 +173,7 @@ export const handlers = [
       .map((study) => ({
         ...study,
         summary: fakeHighlight(study.summary, search),
+        keywords: uniq(study.summary.split(" ")).slice(0, 10),
       }));
     return {
       count: filteredData.length,

@@ -10,7 +10,7 @@ export default function Checkbox({ value, onChange, children }: Props) {
   return (
     <label className="hover:bg-slate-100">
       <input
-        className="size-4"
+        className="size-4 shrink-0"
         type="checkbox"
         checked={value}
         onChange={(event) => onChange?.(event.currentTarget.checked)}
