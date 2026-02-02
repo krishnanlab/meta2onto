@@ -97,11 +97,40 @@ export default function Search() {
 
   const cart = useAtomValue(cartAtom);
 
+  /** new search button */
+  const [newSearch, setNewSearch] = useState(false);
+  const searchRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (newSearch) searchRef.current?.focus();
+  }, [newSearch]);
+
+  const topPanel = (
+    <div className="col-span-full flex flex-wrap items-center justify-center gap-8">
+      {newSearch ? (
+        <SearchBox className="grow" inputRef={searchRef} />
+      ) : (
+        <>
+          <div className="flex items-center gap-2 leading-normal">
+            <SearchIcon className="text-slate-400" />
+            <span>
+              Searched "<strong>{raw}</strong>" and selected "
+              <strong>{search}</strong>"
+            </span>
+          </div>
+          <Button color="none" onClick={() => setNewSearch(true)}>
+            <RefreshCcw />
+            New Search
+          </Button>
+        </>
+      )}
+    </div>
+  );
+
   const filtersPanel = (
     <div
       className="
-        flex w-auto flex-col gap-4 rounded-sm bg-slate-100 p-4
-        max-sm:w-full max-sm:flex-row max-sm:flex-wrap
+        flex flex-col gap-8
+        max-md:w-full max-md:flex-row max-md:flex-wrap
       "
     >
       {/* facets */}
@@ -109,7 +138,7 @@ export default function Search() {
         <span className="text-slate-500">Filters</span>
       )}
       {Object.entries(query.data?.facets ?? {}).map(([facet, values]) => (
-        <div key={facet} className="flex flex-col gap-2">
+        <div key={facet} className="flex flex-col gap-4">
           <strong>{facet}</strong>
           {Object.entries(values).map(([value, count]) => (
             <Checkbox
@@ -132,39 +161,14 @@ export default function Search() {
     </div>
   );
 
-  /** new search button */
-  const [newSearch, setNewSearch] = useState(false);
-  const searchRef = useRef<HTMLInputElement>(null);
-  useEffect(() => {
-    if (newSearch) searchRef.current?.focus();
-  }, [newSearch]);
-
   const resultsPanel = (
-    <div className="flex w-full grow basis-0 flex-col gap-4">
-      <div className="flex flex-wrap items-center gap-4">
-        <div className="flex items-center gap-2 leading-normal">
-          <SearchIcon />
-          <span>
-            Searched <strong>{raw}</strong> and selected{" "}
-            <strong>{search}</strong>
-          </span>
-        </div>
-        {newSearch ? (
-          <SearchBox className="grow" inputRef={searchRef} />
-        ) : (
-          <Button color="none" onClick={() => setNewSearch(true)}>
-            <RefreshCcw />
-            New Search
-          </Button>
-        )}
-      </div>
-
+    <div className="flex flex-col gap-8">
       {/* query status */}
       <Status query={query} />
 
       {/* overview */}
       {query.data?.results && (
-        <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <strong>{formatNumber(query.data?.count)}</strong> results
           </div>
@@ -203,9 +207,7 @@ export default function Search() {
         ) => (
           <div
             key={index}
-            className="
-              flex flex-col gap-4 rounded-sm border border-slate-300 p-4
-            "
+            className="flex flex-col gap-6 rounded-sm p-6 shadow-md"
           >
             {/* top row */}
             <div className="flex items-start justify-between gap-2 leading-normal">
@@ -214,7 +216,7 @@ export default function Search() {
             </div>
 
             {/* details */}
-            <div className="flex flex-wrap gap-x-6 gap-y-2">
+            <div className="flex flex-wrap gap-x-8 gap-y-4">
               {(
                 [
                   [Hash, gse],
@@ -258,7 +260,7 @@ export default function Search() {
                         className="
                           grid max-h-100 max-w-100 grow grid-cols-2
                           grid-rows-[auto_minmax(0,1fr)_auto] items-start gap-4
-                          *:max-h-full *:min-h-0 *:min-w-0
+                          *:max-h-full
                           max-md:grid-cols-1
                         "
                       >
@@ -269,7 +271,7 @@ export default function Search() {
                           "
                         >
                           <strong>Give us feedback on this result</strong>
-                          <span className="text-sm text-gray-500">
+                          <span className="text-sm text-slate-500">
                             (Close to save changes)
                           </span>
                         </div>
@@ -284,7 +286,6 @@ export default function Search() {
                           className="
                             grid max-h-full grid-cols-[1fr_auto_auto]
                             items-center gap-x-2 overflow-auto
-                            *:min-h-0 *:min-w-0
                           "
                         >
                           {keywords.map((keyword, index) => (
@@ -301,7 +302,8 @@ export default function Search() {
                         </div>
 
                         <Textbox
-                          className="col-span-full"
+                          multi
+                          className="col-span-full resize-none"
                           placeholder="Elaborate"
                           onSubmit={close}
                         />
@@ -388,10 +390,11 @@ export default function Search() {
       <section>
         <div
           className="
-            flex items-start gap-4
-            max-sm:flex-col
+            grid grid-cols-[auto_1fr] gap-12
+            max-md:grid-cols-1
           "
         >
+          {topPanel}
           {filtersPanel}
           {resultsPanel}
         </div>

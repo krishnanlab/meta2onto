@@ -159,16 +159,16 @@ export default function Cart() {
       ) : (
         <>
           <section>
-            <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex flex-wrap items-center justify-between gap-8">
               {/* cart details */}
-              <div className="flex flex-wrap gap-4">
+              <div className="flex flex-wrap gap-8">
                 <span className="font-medium">
                   {size ? formatNumber(size) : 0} items
                 </span>
               </div>
 
               {/* cart actions */}
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-4">
                 {!shared && <Clear size={size} />}
 
                 {!shared && (
@@ -195,14 +195,14 @@ export default function Cart() {
 
                         {shareUrl && (
                           <>
-                            <div className="flex flex-col gap-2">
+                            <div className="flex flex-col gap-4">
                               <p>Cart saved to:</p>
                               <Textbox
                                 readOnly
                                 value={String(shareUrl)}
                                 onFocus={(event) => event.target.select()}
                               />
-                              <div className="flex flex-wrap items-center gap-2">
+                              <div className="flex flex-wrap items-center gap-4">
                                 <ActionButton
                                   onClick={() => copy(String(shareUrl))}
                                 >
@@ -222,7 +222,7 @@ export default function Cart() {
                                 </Button>
                               </div>
                             </div>
-                            <div className="flex flex-col gap-2">
+                            <div className="flex flex-col gap-4">
                               <p>Start fresh cart:</p>
                               <Clear size={size} />
                             </div>
@@ -295,9 +295,9 @@ export default function Cart() {
           {/* cart contents */}
           <section>
             {!size && (
-              <div className="flex flex-col items-center gap-4">
+              <div className="flex flex-col items-center gap-8">
                 <div>No studies yet</div>
-                <Button to="/search">
+                <Button to="/">
                   <Plus />
                   Search
                 </Button>
@@ -386,7 +386,7 @@ export default function Cart() {
 
             <div
               className={clsx(
-                "grid max-w-max gap-4 self-center",
+                "grid max-w-max gap-8 self-center",
                 createdCarts.length === 1
                   ? "grid-cols-1"
                   : createdCarts.length === 2
@@ -406,8 +406,7 @@ export default function Cart() {
                   key={index}
                   to={`/cart/${id}`}
                   className="
-                    flex flex-col items-start gap-2 rounded-sm border
-                    border-slate-300 p-2
+                    flex flex-col items-start gap-4 rounded-sm p-4 shadow-md
                   "
                 >
                   <strong>{name || id}</strong>
@@ -415,6 +414,8 @@ export default function Cart() {
                 </Link>
               ))}
             </div>
+
+            <br />
 
             {!!createdCarts.length && (
               <Button
@@ -480,7 +481,9 @@ const DownloadScript = ({
           onChange={setDatabase}
         />
 
-        <div className="flex flex-col gap-2">
+        <br />
+
+        <div className="flex flex-col gap-4">
           <span>
             <strong>Bash script</strong> to download cart directly from database
           </span>
@@ -490,7 +493,7 @@ const DownloadScript = ({
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-4">
         <Button onClick={() => downloadSh(script, name || "cart")}>
           <Download />
           Download

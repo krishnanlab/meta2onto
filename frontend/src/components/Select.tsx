@@ -23,7 +23,7 @@ export default function Select<O extends Option>({
 }: Props<O>) {
   return (
     <select
-      className="rounded-sm border border-slate-300 px-2 py-1"
+      className="rounded-sm px-2 py-1 shadow-md"
       value={value}
       onChange={(event) => onChange?.(event.currentTarget.value)}
       {...props}

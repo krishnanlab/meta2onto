@@ -1,16 +1,38 @@
 import type { ComponentPropsWithRef } from "react";
 import clsx from "clsx";
 
-type Props = {
-  onChange?: (value: string) => void;
+type Multi = {
+  multi: true;
+} & Omit<ComponentPropsWithRef<"textarea">, "onChange">;
+
+type Single = {
+  multi?: false;
 } & Omit<ComponentPropsWithRef<"input">, "onChange">;
 
-export default function Textbox({ className, onChange, ...props }: Props) {
-  return (
-    <input
-      className={clsx(`rounded-sm border border-slate-300 p-2`, className)}
+type Base = {
+  onChange?: (value: string) => void;
+};
+
+type Props = Base & (Multi | Single);
+
+export default function Textbox({
+  multi = false,
+  className,
+  onChange,
+  ...props
+}: Props) {
+  const _class = clsx("rounded-sm bg-white p-2 shadow-md", className);
+  return multi ? (
+    <textarea
+      className={clsx("min-h-[calc(5lh+--spacing(4))]", _class)}
       onChange={(event) => onChange?.(event.currentTarget.value)}
-      {...props}
+      {...(props as ComponentPropsWithRef<"textarea">)}
+    />
+  ) : (
+    <input
+      className={_class}
+      onChange={(event) => onChange?.(event.currentTarget.value)}
+      {...(props as ComponentPropsWithRef<"input">)}
     />
   );
 }

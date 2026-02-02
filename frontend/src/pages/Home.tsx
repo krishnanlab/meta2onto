@@ -49,7 +49,7 @@ export default function Home() {
         <Rings
           className="
             absolute top-1/2 left-1/2 -z-10 w-full max-w-200 -translate-1/2
-            text-[hsl(220,50%,50%,0.25)]
+            text-indigo-300
           "
         />
 
@@ -184,7 +184,7 @@ export const SearchBox = ({
       status={
         showStatus({ query }) && <Status query={query} className="contents!" />
       }
-      className={clsx("bg-white", className)}
+      className={className}
     />
   );
 };

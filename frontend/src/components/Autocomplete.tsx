@@ -55,7 +55,7 @@ export default function Autocomplete({
             <input
               ref={inputRef}
               placeholder={placeholder}
-              className="w-full rounded-sm border border-slate-300 p-2 pr-8"
+              className="w-full rounded-sm bg-white p-2 pr-8 shadow-md"
             />
           }
         />

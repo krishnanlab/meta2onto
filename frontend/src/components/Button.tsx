@@ -34,7 +34,7 @@ export default function Button({
     className,
     `
       flex items-center justify-center gap-2 rounded-sm p-2
-      hover:bg-slate-500 hover:text-white
+      hover:bg-slate-800 hover:text-white
     `,
     color === "none" && "bg-transparent text-theme",
     color === "theme" && "bg-theme text-white",

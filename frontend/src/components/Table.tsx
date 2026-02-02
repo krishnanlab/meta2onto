@@ -136,13 +136,9 @@ export default function Table<Datum extends object>({
         >
           <thead>
             {table.getHeaderGroups().map((headerGroup) => (
-              <tr key={headerGroup.id}>
+              <tr key={headerGroup.id} className="bg-slate-100">
                 {headerGroup.headers.map((header, index) => (
-                  <th
-                    key={header.id}
-                    className="bg-slate-50"
-                    aria-colindex={index + 1}
-                  >
+                  <th key={header.id} aria-colindex={index + 1}>
                     {header.isPlaceholder ? null : (
                       <div className="flex items-center gap-2 p-2">
                         {/* header label */}
@@ -183,6 +179,10 @@ export default function Table<Datum extends object>({
               table.getRowModel().rows.map((row, index) => (
                 <tr
                   key={row.id}
+                  className="
+                    odd:bg-white
+                    even:bg-slate-50
+                  "
                   aria-rowindex={
                     table.getState().pagination.pageIndex *
                       table.getState().pagination.pageSize +
@@ -191,7 +191,7 @@ export default function Table<Datum extends object>({
                   }
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <td key={cell.id} className="border-b border-slate-100">
+                    <td key={cell.id}>
                       <div className="flex flex-wrap items-center gap-2 p-2">
                         {flexRender(
                           cell.column.columnDef.cell,

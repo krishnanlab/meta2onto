@@ -24,6 +24,7 @@ export default function Popover({ children, content }: Props) {
           side="top"
           sideOffset={offset}
           collisionPadding={padding}
+          className="z-20"
         >
           <_Popover.Popup
             className="
