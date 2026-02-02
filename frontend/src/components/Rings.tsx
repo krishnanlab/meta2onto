@@ -1,23 +1,24 @@
-import type { ComponentProps, CSSProperties } from "react";
+import type { CSSProperties } from "react";
+import { clsx } from "clsx";
 import { range } from "lodash";
-import { lerp, tau } from "@/util/math";
+import { tau } from "@/util/math";
 import classes from "./Rings.module.css";
 
 /** params */
-const bounds = 50;
-const size = 48;
+const bounds = 500;
+const size = 400;
 const sides = 6;
-const layers = 12;
-const thickness = 0.33;
-const spacing = 3;
+const layers = 6;
+const spacing = 20;
 
-/** arc segments */
-const segments = range(layers)
-  .map((layer) =>
-    range(sides).map((side) => {
-      /** layer radius */
-      const radius = size - layer * spacing;
+const rings = range(layers).map((layer) => {
+  /** layer radius */
+  const radius = size - layer * spacing;
 
+  return {
+    layer,
+    radius,
+    segments: range(sides).map((side) => {
       /** start/end angles */
       let startAngle = tau * (side / sides);
       let endAngle = tau * ((side + 1) / sides);
@@ -36,37 +37,42 @@ const segments = range(layers)
         y: radius * -Math.sin(-endAngle),
       };
 
-      return { layer, side, radius, start, end };
+      return { side, start, end };
     }),
-  )
-  .flat();
+  };
+});
 
-type Props = ComponentProps<"svg">;
-
-export default function Ring(props: Props) {
-  return (
+export default function Ring() {
+  return rings.map(({ layer, radius, segments }, index) => (
     <svg
+      key={index}
       viewBox={[-bounds, -bounds, 2 * bounds, 2 * bounds].join(" ")}
       fill="none"
       stroke="currentColor"
-      strokeWidth={thickness}
       strokeLinecap="round"
       strokeLinejoin="round"
-      {...props}
+      className={clsx(
+        `
+          absolute top-1/2 left-1/2 size-full -translate-1/2 scale-275
+          text-theme
+        `,
+        classes.svg,
+      )}
+      style={
+        {
+          "--layer": layers - layer,
+          "--layers": layers,
+          "--radius": radius,
+        } as CSSProperties
+      }
     >
-      {segments.map(({ layer, radius, start, end }, index) => (
+      {segments.map(({ start, end }, index) => (
         <path
           key={index}
-          className={classes.ring}
-          style={
-            {
-              "--percent": layer / layers,
-              "--duration": `${lerp((layer + 1) / (layers + 1), 1, 0, 20, 60)}s`,
-            } as CSSProperties
-          }
+          className={classes.path}
           d={`M ${start.x} ${start.y} A ${radius} ${radius} 0 0 1 ${end.x} ${end.y}`}
         />
       ))}
     </svg>
-  );
+  ));
 }

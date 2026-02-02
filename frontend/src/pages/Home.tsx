@@ -46,12 +46,7 @@ export default function Home() {
           relative z-0 overflow-hidden bg-theme-light py-20! text-center narrow
         "
       >
-        <Rings
-          className="
-            absolute top-1/2 left-1/2 -z-10 w-full max-w-200 -translate-1/2
-            text-indigo-300
-          "
-        />
+        <Rings />
 
         <hgroup className="flex flex-col items-center gap-y-1 narrow">
           <h1 className="sr-only">Home</h1>
@@ -157,7 +152,7 @@ export const SearchBox = ({
               {type && (
                 <span
                   className={clsx(
-                    "rounded px-1 py-0.5 text-sm  text-white",
+                    "rounded px-1 text-sm  text-white",
                     typeColor[type] ?? typeColor["default"],
                   )}
                 >

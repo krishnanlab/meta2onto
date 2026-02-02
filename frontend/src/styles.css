@@ -13,8 +13,8 @@
   --font-weight-medium: 500;
   --font-weight-bold: 600;
 
-  --color-theme-light: oklch(95% 0.1 280);
-  --color-theme: oklch(50% 0.1 270);
+  --color-theme-light: oklch(95% 0.05 260);
+  --color-theme: oklch(50% 0.1 260);
   --color-theme-dark: oklch(40% 0.1 260);
   --color-accent: oklch(65% 0.2 20);
 
