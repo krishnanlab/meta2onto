@@ -1,7 +1,9 @@
-import type { ComponentProps } from "react";
+import type { ComponentProps, ReactNode } from "react";
 import { startCase } from "lodash";
 
 type Props<O extends Option> = {
+  /** label */
+  label: ReactNode;
   /** pass with "as const" */
   options: readonly O[];
   /** selected option state */
@@ -16,23 +18,27 @@ export type Option<Value = string> = {
 };
 
 export default function Select<O extends Option>({
+  label,
   value,
   onChange,
   options,
   ...props
 }: Props<O>) {
   return (
-    <select
-      className="rounded-sm px-2 py-1 shadow-md"
-      value={value}
-      onChange={(event) => onChange?.(event.currentTarget.value)}
-      {...props}
-    >
-      {options.map((option) => (
-        <option key={option.value} value={option.value}>
-          {option.name ?? startCase(option.value)}
-        </option>
-      ))}
-    </select>
+    <label>
+      {label}
+      <select
+        className="rounded-sm px-2 py-1 shadow-md"
+        value={value}
+        onChange={(event) => onChange?.(event.currentTarget.value)}
+        {...props}
+      >
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.name ?? startCase(option.value)}
+          </option>
+        ))}
+      </select>
+    </label>
   );
 }

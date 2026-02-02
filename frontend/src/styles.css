@@ -17,6 +17,7 @@
   --color-theme: oklch(50% 0.1 260);
   --color-theme-dark: oklch(40% 0.1 260);
   --color-accent: oklch(65% 0.2 20);
+  --color-highlight: oklch(80% 0.2 160);
 
   --shadow-md: 0 0 2px #00000020, 0 2px 10px #00000020;
   --shadow-thick: 0 0 5px #00000020, 0 2px 10px #00000020;

@@ -29,6 +29,7 @@ import Meter from "@/components/Meter";
 import Pagination from "@/components/Pagination";
 import Popover from "@/components/Popover";
 import Select from "@/components/Select";
+import Slider from "@/components/Slider";
 import Status from "@/components/Status";
 import Textbox from "@/components/Textbox";
 import { SearchBox } from "@/pages/Home";
@@ -137,27 +138,63 @@ export default function Search() {
       {isEmpty(query.data?.facets) && (
         <span className="text-slate-500">Filters</span>
       )}
-      {Object.entries(query.data?.facets ?? {}).map(([facet, values]) => (
-        <div key={facet} className="flex flex-col gap-4">
-          <strong>{facet}</strong>
-          {Object.entries(values).map(([value, count]) => (
-            <Checkbox
-              key={value}
-              value={params.getAll(facet).includes(value)}
-              onChange={(checked) => {
-                setParams((params) => {
-                  if (checked) {
-                    if (!params.has(facet, value)) params.append(facet, value);
-                  } else params.delete(facet, value);
-                  return params;
-                });
-              }}
-            >
-              {value} ({count})
-            </Checkbox>
-          ))}
-        </div>
-      ))}
+      {Object.entries(query.data?.facets ?? {}).map(
+        ([facetKey, facetValues]) => (
+          <div key={facetKey} className="flex flex-col gap-2">
+            <strong className="leading-normal">{facetKey}</strong>
+
+            {typeof facetValues.label === "string" &&
+            typeof facetValues.min === "number" &&
+            typeof facetValues.max === "number" ? (
+              /** range facet */
+              <Slider
+                label={(values) => (
+                  <>
+                    {values.join(" – ")} {facetValues.label}
+                  </>
+                )}
+                thumbLabel={[`${facetKey} minimum`, `${facetKey} maximum`]}
+                value={[
+                  Number(params.get(`${facetKey}-min`)) || facetValues.min,
+                  Number(params.get(`${facetKey}-max`)) || facetValues.max,
+                ]}
+                onChange={(values) =>
+                  setParams((params) => {
+                    const [min = facetValues.min, max = facetValues.max] =
+                      values;
+                    params.set(`${facetKey}-min`, String(min));
+                    params.set(`${facetKey}-max`, String(max));
+                    return params;
+                  })
+                }
+                min={facetValues.min}
+                max={facetValues.max}
+                step={facetValues.max - facetValues.min > 1 ? 1 : 0.01}
+              />
+            ) : (
+              /** boolean facet */
+              Object.entries(facetValues).map(([facetValue, facetCount]) => (
+                <Checkbox
+                  key={facetValue}
+                  /** sync facet with url */
+                  value={params.getAll(facetKey).includes(facetValue)}
+                  onChange={(checked) => {
+                    setParams((params) => {
+                      if (checked) {
+                        if (!params.has(facetKey, facetValue))
+                          params.append(facetKey, facetValue);
+                      } else params.delete(facetKey, facetValue);
+                      return params;
+                    });
+                  }}
+                >
+                  {facetValue} ({facetCount})
+                </Checkbox>
+              ))
+            )}
+          </div>
+        ),
+      )}
     </div>
   );
 
@@ -173,19 +210,17 @@ export default function Search() {
             <strong>{formatNumber(query.data?.count)}</strong> results
           </div>
 
-          <label>
-            Sort
-            <Select
-              options={orderingOptions}
-              value={ordering}
-              onChange={(checked) =>
-                setParams((params) => {
-                  params.set("ordering", checked);
-                  return params;
-                })
-              }
-            />
-          </label>
+          <Select
+            label="Sort"
+            options={orderingOptions}
+            value={ordering}
+            onChange={(checked) =>
+              setParams((params) => {
+                params.set("ordering", checked);
+                return params;
+              })
+            }
+          />
         </div>
       )}
 
@@ -276,7 +311,7 @@ export default function Search() {
                           </span>
                         </div>
 
-                        <div className="flex flex-col gap-2 overflow-y-auto">
+                        <div className="flex flex-col overflow-y-auto">
                           <Checkbox>Lorem ipsum dolor sit amet</Checkbox>
                           <Checkbox>Consectetur adipiscing elit</Checkbox>
                           <Checkbox>Sed do eiusmod tempor incididunt</Checkbox>

@@ -101,17 +101,15 @@ export default function Pagination({
       {/* filters */}
       <div>
         {/* per page */}
-        <label>
-          Per page
-          <Select
-            value={
-              limitOptions.find((option) => option.value === limit)?.value ??
-              limitOptions[1].value
-            }
-            options={limitOptions}
-            onChange={(value) => setLimit(value)}
-          />
-        </label>
+        <Select
+          label="Per page"
+          value={
+            limitOptions.find((option) => option.value === limit)?.value ??
+            limitOptions[1].value
+          }
+          options={limitOptions}
+          onChange={(value) => setLimit(value)}
+        />
       </div>
     </div>
   );

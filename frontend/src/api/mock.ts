@@ -97,14 +97,14 @@ const fakeFacets = () => ({
     Microarray: random(0, 200),
   },
   "Study Size": {
-    "< 10 samples": random(0, 200),
-    "10-50 samples": random(0, 200),
-    "> 50 samples": random(0, 200),
+    label: "samples",
+    min: 0,
+    max: random(100, 1000),
   },
   Confidence: {
-    High: random(0, 200),
-    Medium: random(0, 200),
-    Low: random(0, 200),
+    label: "%",
+    min: 0,
+    max: 100,
   },
 });
 

@@ -31,7 +31,7 @@ export type StudySearch = {
   results: Study[];
   facets: {
     [facet: string]: {
-      [value: string]: number;
+      [value: string]: number | string;
     };
   };
 };

@@ -8,7 +8,12 @@ type Props = {
 
 export default function Checkbox({ value, onChange, children }: Props) {
   return (
-    <label className="hover:bg-slate-100">
+    <label
+      className="
+        p-1
+        hover:bg-slate-100
+      "
+    >
       <input
         className="size-4 shrink-0"
         type="checkbox"
