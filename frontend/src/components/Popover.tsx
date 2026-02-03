@@ -29,7 +29,7 @@ export default function Popover({ children, content }: Props) {
           <_Popover.Popup
             className="
               flex max-h-(--available-height) max-w-(--available-width) flex-col
-              gap-2 rounded-sm bg-white p-4 leading-normal shadow-overlay
+              gap-2 rounded-sm bg-white p-4 shadow-overlay
             "
           >
             <_Popover.Arrow

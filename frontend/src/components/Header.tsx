@@ -78,7 +78,6 @@ export default function Header() {
         className={clsx(
           `
             flex flex-wrap items-center justify-center gap-4 text-xl
-            leading-none
             max-xs:flex-col
           `,
           !open && "max-sm:hidden",

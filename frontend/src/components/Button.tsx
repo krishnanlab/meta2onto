@@ -33,7 +33,7 @@ export default function Button({
   const _class = clsx(
     className,
     `
-      flex items-center justify-center gap-2 rounded-sm p-2
+      flex items-center justify-center gap-2 rounded-sm p-2 leading-none
       hover:bg-slate-800 hover:text-white
     `,
     color === "none" && "bg-transparent text-theme",

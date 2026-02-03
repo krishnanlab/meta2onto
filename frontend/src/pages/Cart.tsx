@@ -469,9 +469,9 @@ const DownloadScript = ({
         <BigRadios
           className="w-200 max-w-full"
           label={
-            <div className="leading-normal">
+            <>
               <strong>Database</strong> to download from
-            </div>
+            </>
           }
           options={databases.map(({ id }) => ({
             value: id,
@@ -484,7 +484,7 @@ const DownloadScript = ({
         <br />
 
         <div className="flex flex-col gap-4">
-          <div className="leading-normal">
+          <div>
             <strong>Bash script</strong> to download cart directly from database
           </div>
           <code>

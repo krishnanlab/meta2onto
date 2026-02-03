@@ -125,7 +125,7 @@ export default function Search() {
       "
     >
       {/* overview */}
-      <div className="flex flex-col gap-2 leading-normal">
+      <div className="flex flex-col gap-2">
         <div>
           Searched "<strong>{raw}</strong>"
         </div>
@@ -157,7 +157,7 @@ export default function Search() {
       {Object.entries(query.data?.facets ?? {}).map(
         ([facetKey, facetValues]) => (
           <div key={facetKey} className="flex flex-col gap-2">
-            <strong className="leading-normal">{facetKey}</strong>
+            <strong>{facetKey}</strong>
 
             {typeof facetValues.label === "string" &&
             typeof facetValues.min === "number" &&
@@ -242,10 +242,10 @@ export default function Search() {
         ) => (
           <div
             key={index}
-            className="flex flex-col gap-6 rounded-sm p-6 shadow-md"
+            className="flex flex-col gap-4 rounded-sm p-6 shadow-md"
           >
             {/* top row */}
-            <div className="flex items-start justify-between gap-8 leading-normal">
+            <div className="flex items-start justify-between gap-8">
               <strong>{title}</strong>
               <Meter value={confidence.value}>{confidence.name}</Meter>
             </div>

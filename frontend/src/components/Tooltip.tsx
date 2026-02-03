@@ -24,7 +24,7 @@ export default function Tooltip({ children, content }: Props) {
             <_Tooltip.Popup
               className="
                 flex w-50 max-w-max flex-col gap-2 rounded-sm bg-slate-900 p-4
-                leading-normal text-white
+                text-white
               "
             >
               <_Tooltip.Arrow
