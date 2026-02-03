@@ -12,7 +12,6 @@ import {
   Logs,
   Plus,
   RefreshCcw,
-  SearchIcon,
   ThumbsDown,
   ThumbsUp,
 } from "lucide-react";
@@ -109,25 +108,12 @@ export default function Search() {
     if (newSearch) searchRef.current?.focus();
   }, [newSearch]);
 
-  const topPanel = (
+  /** reset when search changes */
+  useEffect(() => setNewSearch(false), [search]);
+
+  const topPanel = newSearch && (
     <div className="col-span-full flex flex-wrap items-center justify-center gap-8">
-      {newSearch ? (
-        <SearchBox className="grow" inputRef={searchRef} />
-      ) : (
-        <>
-          <div className="flex items-center gap-2 leading-normal">
-            <SearchIcon className="text-slate-400" />
-            <span>
-              Searched "<strong>{raw}</strong>" and selected "
-              <strong>{search}</strong>"
-            </span>
-          </div>
-          <Button color="none" onClick={() => setNewSearch(true)}>
-            <RefreshCcw />
-            New Search
-          </Button>
-        </>
-      )}
+      <SearchBox className="grow" inputRef={searchRef} />
     </div>
   );
 
@@ -138,7 +124,33 @@ export default function Search() {
         max-md:w-full max-md:flex-row max-md:flex-wrap
       "
     >
-      {/* facets */}
+      {/* overview */}
+      <div className="flex flex-col gap-2 leading-normal">
+        <div>
+          Searched "<strong>{raw}</strong>"
+        </div>
+        <div>
+          Selected "<strong>{search}</strong>"
+        </div>
+        <div>
+          <strong>
+            {query.data?.count ? formatNumber(query.data.count) : "-"}
+          </strong>{" "}
+          results
+        </div>
+      </div>
+
+      {/* sort */}
+      <Select
+        label={<strong>Sort</strong>}
+        options={orderingOptions}
+        value={ordering}
+        onChange={(checked) =>
+          setParams((params) => params.set("ordering", checked))
+        }
+      />
+
+      {/* facet filter */}
       {isEmpty(query.data?.facets) && (
         <span className="text-slate-500">Filters</span>
       )}
@@ -197,6 +209,13 @@ export default function Search() {
           </div>
         ),
       )}
+
+      {!newSearch && (
+        <Button onClick={() => setNewSearch(true)}>
+          <RefreshCcw />
+          New Search
+        </Button>
+      )}
     </div>
   );
 
@@ -204,24 +223,6 @@ export default function Search() {
     <div className="flex flex-col gap-8">
       {/* query status */}
       <Status query={query} />
-
-      {/* overview */}
-      {query.data?.results && (
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <strong>{formatNumber(query.data?.count)}</strong> results
-          </div>
-
-          <Select
-            label="Sort"
-            options={orderingOptions}
-            value={ordering}
-            onChange={(checked) =>
-              setParams((params) => params.set("ordering", checked))
-            }
-          />
-        </div>
-      )}
 
       {/* results */}
       {query.data?.results.map(
@@ -244,7 +245,7 @@ export default function Search() {
             className="flex flex-col gap-6 rounded-sm p-6 shadow-md"
           >
             {/* top row */}
-            <div className="flex items-start justify-between gap-2 leading-normal">
+            <div className="flex items-start justify-between gap-8 leading-normal">
               <strong>{title}</strong>
               <Meter value={confidence.value}>{confidence.name}</Meter>
             </div>
@@ -276,16 +277,16 @@ export default function Search() {
             />
 
             {/* bottom row */}
-            <div className="flex flex-wrap items-end justify-between gap-2">
+            <div className="flex flex-wrap items-end justify-between gap-4">
               {/* databases */}
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-4">
                 {database.map((database, index) => (
                   <Database key={index} database={database} />
                 ))}
               </div>
 
               {/* action buttons */}
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-4">
                 {/* feedback */}
                 {confidence.value > feedbackThreshold && (
                   <Popover

@@ -28,7 +28,7 @@ export default function Select<O extends Option>({
     <label>
       {label}
       <select
-        className="rounded-sm px-2 py-1 shadow-md"
+        className="grow rounded-sm px-2 py-1 shadow-md"
         value={value}
         onChange={(event) => onChange?.(event.currentTarget.value)}
         {...props}
