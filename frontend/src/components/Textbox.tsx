@@ -21,7 +21,10 @@ export default function Textbox({
   onChange,
   ...props
 }: Props) {
-  const _class = clsx("rounded-sm bg-white p-2 shadow-md", className);
+  const _class = clsx(
+    "rounded-sm border border-current/25 bg-white p-2",
+    className,
+  );
   return multi ? (
     <textarea
       className={clsx("min-h-[calc(5lh+--spacing(4))]", _class)}

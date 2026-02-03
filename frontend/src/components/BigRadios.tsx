@@ -49,7 +49,7 @@ export default function BigRadios<O extends Option>({
             key={index}
             className="
               relative flex min-w-50 flex-1 cursor-pointer flex-col items-start!
-              gap-4 rounded-sm p-4 shadow-md transition-colors
+              gap-4 rounded-sm border border-current/25 p-4 transition-colors
               hover:bg-slate-100
             "
           >
