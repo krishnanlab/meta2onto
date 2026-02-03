@@ -1,6 +1,6 @@
 import type { Limit } from "@/components/Pagination";
 import { Fragment, useEffect, useRef, useState } from "react";
-import { useParams, useSearchParams } from "react-router";
+import { useParams } from "react-router";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
 import { isEmpty } from "lodash";
@@ -35,6 +35,7 @@ import Textbox from "@/components/Textbox";
 import { SearchBox } from "@/pages/Home";
 import { addToCart, cartAtom, inCart, removeFromCart } from "@/state/cart";
 import { fly } from "@/util/dom";
+import { useDebouncedParams } from "@/util/hooks";
 import { formatDate, formatNumber } from "@/util/string";
 
 /** don't show feedback if confidence below this */
@@ -46,7 +47,7 @@ const limitOptions = [
   { value: "10" },
   { value: "20" },
   { value: "50" },
-  { value: "100" },
+  { value: "50" },
 ] as const;
 
 /** sort select options */
@@ -60,7 +61,7 @@ export default function Search() {
   const { search = "" } = useParams<{ search: string }>();
 
   /** url search params state */
-  const [params, setParams] = useSearchParams();
+  const [params, setParams, debouncedParams] = useDebouncedParams();
   const raw = params.get("raw") ?? "";
 
   /** ordering state from url params */
@@ -78,7 +79,10 @@ export default function Search() {
 
   /** selected facets state from url params */
   const facets = Object.fromEntries(
-    [...params.keys()].map((key) => [key, params.getAll(key)]),
+    [...debouncedParams.keys()].map((key) => [
+      key,
+      debouncedParams.getAll(key),
+    ]),
   );
   /** exclude param keywords */
   delete facets.ordering;
@@ -130,7 +134,7 @@ export default function Search() {
   const filtersPanel = (
     <div
       className="
-        flex flex-col gap-8
+        flex w-50 flex-col gap-8
         max-md:w-full max-md:flex-row max-md:flex-wrap
       "
     >
@@ -154,17 +158,16 @@ export default function Search() {
                   </>
                 )}
                 thumbLabel={[`${facetKey} minimum`, `${facetKey} maximum`]}
-                value={[
-                  Number(params.get(`${facetKey}-min`)) || facetValues.min,
-                  Number(params.get(`${facetKey}-max`)) || facetValues.max,
-                ]}
+                value={(() => {
+                  const [min = facetValues.min, max = facetValues.max] =
+                    params.get(facetKey)?.split("-").map(Number) ?? [];
+                  return [min, max];
+                })()}
                 onChange={(values) =>
                   setParams((params) => {
                     const [min = facetValues.min, max = facetValues.max] =
                       values;
-                    params.set(`${facetKey}-min`, String(min));
-                    params.set(`${facetKey}-max`, String(max));
-                    return params;
+                    params.set(facetKey, `${min}-${max}`);
                   })
                 }
                 min={facetValues.min}
@@ -184,7 +187,6 @@ export default function Search() {
                         if (!params.has(facetKey, facetValue))
                           params.append(facetKey, facetValue);
                       } else params.delete(facetKey, facetValue);
-                      return params;
                     });
                   }}
                 >
@@ -215,10 +217,7 @@ export default function Search() {
             options={orderingOptions}
             value={ordering}
             onChange={(checked) =>
-              setParams((params) => {
-                params.set("ordering", checked);
-                return params;
-              })
+              setParams((params) => params.set("ordering", checked))
             }
           />
         </div>
@@ -293,7 +292,7 @@ export default function Search() {
                     content={(close) => (
                       <div
                         className="
-                          grid max-h-100 max-w-100 grow grid-cols-2
+                          grid max-h-50 max-w-50 grow grid-cols-2
                           grid-rows-[auto_minmax(0,1fr)_auto] items-start gap-4
                           *:max-h-full
                           max-md:grid-cols-1
@@ -398,18 +397,10 @@ export default function Search() {
         count={query.data?.count ?? 0}
         offset={offset}
         setOffset={(page) =>
-          setParams((params) => {
-            params.set("offset", String(page));
-            return params;
-          })
+          setParams((params) => params.set("offset", String(page)))
         }
         limit={limit}
-        setLimit={(limit) =>
-          setParams((params) => {
-            params.set("limit", limit);
-            return params;
-          })
-        }
+        setLimit={(limit) => setParams((params) => params.set("limit", limit))}
       />
     </div>
   );

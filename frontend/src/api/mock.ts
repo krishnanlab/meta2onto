@@ -99,7 +99,7 @@ const fakeFacets = () => ({
   "Study Size": {
     label: "samples",
     min: 0,
-    max: random(100, 1000),
+    max: 666,
   },
   Confidence: {
     label: "%",

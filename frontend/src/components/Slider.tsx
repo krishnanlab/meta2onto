@@ -7,7 +7,8 @@ import { clamp, isEqual, range } from "lodash";
 
 type Props = {
   value: number[];
-  onChange: (values: number[]) => void;
+  onInput?: (values: number[]) => void;
+  onChange?: (values: number[]) => void;
   label: (values: readonly number[]) => ReactNode;
   thumbLabel: string[];
   className?: string;
@@ -15,6 +16,7 @@ type Props = {
 
 export default function Slider({
   value,
+  onInput,
   onChange,
   min = 0,
   max = 100,
@@ -34,8 +36,12 @@ export default function Slider({
   return (
     <_Slider.Root
       value={values}
-      onValueChange={(values) => setValues([values].flat())}
-      onValueCommitted={(values) => onChange([values].flat())}
+      onValueChange={(values) => {
+        const _values = [values].flat();
+        setValues(_values);
+        onInput?.(_values);
+      }}
+      onValueCommitted={(values) => onChange?.([values].flat())}
       min={min}
       max={max}
       step={step}

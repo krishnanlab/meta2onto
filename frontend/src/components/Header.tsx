@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useElementSize, useWindowScroll } from "@reactuses/core";
+import { useElementSize } from "@reactuses/core";
 import clsx from "clsx";
 import { useAtomValue } from "jotai";
 import { Menu, ShoppingCart, X } from "lucide-react";
@@ -20,7 +20,6 @@ export default function Header() {
   /** cart state */
   const cart = useAtomValue(cartAtom);
 
-  const { y } = useWindowScroll();
   /** nav menu expanded/collapsed state */
   const [open, setOpen] = useState(false);
 
@@ -37,13 +36,10 @@ export default function Header() {
   return (
     <header
       ref={ref}
-      className={clsx(
-        `
-          sticky top-0 z-10 flex flex-row flex-wrap items-center justify-between
-          bg-theme-dark text-white
-        `,
-        y > 0 ? "gap-2 p-2" : "gap-4 p-4",
-      )}
+      className="
+        sticky top-0 z-10 flex flex-row flex-wrap items-center justify-between
+        gap-4 bg-theme-dark p-4 text-white
+      "
     >
       {/* title */}
       <a
