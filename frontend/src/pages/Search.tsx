@@ -292,7 +292,7 @@ export default function Search() {
                     content={(close) => (
                       <div
                         className="
-                          grid max-h-50 max-w-50 grow grid-cols-2
+                          grid max-h-100 max-w-100 grow grid-cols-2
                           grid-rows-[auto_minmax(0,1fr)_auto] items-start gap-4
                           *:max-h-full
                           max-md:grid-cols-1
@@ -310,7 +310,7 @@ export default function Search() {
                           </span>
                         </div>
 
-                        <div className="flex flex-col overflow-y-auto">
+                        <div className="flex flex-col gap-2 overflow-y-auto">
                           <Checkbox>Lorem ipsum dolor sit amet</Checkbox>
                           <Checkbox>Consectetur adipiscing elit</Checkbox>
                           <Checkbox>Sed do eiusmod tempor incididunt</Checkbox>
@@ -319,7 +319,7 @@ export default function Search() {
                         <div
                           className="
                             grid max-h-full grid-cols-[1fr_auto_auto]
-                            items-center gap-x-2 overflow-auto
+                            items-center gap-2 overflow-auto
                           "
                         >
                           {keywords.map((keyword, index) => (
