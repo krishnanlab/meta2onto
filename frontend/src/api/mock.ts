@@ -125,25 +125,25 @@ const fakeOntologySearchResults: Ontologies = range(100).map(() => {
     name: id,
     description: fakeText(4, 6),
     type: fakeType(),
-    series_id: "",
+    series: "",
   };
 });
 
 const fakeStudies: Study[] = range(100).map(() => ({
-  gse: fakeId(),
-  title: fakeText(4, 20),
-  summary: fakeText(10, 200),
+  id: fakeId(),
+  name: fakeText(4, 20),
+  description: fakeText(10, 200),
   confidence: fakeConfidence(),
-  submission_date: fakeDate(),
+  submitted_at: fakeDate(),
   platform: fakePlatform(),
   database: fakeDatabase(),
-  samples: random(1, 200),
+  sample_count: random(1, 200),
   keywords: [],
 }));
 
 const fakeSamples: Sample[] = range(100).map(() => ({
-  sample_id: fakeId(),
-  doc: fakeText(5, 20),
+  id: fakeId(),
+  description: fakeText(5, 20),
   created_at: fakeDate(),
   updated_at: fakeDate(),
 }));
@@ -171,8 +171,8 @@ export const handlers = [
       .slice(offset, offset + limit)
       .map((study) => ({
         ...study,
-        summary: fakeHighlight(study.summary, search),
-        keywords: uniq(study.summary.split(" ")).slice(0, 10),
+        description: fakeHighlight(study.description, search),
+        keywords: uniq(study.description.split(" ")).slice(0, 10),
       }));
     return {
       count: filteredData.length,

@@ -5,7 +5,7 @@ export const ontology = z.object({
   type: z.string(),
   name: z.string(),
   description: z.string(),
-  series_id: z.string(),
+  series: z.string(),
 });
 
 export type Ontology = z.infer<typeof ontology>;
@@ -15,17 +15,17 @@ export const ontologies = z.array(ontology);
 export type Ontologies = z.infer<typeof ontologies>;
 
 export const study = z.object({
-  gse: z.string(),
-  title: z.string(),
-  summary: z.string(),
+  id: z.string(),
+  name: z.string(),
+  description: z.string(),
   confidence: z.object({
     name: z.string(),
     value: z.number(),
   }),
-  submission_date: z.iso.datetime(),
+  submitted_at: z.iso.datetime(),
   platform: z.string(),
   database: z.array(z.string()),
-  samples: z.number(),
+  sample_count: z.number(),
   keywords: z.array(z.string()),
 });
 
@@ -43,8 +43,8 @@ export const studies = z.object({
 export type Studies = z.infer<typeof studies>;
 
 export const sample = z.object({
-  sample_id: z.string(),
-  doc: z.string(),
+  id: z.string(),
+  description: z.string(),
   created_at: z.iso.datetime(),
   updated_at: z.iso.datetime(),
 });

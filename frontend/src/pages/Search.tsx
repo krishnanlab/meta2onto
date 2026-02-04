@@ -324,13 +324,13 @@ const userIdKey = "user-self-id";
 
 /** search result */
 const Result = ({
-  gse,
-  title,
-  summary,
+  id,
+  name,
+  description,
   confidence,
   database,
-  samples,
-  submission_date,
+  sample_count,
+  submitted_at,
   platform,
   keywords,
 }: Study) => {
@@ -338,7 +338,7 @@ const Result = ({
   const cart = useAtomValue(cartAtom);
 
   /** feedback for this study */
-  const feedback = useAtomValue(feedbackAtom)[gse];
+  const feedback = useAtomValue(feedbackAtom)[id];
 
   /** user self-identification */
   const [user] = useLocalStorage(userIdKey, "");
@@ -346,14 +346,14 @@ const Result = ({
   const mutation = useMutation({
     mutationKey: ["study-samples"],
     mutationFn: async () =>
-      feedback && (await studyFeedback(gse, feedback, user || "")),
+      feedback && (await studyFeedback(id, feedback, user || "")),
   });
 
   return (
     <div className="flex flex-col gap-4 rounded-sm p-6 shadow-md">
       {/* top row */}
       <div className="flex items-start justify-between gap-8">
-        <strong>{title}</strong>
+        <strong>{name}</strong>
         <Meter value={confidence.value}>{confidence.name}</Meter>
       </div>
 
@@ -361,8 +361,8 @@ const Result = ({
       <div className="flex flex-wrap gap-x-8 gap-y-4">
         {(
           [
-            [Hash, gse],
-            [Calendar, formatDate(submission_date)],
+            [Hash, id],
+            [Calendar, formatDate(submitted_at)],
             [Dna, platform],
           ] as const
         ).map(([Icon, text], index) => (
@@ -377,7 +377,7 @@ const Result = ({
       <p
         tabIndex={0}
         className="truncate-lines"
-        dangerouslySetInnerHTML={{ __html: summary }}
+        dangerouslySetInnerHTML={{ __html: description }}
       />
 
       {/* bottom row */}
@@ -394,7 +394,7 @@ const Result = ({
           {/* feedback */}
           {confidence.value > feedbackThreshold && (
             <Popover
-              content={<FeedbackPopup id={gse} keywords={keywords} />}
+              content={<FeedbackPopup id={id} keywords={keywords} />}
               onClose={mutation.mutate}
             >
               <Button color="none">
@@ -416,34 +416,34 @@ const Result = ({
           <Dialog
             title={
               <span>
-                Samples for <strong>{gse}</strong>
+                Samples for <strong>{id}</strong>
               </span>
             }
-            subtitle={title}
-            content={<SamplesPopup id={gse} />}
+            subtitle={name}
+            content={<SamplesPopup id={id} />}
           >
             <Button color="theme">
               <Logs />
-              {formatNumber(samples)} Samples
+              {formatNumber(sample_count)} Samples
             </Button>
           </Dialog>
 
           {/* cart */}
           <Button
-            aria-label={inCart(cart, gse) ? "Remove from cart" : "Add to cart"}
-            color={inCart(cart, gse) ? "none" : "accent"}
+            aria-label={inCart(cart, id) ? "Remove from cart" : "Add to cart"}
+            color={inCart(cart, id) ? "none" : "accent"}
             onClick={(event) => {
               const cartRef = getCartRef();
-              if (inCart(cart, gse)) {
-                removeFromCart(gse);
+              if (inCart(cart, id)) {
+                removeFromCart(id);
                 if (cartRef) fly(cartRef, event.currentTarget);
               } else {
-                addToCart(gse);
+                addToCart(id);
                 if (cartRef) fly(event.currentTarget, cartRef);
               }
             }}
           >
-            {inCart(cart, gse) ? <Check /> : <Plus />}
+            {inCart(cart, id) ? <Check /> : <Plus />}
             Cart
           </Button>
         </div>
@@ -596,8 +596,8 @@ const SamplesPopup = ({ id }: { id: string }) => {
 
         {query.data?.results.map((sample, index) => (
           <div key={index} className="flex flex-col gap-1">
-            <strong>{sample.sample_id}</strong>
-            <p dangerouslySetInnerHTML={{ __html: sample.doc }} />
+            <strong>{sample.id}</strong>
+            <p dangerouslySetInnerHTML={{ __html: sample.description }} />
           </div>
         ))}
       </div>

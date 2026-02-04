@@ -314,19 +314,19 @@ export default function Cart() {
                 <Table
                   cols={[
                     {
-                      key: "gse",
+                      key: "id",
                       name: "ID",
                     },
                     {
-                      key: "title",
+                      key: "name",
                       name: "Name",
                     },
                     {
-                      key: "samples",
+                      key: "sample_count",
                       name: "Samples",
                     },
                     {
-                      key: "submission_date",
+                      key: "submitted_at",
                       name: "Date",
                       render: (date) => <Ago date={date} />,
                     },
@@ -344,7 +344,7 @@ export default function Cart() {
                       render: (added) => <Ago date={added} />,
                     },
                     {
-                      key: "gse",
+                      key: "id",
                       name: "",
                       sortable: false,
                       render: (id) => (
@@ -357,7 +357,7 @@ export default function Cart() {
                   rows={studyDetails.map((study) => ({
                     ...study,
                     added:
-                      localCart?.studies.find((s) => s.id === study.gse)
+                      localCart?.studies.find((s) => s.id === study.id)
                         ?.added ?? "2025-01-01T00:00:00.000Z",
                   }))}
                   sort={ordering}

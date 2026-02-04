@@ -20,21 +20,21 @@ const examples: Ontologies = [
     name: "Hepatocyte",
     type: "",
     description: "",
-    series_id: "",
+    series: "",
   },
   {
     id: "Breast cancer",
     name: "Breast cancer",
     type: "",
     description: "",
-    series_id: "",
+    series: "",
   },
   {
     id: "Alzheimer's disease",
     name: "Alzheimer's disease",
     type: "",
     description: "",
-    series_id: "",
+    series: "",
   },
 ];
 
