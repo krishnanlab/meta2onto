@@ -71,12 +71,16 @@ export const studySamples = async ({ id = "", offset = 0, limit = 10 }) => {
 };
 
 /** submit study feedback */
-export const studyFeedback = async (id: string, feedback: Feedback) => {
+export const studyFeedback = async (
+  id: string,
+  feedback: Feedback,
+  user: string,
+) => {
   const url = new URL(`${api}/study/feedback/`);
   const options = {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: { id, ...feedback },
+    body: { id, user, ...feedback },
   } as const;
   await request(url, z.unknown(), options);
 };

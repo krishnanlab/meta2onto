@@ -3,9 +3,8 @@ import type { Studies, Study } from "@/api/types";
 import type { Limit } from "@/components/Pagination";
 import { Fragment, useEffect, useRef, useState } from "react";
 import { useParams } from "react-router";
-import { useTimeout } from "@reactuses/core";
+import { useLocalStorage } from "@reactuses/core";
 import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
-import clsx from "clsx";
 import { useAtomValue } from "jotai";
 import { isEmpty } from "lodash";
 import {
@@ -321,6 +320,8 @@ const Results = ({
   </div>
 );
 
+const userIdKey = "user-self-id";
+
 /** search result */
 const Result = ({
   gse,
@@ -339,9 +340,13 @@ const Result = ({
   /** feedback for this study */
   const feedback = useAtomValue(feedbackAtom)[gse];
 
+  /** user self-identification */
+  const [user] = useLocalStorage(userIdKey, "");
+
   const mutation = useMutation({
     mutationKey: ["study-samples"],
-    mutationFn: async () => feedback && (await studyFeedback(gse, feedback)),
+    mutationFn: async () =>
+      feedback && (await studyFeedback(gse, feedback, user || "")),
   });
 
   return (
@@ -464,10 +469,8 @@ const FeedbackPopup = ({
   /** feedback for this study */
   const feedback = useAtomValue(feedbackAtom)[id];
 
-  /** saved notification timer */
-  const [saved, resetSaved] = useTimeout(1000);
-
-  if (useChanged(feedback)) resetSaved();
+  /** user self-identification */
+  const [user, setUser] = useLocalStorage(userIdKey, "");
 
   return (
     <div
@@ -559,14 +562,12 @@ const FeedbackPopup = ({
 
       {/* actions */}
       <div className="col-span-full flex items-center justify-end gap-4 pt-2">
-        <div
-          className={clsx(
-            "text-slate-500 transition-opacity",
-            saved ? "opacity-100" : "opacity-0",
-          )}
-        >
-          Changes saved
-        </div>
+        <Textbox
+          value={user || ""}
+          onChange={setUser}
+          placeholder="Name/email/etc. (optional)"
+          className="grow"
+        />
         <Button color="none" onClick={() => clearFeedback(id)}>
           <Trash2 />
           Clear
