@@ -73,7 +73,7 @@ export default function Autocomplete({
             "
           >
             {status && (
-              <_Autocomplete.Status className="flex gap-2 p-2">
+              <_Autocomplete.Status className="flex items-center gap-2 p-2">
                 {status}
               </_Autocomplete.Status>
             )}

@@ -27,7 +27,7 @@ export default function Textbox({
   );
   return multi ? (
     <textarea
-      className={clsx("min-h-[calc(5lh+--spacing(4))]", _class)}
+      className={clsx("min-h-[calc(3lh+--spacing(4))]", _class)}
       onChange={(event) => onChange?.(event.currentTarget.value)}
       {...(props as ComponentPropsWithRef<"textarea">)}
     />

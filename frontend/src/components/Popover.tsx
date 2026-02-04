@@ -6,9 +6,11 @@ import { Arrow, offset, padding } from "@/components/Tooltip";
 type Props = {
   children: ReactElement<Record<string, unknown>>;
   content: ReactNode | ((close: () => void) => ReactNode);
+  onOpen?: () => void;
+  onClose?: () => void;
 };
 
-export default function Popover({ children, content }: Props) {
+export default function Popover({ children, content, onOpen, onClose }: Props) {
   const actionsRef = useRef<_Popover.Root.Actions>(null);
 
   const close = () => actionsRef.current?.close();
@@ -17,8 +19,11 @@ export default function Popover({ children, content }: Props) {
   if (children.props["aria-disabled"]) return children;
 
   return (
-    <_Popover.Root actionsRef={actionsRef}>
-      <_Popover.Trigger render={children} openOnHover />
+    <_Popover.Root
+      actionsRef={actionsRef}
+      onOpenChange={(open) => (open ? onOpen?.() : onClose?.())}
+    >
+      <_Popover.Trigger render={children} />
       <_Popover.Portal>
         <_Popover.Positioner
           side="top"

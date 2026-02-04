@@ -36,7 +36,7 @@ export const useTheme = () => {
 };
 
 /** debounced version of useSearchParams */
-export const useDebouncedParams = (delay = 2000) => {
+export const useDebouncedParams = (delay = 1000) => {
   /** search params currently in url that updates in debounced manner */
   const [url, setUrl] = useSearchParams();
   /** local copy of search params that updates instantly */

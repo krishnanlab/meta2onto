@@ -1,5 +1,5 @@
 import type { RefObject } from "react";
-import type { OntologyResult } from "@/api/types";
+import type { Ontologies } from "@/api/types";
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { useDebounce } from "@reactuses/core";
@@ -14,7 +14,7 @@ import { addSearch, getHistory } from "@/state/search";
 import { useChanged } from "@/util/hooks";
 
 /** example searches */
-const examples: OntologyResult[] = [
+const examples: Ontologies = [
   {
     id: "Hepatocyte",
     name: "Hepatocyte",

@@ -1,11 +1,8 @@
-import type {
-  Cart,
-  OntologyResults,
-  StudySamples,
-  StudySearch,
-} from "@/api/types";
+import type { Cart } from "@/api/types";
 import type { LocalCart, ShareCart } from "@/state/cart";
+import z from "zod";
 import { api, request } from "@/api";
+import { cart, ontologies, samples, studies } from "@/api/types";
 import { downloadBlob } from "@/util/download";
 
 /** type to color map */
@@ -21,7 +18,7 @@ export const typeColor: Record<string, string> = {
 export const ontologySearch = async (search: string) => {
   const url = new URL(`${api}/ontology/search/`);
   url.searchParams.set("query", search);
-  const data = request<OntologyResults>(url);
+  const data = request(url, ontologies);
   return data;
 };
 
@@ -40,7 +37,7 @@ export const studySearch = async ({
   url.searchParams.set("limit", String(limit));
   for (const [facet, values] of Object.entries(facets))
     for (const value of values) url.searchParams.append(facet, value);
-  const data = await request<StudySearch>(url);
+  const data = await request(url, studies);
   return data;
 };
 
@@ -60,7 +57,7 @@ export const studyBatchLookup = async ({
     headers: { "Content-Type": "application/json" },
     body: { ids },
   };
-  const data = await request<StudySearch>(url, options);
+  const data = await request(url, studies, options);
   return data;
 };
 
@@ -69,26 +66,26 @@ export const studySamples = async ({ id = "", offset = 0, limit = 10 }) => {
   const url = new URL(`${api}/study/${id}/samples/`);
   url.searchParams.set("offset", String(offset));
   url.searchParams.set("limit", String(limit));
-  const data = request<StudySamples>(url);
+  const data = request(url, samples);
   return data;
 };
 
 /** lookup a cart by id */
 export const cartLookup = async (id: string) => {
   const url = new URL(`${api}/cart/${id}/`);
-  const data = request<Cart>(url);
+  const data = request(url, cart);
   return data;
 };
 
 /** share cart */
-export const shareCart = async (cart: ShareCart) => {
+export const shareCart = async (shareCart: ShareCart) => {
   const url = new URL(`${api}/cart/`);
   const options = {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: cart,
+    body: shareCart,
   };
-  const data = request<Cart>(url, options);
+  const data = request(url, cart, options);
   return data;
 };
 
@@ -107,7 +104,7 @@ export const downloadCart = async (
     body: { ids },
     parse: "blob",
   } as const;
-  const data = await request<Blob>(url, options);
+  const data = await request(url, z.instanceof(Blob), options);
   if (type === "csv") downloadBlob(data, filename, "csv");
   if (type === "json") downloadBlob(data, filename, "json");
 };

@@ -6,12 +6,11 @@ import type {
 } from "msw";
 import type {
   Cart,
-  CartDownload,
-  OntologyResults,
+  Ontologies,
   Sample,
+  Samples,
+  Studies,
   Study,
-  StudySamples,
-  StudySearch,
 } from "@/api/types";
 import type { ShareCart } from "@/state/cart";
 import { random, range, sample, uniq } from "lodash";
@@ -119,7 +118,7 @@ type Props = {
   params: PathParams<string>;
 };
 
-const fakeOntologyResults: OntologyResults = range(100).map(() => {
+const fakeOntologySearchResults: Ontologies = range(100).map(() => {
   const id = fakeText(1, 4);
   return {
     id,
@@ -152,17 +151,17 @@ const fakeSamples: Sample[] = range(100).map(() => ({
 const fakeCarts: Cart[] = [];
 
 export const handlers = [
-  handler("get", `${api}/ontology/search`, ({ url }): OntologyResults => {
+  handler("get", `${api}/ontology/search`, ({ url }): Ontologies => {
     const search = url.searchParams.get("query") || "";
-    const data = fakeOntologyResults.map((ontologyResult) => ({
-      ...ontologyResult,
-      name: fakeHighlight(ontologyResult.name, search),
-      description: fakeHighlight(ontologyResult.description, search),
+    const data = fakeOntologySearchResults.map((ontologySearchResult) => ({
+      ...ontologySearchResult,
+      name: fakeHighlight(ontologySearchResult.name, search),
+      description: fakeHighlight(ontologySearchResult.description, search),
     }));
     return fakeSearch(data, search);
   }),
 
-  handler("get", `${api}/study/search`, ({ url }): StudySearch => {
+  handler("get", `${api}/study/search`, ({ url }): Studies => {
     let search = url.searchParams.get("query") || "";
     search = search.slice(0, search.indexOf(" "));
     const offset = Number(url.searchParams.get("offset"));
@@ -182,7 +181,7 @@ export const handlers = [
     };
   }),
 
-  handler("post", `${api}/study/lookup`, ({ url }): StudySearch => {
+  handler("post", `${api}/study/lookup`, ({ url }): Studies => {
     const offset = Number(url.searchParams.get("offset"));
     const limit = Number(url.searchParams.get("limit"));
     const filteredData = fakeStudies;
@@ -194,7 +193,7 @@ export const handlers = [
     };
   }),
 
-  handler("get", `${api}/study/:id/samples`, ({ url }): StudySamples => {
+  handler("get", `${api}/study/:id/samples`, ({ url }): Samples => {
     const offset = Number(url.searchParams.get("offset"));
     const limit = Number(url.searchParams.get("limit"));
     const paginatedData = fakeSamples.slice(offset, offset + limit);
@@ -220,14 +219,6 @@ export const handlers = [
     fakeCarts.push(cart);
     return cart;
   }),
-
-  handler(
-    "post",
-    `${api}/cart/download`,
-    (): CartDownload => ({
-      link: "https://example.com/download/fake_cart.zip",
-    }),
-  ),
 
   http.get(/.*/, nonMocked),
   http.post(/.*/, nonMocked),
