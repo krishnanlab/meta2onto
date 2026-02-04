@@ -1,4 +1,4 @@
-import type { Cart } from "@/api/types";
+import type { Cart, Feedback } from "@/api/types";
 import type { LocalCart, ShareCart } from "@/state/cart";
 import z from "zod";
 import { api, request } from "@/api";
@@ -68,6 +68,17 @@ export const studySamples = async ({ id = "", offset = 0, limit = 10 }) => {
   url.searchParams.set("limit", String(limit));
   const data = request(url, samples);
   return data;
+};
+
+/** submit study feedback */
+export const studyFeedback = async (id: string, feedback: Feedback) => {
+  const url = new URL(`${api}/study/feedback/`);
+  const options = {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: { id, ...feedback },
+  } as const;
+  await request(url, z.unknown(), options);
 };
 
 /** lookup a cart by id */

@@ -4,7 +4,7 @@ import type { Limit } from "@/components/Pagination";
 import { Fragment, useEffect, useRef, useState } from "react";
 import { useParams } from "react-router";
 import { useTimeout } from "@reactuses/core";
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
 import clsx from "clsx";
 import { useAtomValue } from "jotai";
 import { isEmpty } from "lodash";
@@ -13,6 +13,7 @@ import {
   Check,
   Dna,
   Hash,
+  LoaderCircle,
   Logs,
   MessageCircleWarning,
   Plus,
@@ -20,8 +21,9 @@ import {
   ThumbsDown,
   ThumbsUp,
   Trash2,
+  TriangleAlert,
 } from "lucide-react";
-import { studySamples, studySearch } from "@/api/api";
+import { studyFeedback, studySamples, studySearch } from "@/api/api";
 import Button from "@/components/Button";
 import Checkbox from "@/components/Checkbox";
 import Database from "@/components/Database";
@@ -331,9 +333,16 @@ const Result = ({
   platform,
   keywords,
 }: Study) => {
+  /** current cart state */
   const cart = useAtomValue(cartAtom);
 
-  const hasFeedback = gse in useAtomValue(feedbackAtom);
+  /** feedback for this study */
+  const feedback = useAtomValue(feedbackAtom)[gse];
+
+  const mutation = useMutation({
+    mutationKey: ["study-samples"],
+    mutationFn: async () => feedback && (await studyFeedback(gse, feedback)),
+  });
 
   return (
     <div className="flex flex-col gap-4 rounded-sm p-6 shadow-md">
@@ -379,9 +388,20 @@ const Result = ({
         <div className="flex flex-wrap gap-4">
           {/* feedback */}
           {confidence.value > feedbackThreshold && (
-            <Popover content={<FeedbackPopup id={gse} keywords={keywords} />}>
+            <Popover
+              content={<FeedbackPopup id={gse} keywords={keywords} />}
+              onClose={mutation.mutate}
+            >
               <Button color="none">
-                {hasFeedback ? <Check /> : <MessageCircleWarning />}
+                {mutation.status === "error" ? (
+                  <TriangleAlert />
+                ) : mutation.status === "pending" ? (
+                  <LoaderCircle className="animate-spin" />
+                ) : feedback ? (
+                  <Check />
+                ) : (
+                  <MessageCircleWarning />
+                )}
                 Feedback
               </Button>
             </Popover>

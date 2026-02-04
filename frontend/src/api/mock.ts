@@ -27,7 +27,7 @@ const handler = <Method extends keyof typeof http>(
     const url = new URL(request.url);
     const body = request.body ? await (await request.clone()).json() : {};
     await sleep(100);
-    if (Math.random() < 0.25)
+    if (Math.random() < 0.1)
       return HttpResponse.json(null, { status: 500, statusText: "fake error" });
     return HttpResponse.json(func({ url, body, params }));
   });
@@ -202,6 +202,10 @@ export const handlers = [
       results: paginatedData,
     };
   }),
+
+  handler("post", `${api}/study/feedback`, () => ({
+    message: "Feedback received",
+  })),
 
   handler(
     "get",
