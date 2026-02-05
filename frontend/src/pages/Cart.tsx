@@ -70,14 +70,14 @@ export default function Cart() {
   const shared = !!id;
 
   /** look up study ids from cart id */
-  const studyIdsQuery = useQuery({
+  const cartLookupQuery = useQuery({
     queryKey: ["cart-lookup", id],
     queryFn: () => cartLookup(id),
     enabled: shared,
   });
 
   /** remote, shared cart */
-  const sharedCart = studyIdsQuery.data;
+  const sharedCart = cartLookupQuery.data;
 
   /** cart study ids */
   const studyIds = ((localCart || sharedCart).studies || []).map(
@@ -88,7 +88,7 @@ export default function Cart() {
   const size = studyIds.length || 0;
 
   /** cart name */
-  const name = studyIdsQuery.data?.name || id;
+  const name = cartLookupQuery.data?.name || id;
 
   /** custom cart name for sharing */
   const [shareName, setShareName] = useState(name);
@@ -99,7 +99,7 @@ export default function Cart() {
   const [limit, setLimit] = useState<Limit>("10");
 
   /** look up study details from study ids */
-  const studyDetailsQuery = useQuery({
+  const studyBatchLookupQuery = useQuery({
     queryKey: ["study-batch-lookup", id, ordering, offset, limit],
     queryFn: () =>
       studyBatchLookup({
@@ -117,7 +117,7 @@ export default function Cart() {
   if (!size) queryClient.resetQueries({ queryKey: ["study-batch-lookup"] });
 
   /** full study details */
-  const studyDetails = studyDetailsQuery.data?.results || [];
+  const studyDetails = studyBatchLookupQuery.data?.results || [];
 
   /** page title */
   const title = shared ? `Shared cart "${name}"` : `Data Cart`;
@@ -153,9 +153,9 @@ export default function Cart() {
         <Heading level={1}>{title}</Heading>
       </section>
 
-      {shared && showStatus({ query: studyIdsQuery }) ? (
+      {shared && showStatus({ query: cartLookupQuery }) ? (
         <section>
-          <Status query={studyIdsQuery} />
+          <Status query={cartLookupQuery} />
         </section>
       ) : (
         <>
@@ -306,7 +306,7 @@ export default function Cart() {
             )}
 
             <Status
-              query={studyDetailsQuery}
+              query={studyBatchLookupQuery}
               loading={`Loading ${studyIds.length} studies`}
             />
 

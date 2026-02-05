@@ -121,7 +121,7 @@ export const SearchBox = ({
   if (searchChanged && params.search) setSearch(params.search);
 
   /** ontology search results */
-  const query = useQuery({
+  const ontologySearchQuery = useQuery({
     queryKey: ["ontology-search", search],
     queryFn: () => ontologySearch(search),
   });
@@ -129,7 +129,7 @@ export const SearchBox = ({
   /** search results */
   const results = search.trim()
     ? /** actual search results */
-      (query.data?.map((result) => ({
+      (ontologySearchQuery.data?.map((result) => ({
         ...result,
         icon: <></>,
       })) ?? [])
@@ -183,12 +183,16 @@ export const SearchBox = ({
       }
       onSelect={(id) => {
         if (!id?.trim()) return;
-        const result = query.data?.find((result) => result.id === id);
+        const result = ontologySearchQuery.data?.find(
+          (result) => result.id === id,
+        );
         if (result) addSearch(result);
         navigate(`/search/${result?.id ?? ""}?raw=${_search}`);
       }}
       status={
-        showStatus({ query }) && <Status query={query} className="contents!" />
+        showStatus({ query: ontologySearchQuery }) && (
+          <Status query={ontologySearchQuery} className="contents!" />
+        )
       }
       className={className}
     />

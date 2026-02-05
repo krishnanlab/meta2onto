@@ -26,7 +26,7 @@ const handler = <Method extends keyof typeof http>(
   http[method](url, async ({ request, params }) => {
     const url = new URL(request.url);
     const body = request.body ? await (await request.clone()).json() : {};
-    await sleep(100);
+    await sleep(random(200, 1000));
     if (Math.random() < 0.1)
       return HttpResponse.json(null, { status: 500, statusText: "fake error" });
     return HttpResponse.json(func({ url, body, params }));
@@ -56,7 +56,16 @@ const fakeHighlight = (string: string, highlight: string) =>
 
 const fakeId = () => String(random(10000, 99999));
 
-const fakeType = () => sample(["type-a"]);
+const fakeType = () =>
+  sample([
+    "type-a",
+    "type-a",
+    "type-a",
+    "type-a",
+    "type-a",
+    // "type-b",
+    // "type-c",
+  ]);
 
 const fakeDate = () =>
   new Date(

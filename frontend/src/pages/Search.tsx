@@ -115,7 +115,7 @@ export default function Search() {
   const title = `Search "${search}"`;
 
   /** search results */
-  const query = useQuery({
+  const studySearchQuery = useQuery({
     queryKey: ["study-search", search, ordering, offset, limit, facets],
     queryFn: () =>
       studySearch({ search, ordering, offset, limit: Number(limit), facets }),
@@ -155,14 +155,14 @@ export default function Search() {
             newSearch={newSearch}
             setNewSearch={setNewSearch}
             ordering={ordering}
-            query={query}
+            query={studySearchQuery}
           />
 
           <Results
             setParams={setParams}
             offset={offset}
             limit={limit}
-            query={query}
+            query={studySearchQuery}
           />
         </div>
       </section>
@@ -592,55 +592,66 @@ const SamplesPopup = ({ id }: { id: string }) => {
   const [offset, setOffset] = useState(0);
   const [limit, setLimit] = useState<Limit>("10");
 
-  const query = useQuery({
+  const studySamplesQuery = useQuery({
     queryKey: ["study-samples", id, offset, limit],
     queryFn: () => studySamples({ id, offset, limit: Number(limit) }),
     placeholderData: keepPreviousData,
   });
 
-  /** find any columns that have the same value for every row */
-  const common: Record<string, Record<string, number>> = {};
-  for (const row of query.data?.results ?? [])
+  /** count unique values in each column */
+  const counts: Record<string, Record<string, number>> = {};
+  for (const row of studySamplesQuery.data?.results ?? [])
     for (let [key, value] of Object.entries(row)) {
-      common[key] ??= {};
+      counts[key] ??= {};
       value = String(value);
-      common[key][value] = (common[key][value] || 0) + 1;
+      counts[key][value] = (counts[key][value] || 0) + 1;
     }
+
+  /** cols with all same value */
+  const common = Object.fromEntries(
+    Object.entries(counts)
+      .filter(([, value]) => size(Object.values(value)) === 1)
+      .map(([key, uniques]) => {
+        const value = Object.keys(uniques)[0]!;
+        return [key, value];
+      }),
+  );
 
   return (
     <>
       <div className="flex flex-col gap-4 overflow-y-auto">
-        <Status query={query} />
-
-        <dl>
-          {Object.entries(common).map(([key, counts]) => {
-            const values = Object.values(counts);
-            if (size(values) !== 1) return null;
-            const value = Object.keys(counts)[0]!;
-            return (
+        {!isEmpty(common) && (
+          <dl>
+            {Object.entries(common).map(([key, value]) => (
               <Fragment key={key}>
                 <dt>{upperFirst(key)}</dt>
                 <dd>{value}</dd>
               </Fragment>
-            );
-          })}
-        </dl>
+            ))}
+          </dl>
+        )}
 
-        <Table
-          cols={[
-            { key: "id", name: "ID" },
-            { key: "type", name: "Type" },
-            { key: "description", name: "Description" },
-          ]}
-          rows={query.data?.results ?? []}
-          page={offset}
-          perPage={Number(limit)}
-        />
+        <div className="relative">
+          <Status
+            query={studySamplesQuery}
+            className="absolute inset-0 opacity-90"
+          />
+          <Table
+            cols={[
+              { key: "id", name: "ID" },
+              { key: "type", name: "Type" },
+              { key: "description", name: "Description" },
+            ]}
+            rows={studySamplesQuery.data?.results ?? []}
+            page={offset}
+            perPage={Number(limit)}
+          />
+        </div>
       </div>
 
       {/* pagination */}
       <Pagination
-        count={query.data?.count ?? 0}
+        count={studySamplesQuery.data?.count ?? 0}
         offset={offset}
         setOffset={setOffset}
         limit={limit}
