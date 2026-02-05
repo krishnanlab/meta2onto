@@ -37,6 +37,7 @@ import Popover from "@/components/Popover";
 import Select from "@/components/Select";
 import Slider from "@/components/Slider";
 import Status from "@/components/Status";
+import Table from "@/components/Table";
 import Textbox from "@/components/Textbox";
 import { SearchBox } from "@/pages/Home";
 import { addToCart, cartAtom, inCart, removeFromCart } from "@/state/cart";
@@ -602,12 +603,16 @@ const SamplesPopup = ({ id }: { id: string }) => {
       <div className="flex flex-col gap-4 overflow-y-auto">
         <Status query={query} />
 
-        {query.data?.results.map((sample, index) => (
-          <div key={index} className="flex flex-col gap-1">
-            <strong>{sample.id}</strong>
-            <p dangerouslySetInnerHTML={{ __html: sample.description }} />
-          </div>
-        ))}
+        <Table
+          cols={[
+            { key: "id", name: "ID" },
+            { key: "type", name: "Type" },
+            { key: "description", name: "Description" },
+          ]}
+          rows={query.data?.results ?? []}
+          page={offset}
+          perPage={Number(limit)}
+        />
       </div>
 
       {/* pagination */}

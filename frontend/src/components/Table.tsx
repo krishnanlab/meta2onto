@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import type {
+  Cell,
   NoInfer,
   PaginationState,
   SortingState,
@@ -112,6 +113,7 @@ export default function Table<Datum extends object>({
     getColumnCanGlobalFilter: () => true,
     autoResetPageIndex: true,
     columnResizeMode: "onChange",
+    manualPagination: true,
     state: { sorting, pagination },
     onSortingChange: (updater) => {
       /** https://github.com/TanStack/table/discussions/4005 */
@@ -190,22 +192,30 @@ export default function Table<Datum extends object>({
                     1
                   }
                 >
-                  {row.getVisibleCells().map((cell) => (
-                    <td key={cell.id}>
-                      <div className="flex flex-wrap items-center gap-2 p-2">
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext(),
-                        )}
-                      </div>
-                    </td>
-                  ))}
+                  {row.getVisibleCells().map((cell) => {
+                    const render =
+                      index > 0 && getCellAbove(cell)
+                        ? /** repeat cell above */
+                          "..."
+                        : /** render as normal */
+                          flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext(),
+                          );
+                    return (
+                      <td key={cell.id}>
+                        <div className="flex flex-wrap items-center gap-2 p-2">
+                          {render}
+                        </div>
+                      </td>
+                    );
+                  })}
                 </tr>
               ))
             ) : (
               <tr>
                 <td className="p-2 text-slate-500" colSpan={cols.length}>
-                  No Rows
+                  No rows
                 </td>
               </tr>
             )}
@@ -229,3 +239,11 @@ const defaultFormat = (cell: unknown) => {
   if (typeof cell === "string") return cell;
   return String(cell);
 };
+
+/** get cell above current cell */
+const getCellAbove = <Datum, Value>(cell: Cell<Datum, Value>) =>
+  cell.column
+    .getFacetedRowModel()
+    .flatRows[cell.row.index - 1]?.getAllCells()
+    .find((c) => c.column.id === cell.column.id)
+    ?.getValue() === cell.getValue();

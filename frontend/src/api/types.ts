@@ -44,6 +44,7 @@ export type Studies = z.infer<typeof studies>;
 
 export const sample = z.object({
   id: z.string(),
+  type: z.string(),
   description: z.string(),
   created_at: z.iso.datetime(),
   updated_at: z.iso.datetime(),

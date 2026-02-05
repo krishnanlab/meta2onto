@@ -56,18 +56,7 @@ const fakeHighlight = (string: string, highlight: string) =>
 
 const fakeId = () => String(random(10000, 99999));
 
-const fakeType = () =>
-  sample([
-    "gene",
-    "disease",
-    "compound",
-    "anatomy",
-    "phenotype",
-    "symptom",
-    "genotype",
-    "variant",
-    "pathway",
-  ]);
+const fakeType = () => sample(["type-a", "type-b", "type-c"]);
 
 const fakeDate = () =>
   new Date(
@@ -143,6 +132,7 @@ const fakeStudies: Study[] = range(100).map(() => ({
 
 const fakeSamples: Sample[] = range(100).map(() => ({
   id: fakeId(),
+  type: fakeType(),
   description: fakeText(5, 20),
   created_at: fakeDate(),
   updated_at: fakeDate(),
