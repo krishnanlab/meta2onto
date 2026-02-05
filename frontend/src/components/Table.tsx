@@ -20,6 +20,7 @@ import {
 } from "@tanstack/react-table";
 import { ArrowUpDown, MoveDown, MoveUp } from "lucide-react";
 import Button from "@/components/Button";
+import Tooltip from "@/components/Tooltip";
 import { formatDate, formatNumber } from "@/util/string";
 
 type Props<Datum extends object> = {
@@ -194,14 +195,18 @@ export default function Table<Datum extends object>({
                 >
                   {row.getVisibleCells().map((cell) => {
                     const render =
-                      index > 0 && getCellAbove(cell)
-                        ? /** repeat cell above */
-                          "..."
-                        : /** render as normal */
-                          flexRender(
-                            cell.column.columnDef.cell,
-                            cell.getContext(),
-                          );
+                      index > 0 && getCellAbove(cell) ? (
+                        /** repeat cell above */
+                        <Tooltip content="Same as above">
+                          <span tabIndex={0}>...</span>
+                        </Tooltip>
+                      ) : (
+                        /** render as normal */
+                        flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext(),
+                        )
+                      );
                     return (
                       <td key={cell.id}>
                         <div className="flex flex-wrap items-center gap-2 p-2">

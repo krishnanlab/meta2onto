@@ -56,7 +56,7 @@ const fakeHighlight = (string: string, highlight: string) =>
 
 const fakeId = () => String(random(10000, 99999));
 
-const fakeType = () => sample(["type-a", "type-b", "type-c"]);
+const fakeType = () => sample(["type-a"]);
 
 const fakeDate = () =>
   new Date(

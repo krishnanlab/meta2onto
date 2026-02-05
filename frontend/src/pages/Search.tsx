@@ -7,7 +7,7 @@ import { useLocalStorage } from "@reactuses/core";
 import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
 import clsx from "clsx";
 import { useAtomValue } from "jotai";
-import { isEmpty } from "lodash";
+import { isEmpty, size, upperFirst } from "lodash";
 import {
   Calendar,
   Check,
@@ -598,10 +598,33 @@ const SamplesPopup = ({ id }: { id: string }) => {
     placeholderData: keepPreviousData,
   });
 
+  /** find any columns that have the same value for every row */
+  const common: Record<string, Record<string, number>> = {};
+  for (const row of query.data?.results ?? [])
+    for (let [key, value] of Object.entries(row)) {
+      common[key] ??= {};
+      value = String(value);
+      common[key][value] = (common[key][value] || 0) + 1;
+    }
+
   return (
     <>
       <div className="flex flex-col gap-4 overflow-y-auto">
         <Status query={query} />
+
+        <dl>
+          {Object.entries(common).map(([key, counts]) => {
+            const values = Object.values(counts);
+            if (size(values) !== 1) return null;
+            const value = Object.keys(counts)[0]!;
+            return (
+              <Fragment key={key}>
+                <dt>{upperFirst(key)}</dt>
+                <dd>{value}</dd>
+              </Fragment>
+            );
+          })}
+        </dl>
 
         <Table
           cols={[

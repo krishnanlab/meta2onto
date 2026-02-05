@@ -163,7 +163,7 @@ export const SearchBox = ({
               {type && (
                 <span
                   className={clsx(
-                    "rounded px-1 text-sm  text-white",
+                    "rounded-md px-1 text-sm  text-white",
                     typeColor[type] ?? typeColor["default"],
                   )}
                 >

@@ -118,12 +118,28 @@
     @apply cursor-pointer;
   }
 
+  dl {
+    @apply grid max-w-max grid-cols-[repeat(var(--cols),auto)] rounded-md bg-slate-100 [--cols:2];
+  }
+
+  dt {
+    @apply p-2 font-medium text-slate-500;
+  }
+
+  dd {
+    @apply p-2;
+  }
+
+  dd:empty {
+    @apply before:text-slate-500 before:content-['-'];
+  }
+
   code:not(:has(pre)) {
-    @apply rounded bg-slate-200 px-1 font-mono;
+    @apply rounded-md bg-slate-200 px-1 font-mono;
   }
 
   code > pre {
-    @apply overflow-x-auto rounded bg-slate-700 p-4 font-mono text-slate-300;
+    @apply overflow-x-auto rounded-md bg-slate-700 p-4 font-mono text-slate-300;
   }
 
   [class^="hljs-"] {
@@ -166,7 +182,7 @@
   }
 
   &:focus {
-    @apply rounded outline outline-offset-2 outline-slate-300;
+    @apply rounded-md outline outline-offset-2 outline-slate-300;
   }
 }
 
