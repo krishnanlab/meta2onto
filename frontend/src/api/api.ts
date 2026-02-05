@@ -3,6 +3,7 @@ import type { LocalCart, ShareCart } from "@/state/cart";
 import z from "zod";
 import { api, request } from "@/api";
 import { cart, ontologies, samples, studies } from "@/api/types";
+import { dbLink, getDb } from "@/components/Database";
 import { downloadBlob } from "@/util/download";
 
 /** type to color map */
@@ -124,15 +125,9 @@ export const downloadCart = async (
   if (type === "json") downloadBlob(data, filename, "json");
 };
 
-/** download links for each database */
-const downloadTemplates: Record<string, string> = {
-  "Refine.bio": "https://www.refine.bio/v1/download/$ID.zip",
-};
-
 /** get download bash script */
-export const getCartScript = (cart: Cart | LocalCart, database: string) => {
-  const template = downloadTemplates[database] ?? "";
-  return [
+export const getCartScript = (cart: Cart | LocalCart, database: string) =>
+  [
     `#!/bin/bash`,
     `# Meta2Onto data cart download script`,
     `# Generated: ${new Date().toISOString()}`,
@@ -141,7 +136,7 @@ export const getCartScript = (cart: Cart | LocalCart, database: string) => {
     `# Studies: ${cart.studies.length}`,
     ...cart.studies.map(({ id }) => [
       `# Download ${id} from ${database}`,
-      `wget "${template.replace(/\$ID/g, id)}" -O ${id}_${database}.zip`,
+      `wget "${dbLink(getDb(database).link, id)}" -O ${id}_${database}.zip`,
     ]),
     `# Extract`,
     `for file in *.zip; do unzip "$file"; done`,
@@ -151,4 +146,3 @@ export const getCartScript = (cart: Cart | LocalCart, database: string) => {
     .map((line) => line.trimEnd())
     .filter(Boolean)
     .join("\n");
-};

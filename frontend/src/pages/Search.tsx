@@ -386,7 +386,7 @@ const Result = ({
         {/* databases */}
         <div className="flex flex-wrap gap-4">
           {database.map((database, index) => (
-            <Database key={index} database={database} />
+            <Database key={index} study={id} database={database} />
           ))}
         </div>
 
