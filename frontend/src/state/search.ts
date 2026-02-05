@@ -1,4 +1,4 @@
-import type { Ontology } from "@/api/types";
+import type { Ontologies, Ontology } from "@/api/types";
 import { findLastIndex, groupBy, orderBy } from "lodash";
 import { ontologies } from "@/api/types";
 import { getAtom, setAtom, storageAtom } from "@/util/atoms";
@@ -7,7 +7,7 @@ import { getAtom, setAtom, storageAtom } from "@/util/atoms";
 export const searchHistoryAtom = storageAtom("search-history", [], ontologies);
 
 /** search history limit */
-const limit = 100;
+const limit = 1000;
 
 /** add search term to history */
 export const addSearch = (search: Ontology) =>
@@ -18,13 +18,13 @@ export const addSearch = (search: Ontology) =>
   });
 
 /** get search history */
-export const getHistory = () => {
-  const history = getAtom(searchHistoryAtom);
-  const grouped = Object.entries(groupBy(history, "id"));
-  /** weight searches by frequency and recency */
-  const weighted = grouped.map(([id, dupes]) => ({
+export const getHistory = (history?: Ontologies) => {
+  history ??= getAtom(searchHistoryAtom);
+  const grouped = groupBy(history, "id");
+  const searches = Object.entries(grouped).map(([id, dupes]) => ({
     search: dupes[0]!,
+    /** weight by frequency and recency */
     weight: dupes.length + findLastIndex(history, (other) => other.id === id),
   }));
-  return orderBy(weighted, "weight").map(({ search }) => search);
+  return { list: orderBy(searches, "weight"), grouped };
 };

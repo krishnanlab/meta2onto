@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import { clsx } from "clsx";
+import clsx from "clsx";
 import { range } from "lodash";
 import { tau } from "@/util/math";
 import classes from "./Rings.module.css";

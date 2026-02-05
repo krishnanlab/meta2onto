@@ -5,6 +5,7 @@ import { Fragment, useEffect, useRef, useState } from "react";
 import { useParams } from "react-router";
 import { useLocalStorage } from "@reactuses/core";
 import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
+import clsx from "clsx";
 import { useAtomValue } from "jotai";
 import { isEmpty } from "lodash";
 import {
@@ -381,7 +382,7 @@ const Result = ({
       />
 
       {/* bottom row */}
-      <div className="flex flex-wrap items-end justify-between gap-4">
+      <div className="flex flex-wrap items-end gap-4">
         {/* databases */}
         <div className="flex flex-wrap gap-4">
           {database.map((database, index) => (
@@ -389,8 +390,8 @@ const Result = ({
           ))}
         </div>
 
-        {/* action buttons */}
-        <div className="flex flex-wrap gap-4">
+        {/* actions */}
+        <div className="ml-auto flex flex-wrap gap-4">
           {/* feedback */}
           {confidence.value > feedbackThreshold && (
             <Popover
@@ -520,13 +521,17 @@ const FeedbackPopup = ({
           <Fragment key={index}>
             <span className="truncate py-1 pr-1">{keyword}</span>
             <Button
-              color={
-                feedback?.keywords?.[keyword] === "good" ? undefined : "none"
-              }
+              color="none"
+              className={clsx(
+                "p-2",
+                feedback?.keywords?.[keyword] === "good"
+                  ? "text-emerald-600!"
+                  : "text-slate-300!",
+              )}
               onClick={() =>
                 setFeedback(id, "keywords", (old) => ({
                   ...old,
-                  [keyword]: old[keyword] ? "" : "good",
+                  [keyword]: old[keyword] === "good" ? "" : "good",
                 }))
               }
               aria-label="Up-vote keyword"
@@ -534,13 +539,17 @@ const FeedbackPopup = ({
               <ThumbsUp />
             </Button>
             <Button
-              color={
-                feedback?.keywords?.[keyword] === "bad" ? undefined : "none"
-              }
+              color="none"
+              className={clsx(
+                "p-2",
+                feedback?.keywords?.[keyword] === "bad"
+                  ? "text-red-600!"
+                  : "text-slate-300!",
+              )}
               onClick={() =>
                 setFeedback(id, "keywords", (old) => ({
                   ...old,
-                  [keyword]: old[keyword] ? "" : "bad",
+                  [keyword]: old[keyword] === "bad" ? "" : "bad",
                 }))
               }
               aria-label="Down-vote keyword"
@@ -560,12 +569,11 @@ const FeedbackPopup = ({
         onChange={(value) => setFeedback(id, "elaborate", value)}
       />
 
-      {/* actions */}
       <div className="col-span-full flex items-center justify-end gap-4 pt-2">
         <Textbox
           value={user || ""}
           onChange={setUser}
-          placeholder="Name/email/etc. (optional)"
+          placeholder="Name/contact/etc. (opt-in)"
           className="grow"
         />
         <Button color="none" onClick={() => clearFeedback(id)}>

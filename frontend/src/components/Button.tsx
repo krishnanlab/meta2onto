@@ -32,13 +32,22 @@ export default function Button({
   /** combine styles */
   const _class = clsx(
     className,
-    `
-      flex items-center justify-center gap-2 rounded-sm p-2 leading-none
-      hover:bg-slate-800 hover:text-white
-    `,
-    color === "none" && "bg-transparent text-theme",
-    color === "theme" && "bg-theme text-white",
-    color === "accent" && "bg-accent text-white",
+    `flex items-center justify-center gap-2 rounded-sm p-2 leading-none`,
+    color === "none" &&
+      `
+        bg-transparent text-theme
+        hover:bg-slate-200
+      `,
+    color === "theme" &&
+      `
+        bg-theme text-white
+        hover:bg-slate-800
+      `,
+    color === "accent" &&
+      `
+        bg-accent text-white
+        hover:bg-slate-800
+      `,
   );
 
   /** if "to", render as link */

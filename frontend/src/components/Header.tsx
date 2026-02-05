@@ -39,15 +39,14 @@ export default function Header() {
       className="
         sticky top-0 z-10 flex flex-row flex-wrap items-center justify-between
         gap-4 bg-theme-dark p-4 text-white
+        [&_a,&_button]:text-white
+        [&_a,&_button]:hover:bg-slate-800
       "
     >
       {/* title */}
       <a
         href="/"
-        className="
-          flex items-center gap-2 text-2xl tracking-wider text-white!
-          hover:text-slate-300!
-        "
+        className="flex items-center gap-2 rounded-md text-2xl tracking-wider"
       >
         <Logo color="currentColor" className="h-8" />
         {title}
@@ -61,10 +60,7 @@ export default function Header() {
             return () => (toggleRef = undefined);
           }}
           color="none"
-          className="
-            text-current!
-            sm:hidden
-          "
+          className="sm:hidden"
           onClick={() => setOpen(!open)}
           aria-expanded={open}
           aria-controls="nav"
@@ -84,10 +80,10 @@ export default function Header() {
           open && "max-sm:w-full",
         )}
       >
-        <Button to="/about" color="none" className="text-current!">
+        <Button to="/about" color="none">
           About
         </Button>
-        <Button to="/search" color="none" className="text-current!">
+        <Button to="/search" color="none">
           Search
         </Button>
         <Button

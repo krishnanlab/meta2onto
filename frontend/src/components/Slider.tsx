@@ -49,14 +49,20 @@ export default function Slider({
       {...props}
     >
       <_Slider.Value>{(_, values) => label(values)}</_Slider.Value>
-      <_Slider.Control className="flex cursor-pointer touch-none items-center p-2 select-none">
+      <_Slider.Control
+        className="
+          flex cursor-pointer touch-none items-center p-2 text-theme
+          transition-colors select-none
+          hover:text-slate-800
+        "
+      >
         <_Slider.Track className="h-1 w-full rounded-full bg-slate-300">
-          <_Slider.Indicator className="rounded-full bg-theme" />
+          <_Slider.Indicator className="rounded-full bg-current" />
           {range(values.length).map((index) => (
             <_Slider.Thumb
               key={index}
               index={index}
-              className="size-4 rounded-full bg-theme"
+              className="size-4 rounded-full bg-current"
               aria-label={[thumbLabel].flat()[index]}
             />
           ))}
