@@ -21,10 +21,10 @@ import {
 import { ArrowUpDown, MoveDown, MoveUp } from "lucide-react";
 import Button from "@/components/Button";
 import Tooltip from "@/components/Tooltip";
-import { formatDate, formatNumber } from "@/util/string";
+import { formatDate, formatNumber, parseDate } from "@/util/string";
 
 type Props<Datum extends object> = {
-  cols: _Col<Datum>[];
+  cols: readonly _Col<Datum>[];
   rows: Datum[];
   sort?: SortingState[number];
   onSort?: (sort: SortingState[number]) => void;
@@ -241,6 +241,8 @@ const defaultFormat = (cell: unknown) => {
   if (cell instanceof Date) return formatDate(cell);
   if (typeof cell === "object")
     return Object.keys(cell).length.toLocaleString();
+  if (typeof cell === "string" && parseDate(cell) !== null)
+    return formatDate(cell);
   if (typeof cell === "string") return cell;
   return String(cell);
 };

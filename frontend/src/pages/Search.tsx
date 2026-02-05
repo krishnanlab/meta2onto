@@ -628,6 +628,22 @@ const SamplesPopup = ({ id }: { id: string }) => {
       }),
   );
 
+  /** whether to show extra columns */
+  const [allCols, setAllCols] = useState(false);
+
+  const baseCols = [
+    { key: "id", name: "ID" },
+    { key: "type", name: "Type" },
+    { key: "description", name: "Description" },
+  ] as const;
+
+  const extraCols = [
+    { key: "created_at", name: "Created At" },
+    { key: "updated_at", name: "Updated At" },
+  ] as const;
+
+  const cols = allCols ? [...baseCols, ...extraCols] : baseCols;
+
   return (
     <>
       <div className="flex flex-col gap-4 overflow-y-auto">
@@ -648,11 +664,7 @@ const SamplesPopup = ({ id }: { id: string }) => {
             className="absolute inset-0 opacity-90"
           />
           <Table
-            cols={[
-              { key: "id", name: "ID" },
-              { key: "type", name: "Type" },
-              { key: "description", name: "Description" },
-            ]}
+            cols={cols}
             rows={studySamplesQuery.data?.results ?? []}
             sort={ordering}
             onSort={setOrdering}
@@ -670,6 +682,9 @@ const SamplesPopup = ({ id }: { id: string }) => {
         limit={limit}
         setLimit={setLimit}
       >
+        <Checkbox value={allCols} onChange={setAllCols}>
+          All columns
+        </Checkbox>
         <Textbox
           value={_search}
           onChange={setSearch}
