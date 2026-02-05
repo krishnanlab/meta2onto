@@ -26,7 +26,7 @@ import {
 import { studyFeedback, studySamples, studySearch } from "@/api/api";
 import Button from "@/components/Button";
 import Checkbox from "@/components/Checkbox";
-import Database from "@/components/Database";
+import DatabaseBadge from "@/components/Database";
 import Dialog from "@/components/Dialog";
 import { getCartRef } from "@/components/Header";
 import Heading from "@/components/Heading";
@@ -386,7 +386,7 @@ const Result = ({
         {/* databases */}
         <div className="flex flex-wrap gap-4">
           {database.map((database, index) => (
-            <Database key={index} study={id} database={database} />
+            <DatabaseBadge key={index} study={id} database={database} />
           ))}
         </div>
 

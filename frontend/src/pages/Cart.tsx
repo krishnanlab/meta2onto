@@ -1,5 +1,6 @@
 import type { ColumnSort } from "@tanstack/react-table";
 import type { Cart } from "@/api/types";
+import type { Database } from "@/components/Database";
 import type { Limit } from "@/components/Pagination";
 import type { LocalCart } from "@/state/cart";
 import { useEffect, useState } from "react";
@@ -36,7 +37,7 @@ import ActionButton, { copy } from "@/components/ActionButton";
 import Ago from "@/components/Ago";
 import BigRadios from "@/components/BigRadios";
 import Button from "@/components/Button";
-import Database, { databases } from "@/components/Database";
+import DatabaseBadge, { databases } from "@/components/Database";
 import Dialog from "@/components/Dialog";
 import Heading from "@/components/Heading";
 import Link from "@/components/Link";
@@ -335,7 +336,7 @@ export default function Cart() {
                       name: "Databases",
                       render: (database) =>
                         database.map((database, index) => (
-                          <Database key={index} database={database} />
+                          <DatabaseBadge key={index} database={database} />
                         )),
                     },
                     {
@@ -458,7 +459,7 @@ const DownloadScript = ({
   name: string;
   cart: LocalCart | Cart;
 }) => {
-  const [database, setDatabase] = useState(databases[0]?.id ?? "");
+  const [database, setDatabase] = useState(databases[0].id as Database["id"]);
 
   /** script text */
   const script = getCartScript(cart, database);
@@ -475,7 +476,7 @@ const DownloadScript = ({
           }
           options={databases.map(({ id }) => ({
             value: id,
-            render: <Database database={id} full={true} />,
+            render: <DatabaseBadge database={id} full={true} />,
           }))}
           value={database}
           onChange={setDatabase}

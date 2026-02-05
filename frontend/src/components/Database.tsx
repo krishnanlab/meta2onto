@@ -60,7 +60,7 @@ export const databases = [
   },
 ] as const;
 
-type Database = (typeof databases)[number];
+export type Database = (typeof databases)[number];
 
 /** lookup database from id */
 export const getDb = (database: string): Partial<Database> =>
@@ -80,12 +80,17 @@ type Props = {
 };
 
 /** pill for database info */
-export default function Database({
+export default function DatabaseBadge({
   study = "",
   database,
   full = false,
 }: Props) {
-  const { id = "", description = "", good = "", link = "" } = getDb(database);
+  const {
+    id = database,
+    description = "",
+    good = "",
+    link = "",
+  } = getDb(database);
 
   const details = (
     <div className="flex flex-col items-start gap-2">
