@@ -1,6 +1,7 @@
 import type { ReactElement, ReactNode } from "react";
 import { Dialog as _Dialog } from "@base-ui/react";
 import { X } from "lucide-react";
+import Button from "@/components/Button";
 
 type Props = {
   children: ReactElement<Record<string, unknown>>;
@@ -49,7 +50,7 @@ export default function Dialog({
                   </_Dialog.Description>
                 )}
               </div>
-              <_Dialog.Close>
+              <_Dialog.Close render={<Button color="none" />}>
                 <X />
               </_Dialog.Close>
             </div>

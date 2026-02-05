@@ -63,8 +63,16 @@ export const studyBatchLookup = async ({
 };
 
 /** lookup all samples for a study */
-export const studySamples = async ({ id = "", offset = 0, limit = 10 }) => {
+export const studySamples = async ({
+  id = "",
+  search = "",
+  ordering = "",
+  offset = 0,
+  limit = 10,
+}) => {
   const url = new URL(`${api}/study/${id}/samples/`);
+  url.searchParams.set("query", search);
+  url.searchParams.set("ordering", ordering);
   url.searchParams.set("offset", String(offset));
   url.searchParams.set("limit", String(limit));
   const data = request(url, samples);

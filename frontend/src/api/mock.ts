@@ -63,8 +63,8 @@ const fakeType = () =>
     "type-a",
     "type-a",
     "type-a",
-    // "type-b",
-    // "type-c",
+    "type-b",
+    "type-c",
   ]);
 
 const fakeDate = () =>

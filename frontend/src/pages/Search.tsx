@@ -1,9 +1,10 @@
 import type { UseQueryResult } from "@tanstack/react-query";
+import type { ColumnSort } from "@tanstack/table-core";
 import type { Studies, Study } from "@/api/types";
 import type { Limit } from "@/components/Pagination";
 import { Fragment, useEffect, useRef, useState } from "react";
 import { useParams } from "react-router";
-import { useLocalStorage } from "@reactuses/core";
+import { useDebounce, useLocalStorage } from "@reactuses/core";
 import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
 import clsx from "clsx";
 import { useAtomValue } from "jotai";
@@ -589,12 +590,22 @@ const FeedbackPopup = ({
 /** samples popup */
 const SamplesPopup = ({ id }: { id: string }) => {
   /** pagination */
+  const [_search, setSearch] = useState("");
+  const search = useDebounce(_search, 500);
+  const [ordering, setOrdering] = useState<ColumnSort>({ id: "", desc: true });
   const [offset, setOffset] = useState(0);
   const [limit, setLimit] = useState<Limit>("10");
 
   const studySamplesQuery = useQuery({
-    queryKey: ["study-samples", id, offset, limit],
-    queryFn: () => studySamples({ id, offset, limit: Number(limit) }),
+    queryKey: ["study-samples", id, search, ordering, offset, limit],
+    queryFn: () =>
+      studySamples({
+        id,
+        search,
+        ordering: (ordering.desc ? "-" : "") + ordering.id,
+        offset,
+        limit: Number(limit),
+      }),
     placeholderData: keepPreviousData,
   });
 
@@ -643,6 +654,8 @@ const SamplesPopup = ({ id }: { id: string }) => {
               { key: "description", name: "Description" },
             ]}
             rows={studySamplesQuery.data?.results ?? []}
+            sort={ordering}
+            onSort={setOrdering}
             page={offset}
             perPage={Number(limit)}
           />
@@ -656,7 +669,14 @@ const SamplesPopup = ({ id }: { id: string }) => {
         setOffset={setOffset}
         limit={limit}
         setLimit={setLimit}
-      />
+      >
+        <Textbox
+          value={_search}
+          onChange={setSearch}
+          placeholder="Search"
+          className="grow"
+        />
+      </Pagination>
     </>
   );
 };
