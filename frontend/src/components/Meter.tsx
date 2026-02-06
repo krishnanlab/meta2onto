@@ -12,7 +12,7 @@ export default function Meter({ children, value, min = 0, max = 1 }: Props) {
     <label
       className="flex gap-1! rounded-sm px-1"
       style={{
-        backgroundColor: `color-mix(in hsl, transparent, #10b981 ${50 * value}%)`,
+        backgroundColor: `color-mix(in hsl, transparent, var(--color-highlight) ${50 * value ** 2}%)`,
       }}
     >
       {children}

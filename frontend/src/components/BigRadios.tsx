@@ -1,5 +1,5 @@
-import { useId } from "react";
 import type { ReactElement, ReactNode } from "react";
+import { useId } from "react";
 import { Radio, RadioGroup } from "@base-ui/react";
 import clsx from "clsx";
 import { CheckCircle2 } from "lucide-react";
@@ -36,11 +36,11 @@ export default function BigRadios<O extends Option>({
       value={value}
       onValueChange={(value) => onChange?.(value as O["value"])}
       aria-labelledby={id}
-      className={clsx("flex flex-col gap-2", className)}
+      className={clsx("flex flex-col gap-4", className)}
     >
       <div id={id}>{label}</div>
 
-      <div className="flex gap-2 overflow-x-auto">
+      <div className="flex gap-4 overflow-x-auto p-2">
         {options.map((option, index) => (
           <label
             ref={(el) => {
@@ -49,7 +49,7 @@ export default function BigRadios<O extends Option>({
             key={index}
             className="
               relative flex min-w-50 flex-1 cursor-pointer flex-col items-start!
-              gap-2 rounded-sm border border-slate-300 p-2 transition-colors
+              gap-4 rounded-sm border border-current/25 p-4 transition-colors
               hover:bg-slate-100
             "
           >
@@ -60,7 +60,7 @@ export default function BigRadios<O extends Option>({
               nativeButton={false}
             />
             {option.value === value && (
-              <CheckCircle2 className="absolute top-2 right-2 text-xl text-green-500" />
+              <CheckCircle2 className="absolute top-4 right-4 text-xl text-green-500" />
             )}
           </label>
         ))}

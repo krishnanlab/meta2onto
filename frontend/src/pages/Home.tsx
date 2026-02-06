@@ -1,21 +1,52 @@
+import type { RefObject } from "react";
+import type { Ontologies } from "@/api/types";
 import { useState } from "react";
-import type { ReactNode } from "react";
 import { useNavigate, useParams } from "react-router";
 import { useDebounce } from "@reactuses/core";
 import { useQuery } from "@tanstack/react-query";
 import clsx from "clsx";
-import { History, Lightbulb } from "lucide-react";
-import { modelSearch, typeColor } from "@/api/api";
-import type { Model } from "@/api/types";
+import { useAtomValue } from "jotai";
+import {
+  BookCheck,
+  History,
+  Lightbulb,
+  ScanSearch,
+  Trash2,
+} from "lucide-react";
+import { ontologySearch, typeColor } from "@/api/api";
 import Autocomplete from "@/components/Autocomplete";
-import Link from "@/components/Link";
+import Button from "@/components/Button";
+import Heading from "@/components/Heading";
 import Rings from "@/components/Rings";
 import Status, { showStatus } from "@/components/Status";
-import { addSearch, getHistory } from "@/search";
+import { feedbackAtom } from "@/state/feedback";
+import { addSearch, getHistory, searchHistoryAtom } from "@/state/search";
 import { useChanged } from "@/util/hooks";
 
 /** example searches */
-const examples = ["Hepatocyte", "Breast cancer", "Alzheimer's disease"];
+const examples: Ontologies = [
+  {
+    id: "Hepatocyte",
+    name: "Hepatocyte",
+    type: "",
+    description: "",
+    series: "",
+  },
+  {
+    id: "Breast cancer",
+    name: "Breast cancer",
+    type: "",
+    description: "",
+    series: "",
+  },
+  {
+    id: "Alzheimer's disease",
+    name: "Alzheimer's disease",
+    type: "",
+    description: "",
+    series: "",
+  },
+];
 
 export default function Home() {
   return (
@@ -25,12 +56,7 @@ export default function Home() {
           relative z-0 overflow-hidden bg-theme-light py-20! text-center narrow
         "
       >
-        <Rings
-          className="
-            absolute top-1/2 left-1/2 -z-10 w-full max-w-200 -translate-1/2
-            text-[hsl(220,50%,50%,0.25)]
-          "
-        />
+        <Rings />
 
         <hgroup className="flex flex-col items-center gap-y-1 narrow">
           <h1 className="sr-only">Home</h1>
@@ -45,20 +71,9 @@ export default function Home() {
         </hgroup>
 
         <SearchBox />
-
-        {/* examples */}
-        <p className="flex flex-wrap items-center justify-center gap-4">
-          <span className="flex items-center gap-1 text-slate-500">
-            <Lightbulb />
-            Try
-          </span>
-          {examples.map((example) => (
-            <Link key={example} to={`/search/${example}`}>
-              {example}
-            </Link>
-          ))}
-        </p>
       </section>
+
+      <Stats />
 
       <section>
         <p>
@@ -85,7 +100,13 @@ export default function Home() {
   );
 }
 
-export const SearchBox = () => {
+export const SearchBox = ({
+  inputRef,
+  className,
+}: {
+  inputRef?: RefObject<HTMLInputElement | null>;
+  className?: string;
+}) => {
   const navigate = useNavigate();
 
   /** search string state (immediate) */
@@ -99,22 +120,37 @@ export const SearchBox = () => {
   const searchChanged = useChanged(params.search);
   if (searchChanged && params.search) setSearch(params.search);
 
-  /** model search results */
-  const query = useQuery({
-    queryKey: ["model-search", search],
-    queryFn: () => modelSearch(search),
+  /** ontology search results */
+  const ontologySearchQuery = useQuery({
+    queryKey: ["ontology-search", search],
+    queryFn: () => ontologySearch(search),
   });
 
   /** search results */
-  const results: (Model & { icon?: ReactNode })[] = search.trim()
-    ? (query.data ?? [])
-    : getHistory().map((search) => ({
-        ...search,
-        icon: <History className="text-slate-400" />,
-      }));
+  const results = search.trim()
+    ? /** actual search results */
+      (ontologySearchQuery.data?.map((result) => ({
+        ...result,
+        icon: <></>,
+      })) ?? [])
+    : /** if nothing typed in search box... */
+      /** show search history */
+      [
+        ...getHistory()
+          .list.slice(0, 10)
+          .map(({ search }) => ({
+            ...search,
+            icon: <History className="text-slate-400" />,
+          })),
+        ...examples.map((example) => ({
+          ...example,
+          icon: <Lightbulb className="text-slate-400" />,
+        })),
+      ];
 
   return (
     <Autocomplete
+      inputRef={inputRef}
       search={_search}
       setSearch={setSearch}
       placeholder="Search..."
@@ -124,33 +160,125 @@ export const SearchBox = () => {
           content: (
             <>
               {icon}
-              <span
-                className={clsx(
-                  "rounded px-1 py-0.5 text-sm  text-white",
-                  typeColor[type] ?? typeColor["default"],
-                )}
-              >
-                {type}
-              </span>
-              <span
-                className="grow truncate font-normal"
-                dangerouslySetInnerHTML={{ __html: name }}
-              />
-              <span className="text-right text-slate-500">{id}</span>
+              {type && (
+                <span
+                  className={clsx(
+                    "rounded-md px-1 text-sm  text-white",
+                    typeColor[type] ?? typeColor["default"],
+                  )}
+                >
+                  {type}
+                </span>
+              )}
+              {name && (
+                <span
+                  className="grow truncate font-normal"
+                  dangerouslySetInnerHTML={{ __html: name }}
+                />
+              )}
+              {id && <span className="text-right text-slate-500">{id}</span>}
             </>
           ),
         })) ?? []
       }
       onSelect={(id) => {
         if (!id?.trim()) return;
-        const model = query.data?.find((model) => model.id === id);
-        if (model) addSearch(model);
-        navigate(`/search/${model?.name ?? ""}`);
+        const result = ontologySearchQuery.data?.find(
+          (result) => result.id === id,
+        );
+        if (result) addSearch(result);
+        navigate(`/search/${result?.id ?? ""}?raw=${_search}`);
       }}
       status={
-        showStatus({ query }) && <Status query={query} className="contents!" />
+        showStatus({ query: ontologySearchQuery }) && (
+          <Status query={ontologySearchQuery} className="contents!" />
+        )
       }
-      className="bg-white"
+      className={className}
     />
+  );
+};
+
+/** user's app stats */
+const Stats = () => {
+  const history = getHistory(useAtomValue(searchHistoryAtom));
+  const feedback = useAtomValue(feedbackAtom);
+
+  const uniqueSearches = Object.keys(history.grouped).length.toLocaleString();
+  const studyFeedbacks = Object.keys(feedback).length.toLocaleString();
+
+  const stats = [
+    {
+      Icon: ScanSearch,
+      value: uniqueSearches,
+      label: (
+        <>
+          Made <b>{uniqueSearches}</b> unique searches
+        </>
+      ),
+      color: "text-yellow-500",
+    },
+    {
+      Icon: BookCheck,
+      value: studyFeedbacks,
+      label: (
+        <>
+          Provided feedback on <b>{studyFeedbacks}</b> studies
+        </>
+      ),
+      color: "text-emerald-500",
+    },
+  ];
+
+  return (
+    <section>
+      <Heading level={2}>Your Stats</Heading>
+
+      <em className="self-center">On this device, you've...</em>
+
+      <div
+        className="
+          grid grid-cols-[repeat(auto-fit,minmax(0,auto))] justify-center gap-4
+        "
+      >
+        {stats.map(({ Icon, value, label, color }, index) => (
+          <div key={index} className="flex w-40 flex-col items-center gap-4">
+            <div
+              className={clsx(
+                `
+                  flex aspect-square w-1/2 items-center justify-center gap-2
+                  rounded-full bg-current/10 text-2xl
+                `,
+                color,
+              )}
+            >
+              <Icon />
+              <span className="text-black">{value}</span>
+            </div>
+            <div className="text-center text-balance">{label}</div>
+          </div>
+        ))}
+      </div>
+
+      <Button
+        className="self-center"
+        color="accent"
+        onClick={() => {
+          if (
+            window.confirm(
+              `Clear all ${import.meta.env.VITE_TITLE} info saved on this device? No undo.
+              
+(Does not affect info already sent to us, such as previously submitted feedback.)`,
+            )
+          ) {
+            window.localStorage.clear();
+            window.location.reload();
+          }
+        }}
+      >
+        <Trash2 />
+        Clear
+      </Button>
+    </section>
   );
 };

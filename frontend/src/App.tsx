@@ -104,7 +104,11 @@ const router = createBrowserRouter(routes, {
 /** network request client */
 const queryClient = new QueryClient({
   defaultOptions: {
-    queries: { retry: 2, retryDelay: (retry) => 200 * retry },
+    queries: {
+      retry: 2,
+      retryDelay: (retry) => 200 * retry,
+      staleTime: Infinity,
+    },
     mutations: { retry: 2, retryDelay: (retry) => 200 * retry },
   },
 });

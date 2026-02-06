@@ -25,21 +25,18 @@ const Status = ({
   query,
   className,
 }: Props) => {
-  const base = clsx(
-    "flex items-center justify-center gap-2 rounded-sm bg-current/5 p-4",
-    className,
-  );
+  const base = "flex items-center justify-center gap-2 rounded-sm  p-4";
 
   if ("isFetching" in query ? query.isFetching : query.status === "pending")
     return (
-      <span className={clsx(base, "text-slate-500", className)}>
+      <span className={clsx(base, "bg-slate-100 text-slate-500", className)}>
         <LoaderCircle className="animate-spin" />
         {loading}
       </span>
     );
   else if (query.status === "error")
     return (
-      <span className={clsx(base, "text-red-500", className)}>
+      <span className={clsx(base, "bg-red-100 text-red-500", className)}>
         <TriangleAlert />
         <Tooltip content={query.error?.message}>
           <span className="underline decoration-dashed underline-offset-2">
@@ -50,7 +47,7 @@ const Status = ({
     );
   else if (query.status === "success" && isEmpty(query.data))
     return (
-      <span className={clsx(base, "text-slate-500", className)}>
+      <span className={clsx(base, "bg-slate-100 text-slate-500", className)}>
         <InfoIcon />
         {empty}
       </span>

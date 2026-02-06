@@ -1,5 +1,5 @@
-import { useRef } from "react";
 import type { JSX, ReactNode } from "react";
+import { useRef } from "react";
 import clsx from "clsx";
 import Link from "@/components/Link";
 import { renderText } from "@/util/dom";

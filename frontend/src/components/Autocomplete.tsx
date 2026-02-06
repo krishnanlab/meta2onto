@@ -1,11 +1,13 @@
+import type { ReactElement, ReactNode, RefObject } from "react";
 import { useRef } from "react";
-import type { ReactElement, ReactNode } from "react";
 import { Autocomplete as _Autocomplete } from "@base-ui/react";
 import clsx from "clsx";
 import { Search } from "lucide-react";
 import { padding } from "@/components/Tooltip";
 
 type Props = {
+  /** optional input ref */
+  inputRef?: RefObject<HTMLInputElement | null>;
   /** search value */
   search: string;
   /** on input search */
@@ -27,6 +29,7 @@ type Props = {
 
 /** textbox box with dropdown */
 export default function Autocomplete({
+  inputRef,
   search,
   setSearch,
   options,
@@ -35,7 +38,8 @@ export default function Autocomplete({
   status,
   className,
 }: Props) {
-  const ref = useRef<HTMLInputElement>(null);
+  const _inputRef = useRef<HTMLInputElement>(null);
+  inputRef ??= _inputRef;
 
   return (
     <_Autocomplete.Root
@@ -45,19 +49,15 @@ export default function Autocomplete({
       mode="none"
       openOnInputClick
     >
-      <div className="relative flex items-center">
+      <div className={clsx("relative flex items-center", className)}>
         <_Autocomplete.Input
           render={
             <input
-              ref={ref}
+              ref={inputRef}
               placeholder={placeholder}
-              className={clsx(
-                `
-                  w-full rounded-sm border border-slate-300 p-2
-                  disabled:border-0 disabled:bg-slate-200!
-                `,
-                className,
-              )}
+              className="
+                w-full rounded-sm border border-current/25 bg-white p-2 pr-8
+              "
             />
           }
         />
@@ -73,7 +73,7 @@ export default function Autocomplete({
             "
           >
             {status && (
-              <_Autocomplete.Status className="flex gap-2 p-2">
+              <_Autocomplete.Status className="flex items-center gap-2 p-2">
                 {status}
               </_Autocomplete.Status>
             )}
@@ -84,7 +84,7 @@ export default function Autocomplete({
                     key={index}
                     value={tag.value}
                     className="
-                      flex cursor-pointer gap-2 p-2
+                      flex cursor-pointer items-center gap-2 p-2
                       data-highlighted:bg-theme/10
                     "
                     onClick={(event) => {
@@ -92,7 +92,7 @@ export default function Autocomplete({
                       /** select option */
                       onSelect?.(tag.value);
                       /** close dropdown */
-                      ref.current?.blur();
+                      inputRef.current?.blur();
                     }}
                   >
                     {tag.content}
