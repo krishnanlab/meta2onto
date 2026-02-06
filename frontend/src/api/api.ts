@@ -28,7 +28,7 @@ export const studySearch = async ({
   limit = 100,
   facets = {} as Record<string, string[]>,
 }) => {
-  const url = new URL(`${api}/geo-metadata/search/`);
+  const url = new URL(`${api}/series/search/`);
   url.searchParams.set("query", search);
   url.searchParams.set("ordering", ordering);
   url.searchParams.set("offset", String(offset));
@@ -46,7 +46,7 @@ export const studyBatchLookup = async ({
   offset = 0,
   limit = 100,
 }) => {
-  const url = new URL(`${api}/geo-metadata/lookup/`);
+  const url = new URL(`${api}/series/lookup/`);
   // url.searchParams.set("ordering", ordering);
   url.searchParams.set("offset", String(offset));
   url.searchParams.set("limit", String(limit));
