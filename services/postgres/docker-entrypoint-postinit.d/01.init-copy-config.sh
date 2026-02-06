@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 set -e
 
 # only copy it in if /tmp/postgresql.conf exists
