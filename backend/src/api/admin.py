@@ -1,9 +1,9 @@
 from django.contrib import admin
 
-from api.models import Organism, Platform, Sample, Series, SeriesRelations
+from api.models import Organism, GEOPlatform, GEOSample, GEOSeries, GEOSeriesRelations
 
 admin.site.register(Organism)
-admin.site.register(Platform)
-admin.site.register(Sample)
-admin.site.register(Series)
-admin.site.register(SeriesRelations)
+admin.site.register(GEOPlatform)
+admin.site.register(GEOSample)
+admin.site.register(GEOSeries)
+admin.site.register(GEOSeriesRelations)

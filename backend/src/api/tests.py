@@ -2,10 +2,10 @@ from django.test import TestCase
 
 # Create your tests here.
 
-class GEOSeriesMetadataViewSetTests(TestCase):
+class GEOSeriesViewSetTests(TestCase):
     def test_search_action(self):
         # Simulate a GET request to the search action
-        response = self.client.get('/api/geoseriesmetadata/search/', {'query': 'lower respiratory tract disorder'})
+        response = self.client.get('/api/series/search/', {'query': 'lower respiratory tract disorder'})
 
         # Check that the response is successful
         self.assertEqual(response.status_code, 200)

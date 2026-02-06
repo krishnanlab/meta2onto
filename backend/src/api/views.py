@@ -14,19 +14,32 @@ from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
-from .models import (Cart, CartItem, ExternalRelation, GEOPlatformMetadata,
-                     GEOSampleMetadata, GEOSeriesMetadata,
-                     GEOSeriesToPlatforms, OntologySearchResults, Organism,
-                     OrganismForPairing, Platform, SearchTerm, Series,
-                     SeriesRelations)
-from .serializers import (CartSerializer, ExternalRelationSerializer,
-                          GEOSampleMetadataSerializer,
-                          GEOSeriesMetadataSerializer,
-                          OntologySearchResultsSerializer,
-                          OrganismForPairingSerializer, OrganismSerializer,
-                          PlatformSerializer,
-                          SearchTermSerializer, SeriesRelationsSerializer,
-                          SeriesSerializer)
+from .models import (
+    Cart,
+    CartItem,
+    # ExternalRelation,
+    GEOPlatform,
+    GEOSample,
+    GEOSeries,
+    GEOSeriesToGEOPlatforms,
+    OntologySearchResults, Organism,
+    # OrganismForPairing,
+    GEOPlatform, SearchTerm, GEOSeries,
+    # GEOSeriesRelations
+)
+from .serializers import (
+    CartSerializer,
+    # ExternalRelationSerializer,
+    GEOSampleSerializer,
+    GEOSeriesSerializer,
+    OntologySearchResultsSerializer,
+    # OrganismForPairingSerializer,
+    OrganismSerializer,
+    GEOPlatformSerializer,
+    SearchTermSerializer,
+    # GEOSeriesRelationsSerializer,
+    GEOSeriesSerializer
+)
 
 # ===========================================================================
 # === Helpers
@@ -39,7 +52,7 @@ class LargeEntityPagination(LimitOffsetPagination):
     default_limit = 5
 
 
-class SeriesSearchPagination(LimitOffsetPagination):
+class GEOSeriesSearchPagination(LimitOffsetPagination):
     """Limit/offset pagination that always returns facets with page metadata."""
 
     def get_paginated_response(self, data):  # type: ignore[override]
@@ -72,26 +85,26 @@ class OrganismViewSet(viewsets.ReadOnlyModelViewSet):
 # === Core Entities
 # ===========================================================================
 
-class PlatformViewSet(viewsets.ReadOnlyModelViewSet):
+class GEOPlatformViewSet(viewsets.ReadOnlyModelViewSet):
     """
-    ReadOnly API endpoint for viewing Platforms.
+    ReadOnly API endpoint for viewing GEOPlatforms.
     Accessible at /api/platforms/
     """
-    queryset = Platform.objects.all()
-    serializer_class = PlatformSerializer
+    queryset = GEOPlatform.objects.all()
+    serializer_class = GEOPlatformSerializer
     filter_backends = [SearchFilter, OrderingFilter]
     search_fields = ['platform_id']
     ordering_fields = ['platform_id', 'created_at', 'updated_at']
     ordering = ['platform_id']
 
 
-class SeriesViewSet(viewsets.ReadOnlyModelViewSet):
+class GEOSeriesViewSet(viewsets.ReadOnlyModelViewSet):
     """
-    ReadOnly API endpoint for viewing Series.
+    ReadOnly API endpoint for viewing GEOSeries.
     Accessible at /api/series/
     """
-    queryset = Series.objects.all()
-    serializer_class = SeriesSerializer
+    queryset = GEOSeries.objects.all()
+    serializer_class = GEOSeriesSerializer
     filter_backends = [SearchFilter, OrderingFilter]
     # search_fields = ['series_id', 'doc', 'search_terms__term']
     search_fields = ['search_terms__term']
@@ -103,14 +116,14 @@ class SeriesViewSet(viewsets.ReadOnlyModelViewSet):
     def samples(self, request, pk=None):
         series = self.get_object()
         # samples = series.series_relations.first().samples.all()
-        samples = GEOSampleMetadata.objects.filter(
+        samples = GEOSample.objects.filter(
             series_id=series.series_id
         ).all()
         page = self.paginate_queryset(samples)
         if page is not None:
-            serializer = GEOSampleMetadataSerializer(page, many=True)
+            serializer = GEOSampleSerializer(page, many=True)
             return self.get_paginated_response(serializer.data)
-        serializer = GEOSampleMetadataSerializer(samples, many=True)
+        serializer = GEOSampleSerializer(samples, many=True)
         return Response(serializer.data)
     
     # provide a /lookup action to get series by a list of ids
@@ -119,7 +132,7 @@ class SeriesViewSet(viewsets.ReadOnlyModelViewSet):
     def lookup(self, request):
         # takes a list of series_ids in the body
         series_ids = request.data.get('ids', [])
-        queryset = GEOSampleMetadata.objects.filter(series_id__in=series_ids)
+        queryset = GEOSample.objects.filter(series_id__in=series_ids)
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
@@ -128,15 +141,15 @@ class SeriesViewSet(viewsets.ReadOnlyModelViewSet):
         return Response(serializer.data)
 
 
-class SampleViewSet(viewsets.ReadOnlyModelViewSet):
+class GEOSampleViewSet(viewsets.ReadOnlyModelViewSet):
     """
-    ReadOnly API endpoint for viewing Samples.
+    ReadOnly API endpoint for viewing GEOSamples.
     Accessible at /api/samples/
     """
-    # queryset = Sample.objects.all()
-    # serializer_class = SampleSerializer
-    queryset = GEOSampleMetadata.objects.all()
-    serializer_class = GEOSampleMetadataSerializer
+    # queryset = GEOSample.objects.all()
+    # serializer_class = GEOSampleSerializer
+    queryset = GEOSample.objects.all()
+    serializer_class = GEOSampleSerializer
     filter_backends = [SearchFilter, OrderingFilter]
     search_fields = ['sample_id', 'doc', 'search_terms__term']
     ordering_fields = ['sample_id', 'created_at', 'updated_at']
@@ -147,61 +160,61 @@ class SampleViewSet(viewsets.ReadOnlyModelViewSet):
 # === Join tables / relations
 # ===========================================================================---------
 
-class OrganismForPairingViewSet(viewsets.ReadOnlyModelViewSet):
-    """
-    ReadOnly API endpoint for viewing OrganismForPairing relationships.
-    Accessible at /api/organism-pairings/
-    """
-    queryset = OrganismForPairing.objects.select_related(
-        'organism', 'series', 'sample', 'platform'
-    ).all()
-    # queryset = OrganismForPairing.objects.all()
-    serializer_class = OrganismForPairingSerializer
-    pagination_class = LargeEntityPagination
-    # filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    # filterset_fields = ['organism', 'series', 'sample', 'platform', 'status']
-    # search_fields = ['status', 'organism__name']
-    # ordering_fields = ['id', 'series', 'sample', 'platform']
-    # ordering = ['id']
-    filter_backends = [SearchFilter, OrderingFilter]
-    search_fields = ['status', 'organism__name']
-    ordering_fields = ['id', 'series', 'sample', 'platform']
-    ordering = ['id']
+# class OrganismForPairingViewSet(viewsets.ReadOnlyModelViewSet):
+#     """
+#     ReadOnly API endpoint for viewing OrganismForPairing relationships.
+#     Accessible at /api/organism-pairings/
+#     """
+#     queryset = OrganismForPairing.objects.select_related(
+#         'organism', 'series', 'sample', 'platform'
+#     ).all()
+#     # queryset = OrganismForPairing.objects.all()
+#     serializer_class = OrganismForPairingSerializer
+#     pagination_class = LargeEntityPagination
+#     # filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+#     # filterset_fields = ['organism', 'series', 'sample', 'platform', 'status']
+#     # search_fields = ['status', 'organism__name']
+#     # ordering_fields = ['id', 'series', 'sample', 'platform']
+#     # ordering = ['id']
+#     filter_backends = [SearchFilter, OrderingFilter]
+#     search_fields = ['status', 'organism__name']
+#     ordering_fields = ['id', 'series', 'sample', 'platform']
+#     ordering = ['id']
 
-@method_decorator(cache_page(60 * 5), name='list')
-@method_decorator(cache_page(60 * 5), name='retrieve')
-class SeriesRelationsViewSet(viewsets.ReadOnlyModelViewSet):
-    """
-    ReadOnly API endpoint for viewing SeriesRelations.
-    Accessible at /api/series-relations/
-    Cached for 5 minutes to improve performance.
-    """
-    queryset = SeriesRelations.objects.prefetch_related(
-        'samples', 'platforms'
-    ).select_related('series').all()
-    serializer_class = SeriesRelationsSerializer
-    pagination_class = LargeEntityPagination
-    # filter_backends = [DjangoFilterBackend, OrderingFilter]
-    # filterset_fields = ['series']
-    filter_backends = [OrderingFilter]
-    ordering_fields = ['id', 'series']
-    ordering = ['id']
+# @method_decorator(cache_page(60 * 5), name='list')
+# @method_decorator(cache_page(60 * 5), name='retrieve')
+# class GEOSeriesRelationsViewSet(viewsets.ReadOnlyModelViewSet):
+#     """
+#     ReadOnly API endpoint for viewing GEOSeriesRelations.
+#     Accessible at /api/series-relations/
+#     Cached for 5 minutes to improve performance.
+#     """
+#     queryset = GEOSeriesRelations.objects.prefetch_related(
+#         'samples', 'platforms'
+#     ).select_related('series').all()
+#     serializer_class = GEOSeriesRelationsSerializer
+#     pagination_class = LargeEntityPagination
+#     # filter_backends = [DjangoFilterBackend, OrderingFilter]
+#     # filterset_fields = ['series']
+#     filter_backends = [OrderingFilter]
+#     ordering_fields = ['id', 'series']
+#     ordering = ['id']
 
 
-class ExternalRelationViewSet(viewsets.ReadOnlyModelViewSet):
-    """
-    ReadOnly API endpoint for viewing ExternalRelations.
-    Accessible at /api/external-relations/
-    """
-    queryset = ExternalRelation.objects.all()
-    serializer_class = ExternalRelationSerializer
-    pagination_class = LargeEntityPagination
-    # filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    # filterset_fields = ['from_entity', 'to_entity', 'relation_type']
-    filter_backends = [SearchFilter, OrderingFilter]
-    search_fields = ['from_entity', 'to_entity', 'relation_type']
-    ordering_fields = ['id', 'from_entity', 'to_entity', 'relation_type']
-    ordering = ['id']
+# class ExternalRelationViewSet(viewsets.ReadOnlyModelViewSet):
+#     """
+#     ReadOnly API endpoint for viewing ExternalRelations.
+#     Accessible at /api/external-relations/
+#     """
+#     queryset = ExternalRelation.objects.all()
+#     serializer_class = ExternalRelationSerializer
+#     pagination_class = LargeEntityPagination
+#     # filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+#     # filterset_fields = ['from_entity', 'to_entity', 'relation_type']
+#     filter_backends = [SearchFilter, OrderingFilter]
+#     search_fields = ['from_entity', 'to_entity', 'relation_type']
+#     ordering_fields = ['id', 'from_entity', 'to_entity', 'relation_type']
+#     ordering = ['id']
 
 
 # ===========================================================================
@@ -259,18 +272,18 @@ def ontology_search(request):
 # === GEO Series Metadata
 # ===========================================================================
 
-class GEOSeriesMetadataViewSet(viewsets.ReadOnlyModelViewSet):
+class GEOSeriesViewSet(viewsets.ReadOnlyModelViewSet):
     """
     ReadOnly API endpoint for viewing GEO Series Metadata.
-    Accessible at /api/geo-metadata/
+    Accessible at /api/series/
     """
-    queryset = GEOSeriesMetadata.objects.all()
-    serializer_class = GEOSeriesMetadataSerializer
+    queryset = GEOSeries.objects.all()
+    serializer_class = GEOSeriesSerializer
     filter_backends = [SearchFilter, OrderingFilter]
     search_fields = ['gse', 'title', 'summary']
     ordering_fields = ['gse', 'title']
     ordering = ['gse']
-    pagination_class = SeriesSearchPagination
+    pagination_class = GEOSeriesSearchPagination
 
     def _build_facets(self, queryset):
         """Compute facets for the search result set."""
@@ -286,7 +299,7 @@ class GEOSeriesMetadataViewSet(viewsets.ReadOnlyModelViewSet):
             )
         )
 
-        # join the 'gpl' field from GEOSampleMetadata to this queryset
+        # join the 'gpl' field from GEOSample to this queryset
         annotated_qs = annotated_qs.annotate(
             samples_ct=models.Count('samples', distinct=True)
         )
@@ -308,7 +321,7 @@ class GEOSeriesMetadataViewSet(viewsets.ReadOnlyModelViewSet):
 
         # 2) Flatten platforms arrays into one stream of GPLs
         platform_gpls = (
-            GEOSeriesToPlatforms.objects
+            GEOSeriesToGEOPlatforms.objects
             .filter(gse__in=gse_list)
             .annotate(
                 gpl=Func(F("platforms"), function="unnest", output_field=CharField())
@@ -317,7 +330,7 @@ class GEOSeriesMetadataViewSet(viewsets.ReadOnlyModelViewSet):
         )
 
         # 3) Join to platform metadata + count titles
-        platforms_qs = GEOPlatformMetadata.objects.filter(gpl__in=platform_gpls)
+        platforms_qs = GEOPlatform.objects.filter(gpl__in=platform_gpls)
         platforms_dict = Counter(platforms_qs.values_list("technology", flat=True))
 
         # compute counts for each confidence level
@@ -364,7 +377,7 @@ class GEOSeriesMetadataViewSet(viewsets.ReadOnlyModelViewSet):
             #     status=status.HTTP_400_BAD_REQUEST
             # )
         
-        results = GEOSeriesMetadata.objects.search(query, order_by=ordering)
+        results = GEOSeries.objects.search(query, order_by=ordering)
         facets = self._build_facets(results)
 
         # paginate the response
@@ -405,11 +418,11 @@ class GEOSeriesMetadataViewSet(viewsets.ReadOnlyModelViewSet):
         # 3. filter results to only those gse values
         platforms = request.query_params.getlist('platforms')
         if platforms:
-            gpls = GEOPlatformMetadata.objects.filter(
+            gpls = GEOPlatform.objects.filter(
                 technology__in=platforms
             ).values_list('gpl', flat=True)
 
-            gse_values = GEOSeriesToPlatforms.objects.filter(
+            gse_values = GEOSeriesToGEOPlatforms.objects.filter(
                 platforms__overlap=list(gpls)
             ).values_list('gse', flat=True).distinct()
 
@@ -509,13 +522,13 @@ class CartViewSet(viewsets.ModelViewSet):
                 series_id = series_data['id']
                 added_at = series_data.get('added')
                 try:
-                    series = Series.objects.get(series_id=series_id)
+                    series = GEOSeries.objects.get(series_id=series_id)
                     CartItem.objects.create(
                         series=series,
                         added_at=added_at,
                         cart=cart
                     )
-                except Series.DoesNotExist:
+                except GEOSeries.DoesNotExist:
                     continue  # skip invalid series ids
 
             serializer = self.get_serializer(cart)
@@ -546,7 +559,7 @@ class CartViewSet(viewsets.ModelViewSet):
         download_type = request.query_params.get('type', 'json')
         filename = request.query_params.get('filename', 'cart_download')
         
-        series_qs = GEOSeriesMetadata.objects.filter(gse__in=series_ids)
+        series_qs = GEOSeries.objects.filter(gse__in=series_ids)
         
         if download_type == 'json':
             # prepare JSON response
@@ -573,7 +586,7 @@ class CartViewSet(viewsets.ModelViewSet):
             response.write('\ufeff')
 
             writer = csv.writer(response)
-            writer.writerow(['Series ID', 'Title', 'Summary'])
+            writer.writerow(['GEOSeries ID', 'Title', 'Summary'])
             for series in series_qs:
                 writer.writerow([series.gse, series.title, series.summary])
 

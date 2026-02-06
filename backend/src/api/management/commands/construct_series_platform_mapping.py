@@ -6,16 +6,16 @@ from django.core.management.base import BaseCommand
 
 from django.db import connection, transaction
 
-from api.models import GEOPlatformMetadata, GEOSeriesMetadata, GEOSeriesToPlatforms
+from api.models import GEOPlatform, GEOSeries, GEOSeriesToGEOPlatforms
 
 class Command(BaseCommand):
-    help = 'Construct mapping between GEO Series and their Platforms'
+    help = 'Construct mapping between GEOSeries and their GEOPlatforms'
 
     def handle(self, *args, **options):
-        self.stdout.write('Starting construction of Series to Platform mapping...')
+        self.stdout.write('Starting construction of GEOSeries to GEOPlatform mapping...')
 
         # Clear existing mappings
-        GEOSeriesToPlatforms.objects.all().delete()
+        GEOSeriesToGEOPlatforms.objects.all().delete()
 
         # run the following SQL:
         # insert into api_geoseriestoplatforms
@@ -36,4 +36,4 @@ class Command(BaseCommand):
             with connection.cursor() as cursor:
                 cursor.execute(copy_sql)
 
-        self.stdout.write(self.style.SUCCESS('Successfully constructed Series to Platform mapping.'))
+        self.stdout.write(self.style.SUCCESS('Successfully constructed GEOSeries to GEOPlatform mapping.'))

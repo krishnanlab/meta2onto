@@ -28,7 +28,7 @@ import gc
 import psycopg2
 
 from api.models import (
-    GEOSeriesMetadata, GEOSampleMetadata, GEOPlatformMetadata
+    GEOSeries, GEOSample, GEOPlatform
 )
 
 from django.conf import settings
@@ -190,7 +190,7 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.WARNING("Clearing existing GEOmetadb data..."))
 
                 models_to_clear = (
-                    GEOSeriesMetadata, GEOSampleMetadata, GEOPlatformMetadata,
+                    GEOSeries, GEOSample, GEOPlatform,
                 )
 
                 with connection.cursor() as cursor:
@@ -204,11 +204,11 @@ class Command(BaseCommand):
 
         # con = duckdb.connect(database=str(geometadb_db), read_only=True, config={'memory_limit': "8GB"})
 
-        # GEOSeriesMetadata via COPY
+        # GEOSeries via COPY
         self._copy_from_duckdb(
             path_to_db=geometadb_db,
             src_table="gse",
-            model=GEOSeriesMetadata,
+            model=GEOSeries,
             cols=(
                 'title',
                 'gse',
@@ -234,7 +234,7 @@ class Command(BaseCommand):
         self._copy_from_duckdb(
             path_to_db=geometadb_db,
             src_table="gsm",
-            model=GEOSampleMetadata,
+            model=GEOSample,
             cols=(
                 'gsm',
                 'title',
@@ -275,7 +275,7 @@ class Command(BaseCommand):
         self._copy_from_duckdb(
             path_to_db=geometadb_db,
             src_table="gpl",
-            model=GEOPlatformMetadata,
+            model=GEOPlatform,
             cols=(
                 'gpl',
                 'title',

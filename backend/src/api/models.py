@@ -39,148 +39,416 @@ class Organism(models.Model):
 
 # ===========================================================================
 # === Core entities
+# === from GEOmetadb, https://gbnci.cancer.gov/geo/
 # ===========================================================================
 
-class Platform(TimeStampedModel):
+class GEOSeriesManager(models.Manager):
+    @classmethod
+    def search_gse_with_prob(cls, query: str, limit: int = 50):
+        # CTE that yields (series_id, prob)
+        hits = CTE(
+            raw_cte_sql(
+                """
+                SELECT st.series_id AS series_id, st.prob
+                FROM search_onto(%s, %s) so
+                INNER JOIN api_searchterm st ON st.term = so.id
+                LIMIT 100
+                """,
+                # params for search_onto(%s, %s)
+                [query, limit],
+                # tell django-cte the output column types
+                {
+                    "series_id": CharField(),
+                    "prob": FloatField(),
+                },
+            ),
+            name="hits",
+        )
+
+        # Join the CTE to your model on gse = series_id
+        qs = hits.join(
+            GEOSeries.objects.all(),
+            gse=hits.col.series_id,
+            _join_type=INNER,  # keeps GSE rows even if no match; use INNER if you only want matches
+        ).annotate(
+            prob=hits.col.prob
+        )
+
+        return with_cte(hits, select=qs)
+
+    def search(self, query:str, max_results:int=50, order_by:str='relevance'):
+        """
+        Fetch GEO sample metadata by sample ID (GSM*).
+
+        For details about the search_onto method used here, see
+        /backend/src/api/migrations/0012_search_onto_func.py, the migration that
+        introduces the search_onto function.
+        """
+
+        result = GEOSeriesManager.search_gse_with_prob(
+            query=query, limit=max_results
+        )
+
+        # # annotate samples count
+        # qs = result.annotate(
+        #     samples_ct=Subquery(
+        #         GEOSeriesRelations.objects
+        #             .filter(series_id=OuterRef("gse"))
+        #             .values("series_id")
+        #             .annotate(c=models.Count("samples"))
+        #             .values("c")[:1],
+        #         output_field=IntegerField(),
+        #     ),
+        # )
+
+        qs = result.annotate(
+            samples_ct=Subquery(
+                GEOSample.objects
+                    .filter(series_id=OuterRef("gse"))
+                    .values("series_id")
+                    .annotate(c=models.Count("gsm"))
+                    .values("c")[:1],
+                output_field=IntegerField(),
+            ),
+        )
+
+        if order_by == "relevance":
+            qs = qs.order_by("-prob")
+        elif order_by == "-relevance":
+            qs = qs.order_by("prob")
+        elif order_by == "samples":
+            qs = qs.order_by("-samples_ct")
+
+        return qs
+
+class GEOSeries(models.Model):
     """
-    GEO 'platform' (instrument) ID, e.g., 'GPL17021'.
+    the "gse" table from GEOmetadb.
+    Originally fetched from https://gbnci.cancer.gov/geo/GEOmetadb.sqlite.gz
+    on 2025-12-11.
     """
-    platform_id = models.CharField(max_length=64, primary_key=True)
-  
+
+    objects = GEOSeriesManager()
+
+    title = models.TextField(null=True, blank=True)
+    gse = models.CharField(primary_key=True)
+    status = models.CharField(null=True, blank=True)
+    submission_date = models.CharField(null=True, blank=True)
+    last_update_date = models.CharField(null=True, blank=True)
+    pubmed_id = models.BigIntegerField(null=True, blank=True)
+    summary = models.TextField(null=True, blank=True)
+    type = models.CharField(null=True, blank=True)
+    contributor = models.TextField(null=True, blank=True)
+    web_link = models.TextField(null=True, blank=True)
+    overall_design = models.TextField(null=True, blank=True)
+    repeats = models.TextField(null=True, blank=True)
+    repeats_sample_list = models.TextField(null=True, blank=True)
+    variable = models.TextField(null=True, blank=True)
+    variable_description = models.TextField(null=True, blank=True)
+    contact = models.TextField(null=True, blank=True)
+    supplementary_file = models.TextField(null=True, blank=True)
+
+    # from original GEOSeries import
+    doc = models.TextField(blank=True, null=True)
+
+    # this is not actually a column, but will be annotated into
+    # the model instances by the custom manager's search() method
+    prob: float | None = None
+
+    @property
+    def database(self):
+        inlined_db = getattr(self, "_database", None)
+
+        if inlined_db is not None:
+            return inlined_db
+        else:
+            return list(
+                GEOSeriesDatabase.objects.filter(series_id=self.gse).values_list('database_name', flat=True)
+            )
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['gse']),
+        ]
 
     def __str__(self):
-        return self.platform_id
-
-
-class Series(TimeStampedModel):
+        return f"GEO Metadata for {self.gse}"
+    
+class GEOSample(models.Model):
     """
-    GEO 'series' (dataset) ID, e.g., 'GSE12345'.
-    Mirrors ids__level-series.parquet (sans denormalized arrays).
+    the "gsm" table from GEOmetadb.
+    Originally fetched from https://gbnci.cancer.gov/geo/GEOmetadb.sqlite.gz
+    on 2025-12-11.
     """
-  
-    series_id = models.CharField(max_length=64, primary_key=True)
-    doc = models.TextField()
+
+    gsm = models.CharField(primary_key=True, help_text="GEOSample ID")
+    title = models.TextField(null=True, blank=True)
+    # series_id = models.TextField(null=True, blank=True)
+    gpl_raw = models.TextField(null=True, blank=True, db_column="gpl", help_text="GEOPlatform ID")
+    status = models.TextField(null=True, blank=True)
+    submission_date = models.TextField(null=True, blank=True)
+    last_update_date = models.TextField(null=True, blank=True)
+    type = models.TextField(null=True, blank=True)
+    source_name_ch1 = models.TextField(null=True, blank=True)
+    organism_ch1 = models.TextField(null=True, blank=True)
+    characteristics_ch1 = models.TextField(null=True, blank=True)
+    molecule_ch1 = models.TextField(null=True, blank=True)
+    label_ch1 = models.TextField(null=True, blank=True)
+    treatment_protocol_ch1 = models.TextField(null=True, blank=True)
+    extract_protocol_ch1 = models.TextField(null=True, blank=True)
+    label_protocol_ch1 = models.TextField(null=True, blank=True)
+    source_name_ch2 = models.TextField(null=True, blank=True)
+    organism_ch2 = models.TextField(null=True, blank=True)
+    characteristics_ch2 = models.TextField(null=True, blank=True)
+    molecule_ch2 = models.TextField(null=True, blank=True)
+    label_ch2 = models.TextField(null=True, blank=True)
+    treatment_protocol_ch2 = models.TextField(null=True, blank=True)
+    extract_protocol_ch2 = models.TextField(null=True, blank=True)
+    label_protocol_ch2 = models.TextField(null=True, blank=True)
+    hyb_protocol = models.TextField(null=True, blank=True)
+    description = models.TextField(null=True, blank=True)
+    data_processing = models.TextField(null=True, blank=True)
+    contact = models.TextField(null=True, blank=True)
+    supplementary_file = models.TextField(null=True, blank=True)
+    data_row_count = models.IntegerField(null=True, blank=True)
+    channel_count = models.IntegerField(null=True, blank=True)
+
+    # from original GEOSample import
+    doc = models.TextField(blank=True, null=True)
+
+    # series_id column in the sample table contains the GSE id, e.g. "GSE12345"
+    series = models.ForeignKey(
+        "GEOSeries",
+        to_field="gse",
+        db_column="series_id",
+        related_name="samples",
+        on_delete=models.DO_NOTHING,
+        db_constraint=False,
+        null=True,
+        blank=True,
+    )
+
+    # # the platform to which this sample belongs
+    # platform = models.ForeignKey(
+    #     "Platform",
+    #     # to_field="gpl",
+    #     db_column="gpl",
+    #     related_name="samples",
+    #     on_delete=models.DO_NOTHING,
+    #     db_constraint=False,
+    #     null=True,
+    #     blank=True,
+    # )
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['gsm']),
+            models.Index(fields=['series']),
+            models.Index(fields=['gpl_raw']),
+        ]
 
     def __str__(self):
-        return self.series_id
-
-
-class Sample(TimeStampedModel):
+        return f"GEOSample Metadata for {self.gsm}"
+    
+class GEOPlatform(models.Model):
     """
-    Sample-level ID (GSM* typically).
-    Mirrors ids__level-sample.parquet per-row sample metadata (normalized).
+    the "gpl" table from GEOmetadb.
+    Originally fetched from https://gbnci.cancer.gov/geo/GEOmetadb.sqlite.gz
+    on 2025-12-11.
     """
-  
-    sample_id = models.CharField(max_length=64, primary_key=True)
-    doc = models.TextField()
+
+    gpl = models.CharField(primary_key=True)
+    title = models.TextField(null=True, blank=True)
+    status = models.TextField(null=True, blank=True)
+    submission_date = models.TextField(null=True, blank=True)
+    last_update_date = models.TextField(null=True, blank=True)
+    technology = models.TextField(null=True, blank=True)
+    distribution = models.TextField(null=True, blank=True)
+    organism = models.TextField(null=True, blank=True)
+    manufacturer = models.TextField(null=True, blank=True)
+    manufacture_protocol = models.TextField(null=True, blank=True)
+    coating = models.TextField(null=True, blank=True)
+    catalog_number = models.TextField(null=True, blank=True)
+    support = models.TextField(null=True, blank=True)
+    description = models.TextField(null=True, blank=True)
+    web_link = models.TextField(null=True, blank=True)
+    contact = models.TextField(null=True, blank=True)
+    data_row_count = models.IntegerField(null=True, blank=True)
+    supplementary_file = models.TextField(null=True, blank=True)
+    bioc_package = models.TextField(null=True, blank=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['gpl']),
+        ]
 
     def __str__(self):
-        return self.sample_id
+        return f"GEO Platform Metadata for {self.gpl}"
+    
+# ----
+# - lookup tables for GEO relations
+# ----
+
+class GEOSeriesToGEOPlatforms(models.Model):
+    """
+    Mapping from GEOSeries (GSE*) to GEOPlatforms (GPL*).
+
+    Computed via the GEOSample table's 'gpl' column,
+    grouped by 'series_id'.
+
+    FIXME: this should eventually be a view rather than a table.
+    """
+
+    gse = models.CharField(unique=True)
+    platforms = ArrayField(models.CharField(max_length=64), blank=True, default=list)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['gse']),
+        ]
+
+    def __str__(self):
+        return f"GEO Series {self.gse} to platforms {self.platforms}"
 
 
 # ===========================================================================---------
 # === Join tables / relations
 # ===========================================================================---------
 
-class OrganismForPairing(models.Model):
+# class OrganismForPairing(models.Model):
+#     """
+#     Organism and status for a (GEOSeries, GEOSample, GEOPlatform) triplet.
+
+#     Originates from ids__level-sample.parquet
+#     """
+#     organism = models.ForeignKey(Organism, on_delete=models.CASCADE)
+#     status = models.CharField(null=True, blank=True)
+
+#     series = models.ForeignKey(
+#         GEOSeries, related_name='organism_pairings',
+#         null=True, blank=True,
+#         on_delete=models.DO_NOTHING,
+#         db_constraint=False,
+#     )
+#     sample = models.ForeignKey(
+#         GEOSample, related_name='organism_pairings',
+#         null=True, blank=True,
+#         on_delete=models.DO_NOTHING,
+#         db_constraint=False,
+#     )
+#     platform = models.ForeignKey(
+#         GEOPlatform, related_name='organism_pairings',
+#         null=True, blank=True,
+#         on_delete=models.DO_NOTHING,
+#         db_constraint=False,
+#     )
+
+#     class Meta:
+#         unique_together = ('series', 'sample', 'platform')
+#         indexes = [
+#             models.Index(fields=['series']),
+#             models.Index(fields=['sample']),
+#             models.Index(fields=['platform']),
+#             models.Index(fields=['series', 'sample', 'platform']),
+#         ]
+
+#     def __str__(self):
+#         return f'Organism {self.organism.name} (series {self.series_id}, sample {self.sample_id} platform {self.platform_id})'
+
+class GEOSeriesRelations(models.Model):
     """
-    Organism and status for a (Series, Sample, Platform) triplet.
-
-    Originates from ids__level-sample.parquet
-    """
-    organism = models.ForeignKey(Organism, on_delete=models.CASCADE)
-    status = models.CharField(null=True, blank=True)
-
-    series = models.ForeignKey(Series, on_delete=models.CASCADE, related_name='organism_pairings')
-    sample = models.ForeignKey(Sample, on_delete=models.CASCADE, related_name='organism_pairings')
-    platform = models.ForeignKey(Platform, on_delete=models.CASCADE, related_name='organism_pairings')
-
-    class Meta:
-        unique_together = ('series', 'sample', 'platform')
-        indexes = [
-            models.Index(fields=['series']),
-            models.Index(fields=['sample']),
-            models.Index(fields=['platform']),
-            models.Index(fields=['series', 'sample', 'platform']),
-        ]
-
-    def __str__(self):
-        return f'Organism {self.organism.name} (series {self.series_id}, sample {self.sample_id} platform {self.platform_id})'
-
-class SeriesRelations(models.Model):
-    """
-    Relation between a single Series and multiple Samples and/or Platforms.
+    Relation between a single GEOSeries and multiple GEOSamples and/or GEOPlatforms.
 
     Originates from ids__level-series.parquet, specifically the "||"-delimited 'samples' and 'platforms' columns.
     """
 
-    series = models.ForeignKey(Series, on_delete=models.CASCADE, related_name='series_relations')
+    series = models.ForeignKey(
+        GEOSeries, related_name='series_relations',
+        null=True, blank=True,
+        on_delete=models.DO_NOTHING,
+        db_constraint=False,
+    )
 
-    samples = models.ManyToManyField(Sample, related_name='series_relations')
-    platforms = models.ManyToManyField(Platform, related_name='series_relations')
+    samples = models.ManyToManyField(GEOSample, related_name='series_relations')
+    platforms = models.ManyToManyField(GEOPlatform, related_name='series_relations')
 
-class ExternalRelation(models.Model):
-    """
-    Relation to external entities, e.g. URLs.
+# class ExternalRelation(models.Model):
+#     """
+#     Relation to external entities, e.g. URLs.
 
-    Originates from ids__level-series.parquet, specifically the 'relations' column,
-    which contains entries like the following:
+#     Originates from ids__level-series.parquet, specifically the 'relations' column,
+#     which contains entries like the following:
     
-    BioProject: <URL>
-    SRA: <URL>
-    NA: <URL> (not sure if this is a literal NA)
-    ArrayExpress: <URL>
-    Peptidome: <URL>
-    SuperSeries of: <series ID>
-    SubSeries of:  <series ID>
-    Reanalyzed by: <series ID>
-    Superseded by: <series ID>
-    Alternative to: <series ID>
-    Reanalysis of: <sample ID>
-    Affiliated with: <series ID> | <sample ID>
-    Supersedes: <series ID> | <sample ID>
-    """
+#     BioProject: <URL>
+#     SRA: <URL>
+#     NA: <URL> (not sure if this is a literal NA)
+#     ArrayExpress: <URL>
+#     Peptidome: <URL>
+#     SuperGEOSeries of: <series ID>
+#     SubGEOSeries of:  <series ID>
+#     Reanalyzed by: <series ID>
+#     Superseded by: <series ID>
+#     Alternative to: <series ID>
+#     Reanalysis of: <sample ID>
+#     Affiliated with: <series ID> | <sample ID>
+#     Supersedes: <series ID> | <sample ID>
+#     """
 
-    series = models.ForeignKey(Series, on_delete=models.CASCADE, related_name='external_relations', null=True, blank=True)
+#     series = models.ForeignKey(
+#         GEOSeries, related_name='external_relations',
+#         null=True, blank=True,
+#         on_delete=models.DO_NOTHING,
+#         db_constraint=False,
+#     )
 
-    relation_type = models.CharField(max_length=128)
+#     relation_type = models.CharField(max_length=128)
 
   
-    to_url= models.CharField(null=True, blank=True, max_length=512)
-    to_sample = models.ForeignKey(Sample, null=True, blank=True, on_delete=models.SET_NULL, related_name='external_sample_relations')
-    to_series = models.ForeignKey(Sample, null=True, blank=True, on_delete=models.SET_NULL, related_name='external_series_relations')
+#     to_url= models.CharField(null=True, blank=True, max_length=512)
+#     to_sample = models.ForeignKey(
+#         GEOSample, related_name='external_sample_relations',
+#         null=True, blank=True,
+#         on_delete=models.DO_NOTHING,
+#         db_constraint=False,
+#     )
+#     to_series = models.ForeignKey(
+#         GEOSample, related_name='external_series_relations',
+#         null=True, blank=True,
+#         on_delete=models.DO_NOTHING,
+#         db_constraint=False,
+#     )
 
-    def to_entity(self):
-        """
-        Return the target entity of the relation, whether Sample, Series, or URL.
-        """
-        if self.to_sample:
-            return self.to_sample.sample_id
-        elif self.to_series:
-            return self.to_series.series_id
-        else:
-            return self.to_url
+#     def to_entity(self):
+#         """
+#         Return the target entity of the relation, whether GEOSample, GEOSeries, or URL.
+#         """
+#         if self.to_sample:
+#             return self.to_sample.sample_id
+#         elif self.to_series:
+#             return self.to_series.series_id
+#         else:
+#             return self.to_url
         
-    def to_entity_by_type(self):
-        """
-        Return the target entity of the relation, based on relation_type.
-        """
-        if self.relation_type in ['SuperSeries of', 'SubSeries of', 'Reanalyzed by', 'Superseded by', 'Alternative to']:
-            return self.to_series.series_id if self.to_series else None
-        elif self.relation_type in ['Reanalysis of']:
-            return self.to_sample.sample_id if self.to_sample else None
-        elif self.relation_type in ['Reanalysis of']:
-            return self.to_sample.sample_id if self.to_sample else None
-        else:
-            return self.to_url
+#     def to_entity_by_type(self):
+#         """
+#         Return the target entity of the relation, based on relation_type.
+#         """
+#         if self.relation_type in ['SuperGEOSeries of', 'SubGEOSeries of', 'Reanalyzed by', 'Superseded by', 'Alternative to']:
+#             return self.to_series.series_id if self.to_series else None
+#         elif self.relation_type in ['Reanalysis of']:
+#             return self.to_sample.sample_id if self.to_sample else None
+#         elif self.relation_type in ['Reanalysis of']:
+#             return self.to_sample.sample_id if self.to_sample else None
+#         else:
+#             return self.to_url
 
-    def __str__(self):
-        return f"{self.from_entity} --{self.relation_type}--> {self.to_entity}"
+#     def __str__(self):
+#         return f"{self.from_entity} --{self.relation_type}--> {self.to_entity}"
     
 
-class SeriesDatabase(models.Model):
+class GEOSeriesDatabase(models.Model):
     """
-    Database source for a Series, e.g., GEO, ArrayExpress, SRA.
+    Database source for a GEOSeries, e.g., GEO, ArrayExpress, SRA.
 
     We'll eventually use ExternalRelation for this, but for now it's faster to
     have a dedicated table that just lists databases.
@@ -190,7 +458,12 @@ class SeriesDatabase(models.Model):
     "relations" column.
     """
 
-    series = models.ForeignKey(Series, on_delete=models.CASCADE, related_name='databases')
+    series = models.ForeignKey(
+        GEOSeries, related_name='databases',
+        null=True, blank=True,
+        on_delete=models.DO_NOTHING,
+        db_constraint=False,
+    )
     database_name = models.CharField()
     url = models.CharField(null=True, blank=True)
 
@@ -227,7 +500,7 @@ class SearchTerm(models.Model):
 
     This is used to populate the autocomplete search box; see 
     backend.src.api.views.ontology_search for how the actual fetching
-    of matching Series is performed.
+    of matching GEOSeries is performed.
 
     Originates from meta2onto_example_predictions.parquet
     """
@@ -235,7 +508,12 @@ class SearchTerm(models.Model):
     objects = SearchTermManager()
 
     term = models.CharField(max_length=256) # ontology term
-    series = models.ForeignKey(Series, on_delete=models.SET_NULL, null=True, blank=True, related_name='search_terms')
+    series = models.ForeignKey(
+        GEOSeries, related_name='search_terms', 
+        null=True, blank=True,
+        on_delete=models.DO_NOTHING,
+        db_constraint=False,
+    )
     prob = models.FloatField()
     log2_prob_prior = models.FloatField()
     related_words = models.TextField(null=True, blank=True)
@@ -277,9 +555,9 @@ class OntologySearchResultsManager(models.Manager):
     def search_series(self, query:str, max_results:int=50):
         """
         Perform a search for the given query string across ontology terms;
-        joins the ontology terms against api_searchterm to get associated Series.
+        joins the ontology terms against api_searchterm to get associated GEOSeries.
         Returns api_series entries matching the ontology search.
-        Brings in metadata about each series from api_geoseriesmetadata.
+        Brings in metadata about each series from api_GEOSeries.
         """
         qs = self.get_queryset().raw(
             """
@@ -287,7 +565,7 @@ class OntologySearchResultsManager(models.Manager):
             FROM search_onto(%(query)s, %(max_results)s) AS so
             INNER JOIN api_searchterm AS st ON st.term = so.id
             INNER JOIN api_series AS sx ON sx.series_id = st.series_id
-            INNER JOIN api_geoseriesmetadata AS gse ON gse.gse = sx.series_id
+            INNER JOIN api_GEOSeries AS gse ON gse.gse = sx.series_id
             LIMIT %(max_results)s
             """, {'query': query, 'max_results': max_results}
         )
@@ -413,258 +691,6 @@ class OntologyTerms(models.Model):
 
 
 # ===========================================================================
-# === GEO metadata subset, from GEOmetadb, https://gbnci.cancer.gov/geo/
-# ===========================================================================
-
-def search_gse_with_prob(query: str, limit: int = 50):
-    # CTE that yields (series_id, prob)
-    hits = CTE(
-        raw_cte_sql(
-            """
-            SELECT st.series_id AS series_id, st.prob
-            FROM search_onto(%s, %s) so
-            INNER JOIN api_searchterm st ON st.term = so.id
-            LIMIT 100
-            """,
-            # params for search_onto(%s, %s)
-            [query, limit],
-            # tell django-cte the output column types
-            {
-                "series_id": CharField(),
-                "prob": FloatField(),
-            },
-        ),
-        name="hits",
-    )
-
-    # Join the CTE to your model on gse = series_id
-    qs = hits.join(
-        GEOSeriesMetadata.objects.all(),
-        gse=hits.col.series_id,
-        _join_type=INNER,  # keeps GSE rows even if no match; use INNER if you only want matches
-    ).annotate(
-        prob=hits.col.prob
-    )
-
-    return with_cte(hits, select=qs)
-
-class GEOSeriesMetadataManager(models.Manager):
-    def search(self, query:str, max_results:int=50, order_by:str='relevance'):
-        """
-        Fetch GEO sample metadata by sample ID (GSM*).
-
-        For details about the search_onto method used here, see
-        /backend/src/api/migrations/0012_search_onto_func.py, the migration that
-        introduces the search_onto function.
-        """
-
-        result = search_gse_with_prob(query=query, limit=max_results)
-
-        # annotate samples count
-        qs = result.annotate(
-            samples_ct=Subquery(
-                SeriesRelations.objects
-                .filter(series_id=OuterRef("gse"))
-                .values("series_id")
-                .annotate(c=models.Count("samples"))
-                .values("c")[:1],
-                output_field=IntegerField(),
-            ),
-        )
-
-        if order_by == "relevance":
-            qs = qs.order_by("-prob")
-        elif order_by == "-relevance":
-            qs = qs.order_by("prob")
-        elif order_by == "samples":
-            qs = qs.order_by("-samples_ct")
-
-        return qs
-
-class GEOSeriesMetadata(models.Model):
-    """
-    the "gse" table from GEOmetadb.
-    Originally fetched from https://gbnci.cancer.gov/geo/GEOmetadb.sqlite.gz
-    on 2025-12-11.
-    """
-
-    objects = GEOSeriesMetadataManager()
-
-    title = models.TextField(null=True, blank=True)
-    gse = models.CharField(primary_key=True)
-    status = models.CharField(null=True, blank=True)
-    submission_date = models.CharField(null=True, blank=True)
-    last_update_date = models.CharField(null=True, blank=True)
-    pubmed_id = models.BigIntegerField(null=True, blank=True)
-    summary = models.TextField(null=True, blank=True)
-    type = models.CharField(null=True, blank=True)
-    contributor = models.TextField(null=True, blank=True)
-    web_link = models.TextField(null=True, blank=True)
-    overall_design = models.TextField(null=True, blank=True)
-    repeats = models.TextField(null=True, blank=True)
-    repeats_sample_list = models.TextField(null=True, blank=True)
-    variable = models.TextField(null=True, blank=True)
-    variable_description = models.TextField(null=True, blank=True)
-    contact = models.TextField(null=True, blank=True)
-    supplementary_file = models.TextField(null=True, blank=True)
-
-    # this is not actually a column, but will be annotated into
-    # the model instances by the custom manager's search() method
-    prob: float | None = None
-
-    @property
-    def database(self):
-        inlined_db = getattr(self, "_database", None)
-
-        if inlined_db is not None:
-            return inlined_db
-        else:
-            return list(
-                SeriesDatabase.objects.filter(series_id=self.gse).values_list('database_name', flat=True)
-            )
-
-    class Meta:
-        indexes = [
-            models.Index(fields=['gse']),
-        ]
-
-    def __str__(self):
-        return f"GEO Metadata for {self.gse}"
-    
-class GEOSampleMetadata(models.Model):
-    """
-    the "gsm" table from GEOmetadb.
-    Originally fetched from https://gbnci.cancer.gov/geo/GEOmetadb.sqlite.gz
-    on 2025-12-11.
-    """
-
-    gsm = models.CharField(primary_key=True, help_text="Sample ID")
-    title = models.TextField(null=True, blank=True)
-    # series_id = models.TextField(null=True, blank=True)
-    gpl_raw = models.TextField(null=True, blank=True, db_column="gpl", help_text="Platform ID")
-    status = models.TextField(null=True, blank=True)
-    submission_date = models.TextField(null=True, blank=True)
-    last_update_date = models.TextField(null=True, blank=True)
-    type = models.TextField(null=True, blank=True)
-    source_name_ch1 = models.TextField(null=True, blank=True)
-    organism_ch1 = models.TextField(null=True, blank=True)
-    characteristics_ch1 = models.TextField(null=True, blank=True)
-    molecule_ch1 = models.TextField(null=True, blank=True)
-    label_ch1 = models.TextField(null=True, blank=True)
-    treatment_protocol_ch1 = models.TextField(null=True, blank=True)
-    extract_protocol_ch1 = models.TextField(null=True, blank=True)
-    label_protocol_ch1 = models.TextField(null=True, blank=True)
-    source_name_ch2 = models.TextField(null=True, blank=True)
-    organism_ch2 = models.TextField(null=True, blank=True)
-    characteristics_ch2 = models.TextField(null=True, blank=True)
-    molecule_ch2 = models.TextField(null=True, blank=True)
-    label_ch2 = models.TextField(null=True, blank=True)
-    treatment_protocol_ch2 = models.TextField(null=True, blank=True)
-    extract_protocol_ch2 = models.TextField(null=True, blank=True)
-    label_protocol_ch2 = models.TextField(null=True, blank=True)
-    hyb_protocol = models.TextField(null=True, blank=True)
-    description = models.TextField(null=True, blank=True)
-    data_processing = models.TextField(null=True, blank=True)
-    contact = models.TextField(null=True, blank=True)
-    supplementary_file = models.TextField(null=True, blank=True)
-    data_row_count = models.IntegerField(null=True, blank=True)
-    channel_count = models.IntegerField(null=True, blank=True)
-
-    # series_id column in the sample table contains the GSE id, e.g. "GSE12345"
-    series = models.ForeignKey(
-        "GEOSeriesMetadata",
-        to_field="gse",
-        db_column="series_id",
-        related_name="samples",
-        on_delete=models.DO_NOTHING,
-        db_constraint=False,
-        null=True,
-        blank=True,
-    )
-
-    # # the platform to which this sample belongs
-    # platform = models.ForeignKey(
-    #     "GEOPlatformMetadata",
-    #     # to_field="gpl",
-    #     db_column="gpl",
-    #     related_name="samples",
-    #     on_delete=models.DO_NOTHING,
-    #     db_constraint=False,
-    #     null=True,
-    #     blank=True,
-    # )
-
-    class Meta:
-        indexes = [
-            models.Index(fields=['gsm']),
-            models.Index(fields=['series']),
-            models.Index(fields=['gpl_raw']),
-        ]
-
-    def __str__(self):
-        return f"GEO Sample Metadata for {self.gsm}"
-    
-class GEOPlatformMetadata(models.Model):
-    """
-    the "gpl" table from GEOmetadb.
-    Originally fetched from https://gbnci.cancer.gov/geo/GEOmetadb.sqlite.gz
-    on 2025-12-11.
-    """
-
-    gpl = models.CharField(primary_key=True)
-    title = models.TextField(null=True, blank=True)
-    status = models.TextField(null=True, blank=True)
-    submission_date = models.TextField(null=True, blank=True)
-    last_update_date = models.TextField(null=True, blank=True)
-    technology = models.TextField(null=True, blank=True)
-    distribution = models.TextField(null=True, blank=True)
-    organism = models.TextField(null=True, blank=True)
-    manufacturer = models.TextField(null=True, blank=True)
-    manufacture_protocol = models.TextField(null=True, blank=True)
-    coating = models.TextField(null=True, blank=True)
-    catalog_number = models.TextField(null=True, blank=True)
-    support = models.TextField(null=True, blank=True)
-    description = models.TextField(null=True, blank=True)
-    web_link = models.TextField(null=True, blank=True)
-    contact = models.TextField(null=True, blank=True)
-    data_row_count = models.IntegerField(null=True, blank=True)
-    supplementary_file = models.TextField(null=True, blank=True)
-    bioc_package = models.TextField(null=True, blank=True)
-
-    class Meta:
-        indexes = [
-            models.Index(fields=['gpl']),
-        ]
-
-    def __str__(self):
-        return f"GEO Platform Metadata for {self.gpl}"
-    
-# ----
-# - lookup tables for GEO relations
-# ----
-
-class GEOSeriesToPlatforms(models.Model):
-    """
-    Mapping from GEO Series (GSE*) to Platforms (GPL*).
-
-    Computed via the GEOSampleMetadata table's 'gpl' column,
-    grouped by 'series_id'.
-
-    FIXME: this should eventually be a view rather than a table.
-    """
-
-    gse = models.CharField(unique=True)
-    platforms = ArrayField(models.CharField(max_length=64), blank=True, default=list)
-
-    class Meta:
-        indexes = [
-            models.Index(fields=['gse']),
-        ]
-
-    def __str__(self):
-        return f"GEO Series {self.gse} to platforms {self.platforms}"
-
-# ===========================================================================
 # === Cart server-side state
 # ===========================================================================
 
@@ -673,7 +699,7 @@ class CartItem(models.Model):
     An item in a user's cart.
     """
 
-    series = models.ForeignKey(Series, on_delete=models.CASCADE)
+    series = models.ForeignKey(GEOSeries, on_delete=models.CASCADE)
     added_at = models.DateTimeField(null=True, blank=True)
     cart = models.ForeignKey(
         'Cart', null=True, blank=True, on_delete=models.CASCADE, related_name='items'
