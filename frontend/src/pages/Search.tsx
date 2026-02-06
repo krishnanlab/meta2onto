@@ -1,7 +1,8 @@
 import type { UseQueryResult } from "@tanstack/react-query";
 import type { ColumnSort } from "@tanstack/table-core";
-import type { Studies, Study } from "@/api/types";
+import type { Sample, Studies, Study } from "@/api/types";
 import type { Limit } from "@/components/Pagination";
+import type { Col } from "@/components/Table";
 import { Fragment, useEffect, useRef, useState } from "react";
 import { useParams } from "react-router";
 import { useDebounce, useLocalStorage } from "@reactuses/core";
@@ -631,16 +632,24 @@ const SamplesPopup = ({ id }: { id: string }) => {
   /** whether to show extra columns */
   const [allCols, setAllCols] = useState(false);
 
-  const baseCols = [
+  const baseCols: Col<Sample>[] = [
     { key: "id", name: "ID" },
     { key: "type", name: "Type" },
     { key: "description", name: "Description" },
-  ] as const;
+  ];
 
-  const extraCols = [
-    { key: "created_at", name: "Created At" },
-    { key: "updated_at", name: "Updated At" },
-  ] as const;
+  const extraCols: Col<Sample>[] = [
+    {
+      key: "created_at",
+      name: "Created At",
+      render: (cell) => formatDate(cell),
+    },
+    {
+      key: "updated_at",
+      name: "Updated At",
+      render: (cell) => formatDate(cell),
+    },
+  ];
 
   const cols = allCols ? [...baseCols, ...extraCols] : baseCols;
 
