@@ -18,6 +18,8 @@ dependencies = [
     "python-memcached>=1.62",
     "pymemcache>=4.0.0",
     "duckdb>=1.4.2",
+    "drf-spectacular>=0.29.0",
+    "django-cte>=2.0.0",
 ]
 
 # [build-system]

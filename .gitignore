@@ -221,3 +221,4 @@ __marimo__/
 # project-specific ignores
 # ignore dumpfiles that aren't explicitly checked in
 /db-exports/*.dump
+/archived-db-exports/

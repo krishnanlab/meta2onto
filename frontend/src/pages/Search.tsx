@@ -154,7 +154,7 @@ export default function Search() {
             summary,
             confidence,
             database,
-            samples,
+            samples_ct,
             submission_date,
             platform,
           },
@@ -216,7 +216,7 @@ export default function Search() {
                 >
                   <Button color="theme">
                     <Logs />
-                    {formatNumber(samples)} Samples
+                    {formatNumber(samples_ct)} Samples
                   </Button>
                 </Dialog>
                 <Button
@@ -307,8 +307,9 @@ const Samples = ({ id }: { id: string }) => {
 
         {query.data?.results.map((sample, index) => (
           <div key={index} className="flex flex-col gap-1">
-            <strong>{sample.sample_id}</strong>
-            <p dangerouslySetInnerHTML={{ __html: sample.doc }} />
+            <strong>{sample.id}</strong>
+            <p dangerouslySetInnerHTML={{ __html: sample.description }} />
+            <i dangerouslySetInnerHTML={{ __html: sample.data_processing }} />
           </div>
         ))}
       </div>

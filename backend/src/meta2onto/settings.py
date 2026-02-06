@@ -64,6 +64,8 @@ INSTALLED_APPS = [
     "rest_framework",
     "corsheaders",
     "django_filters",
+    'drf_spectacular',
+    'django_extensions',
 
     # local apps
     "api",

@@ -40,6 +40,6 @@ services:
     healthcheck:
       test: ["CMD-SHELL", "/opt/healthcheck.sh || exit 1"]
       interval: 5s
-      timeout: 60s
-      retries: 5
+      timeout: 120s
+      retries: 30
       start_period: 2m

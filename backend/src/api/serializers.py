@@ -1,14 +1,15 @@
 from rest_framework import serializers
 from .models import (
-    GEOSeriesMetadata,
+    GEOSample,
+    GEOSeries,
     Organism,
-    Platform,
+    GEOPlatform,
     SearchTerm,
-    Series,
-    Sample,
-    OrganismForPairing,
-    SeriesRelations,
-    ExternalRelation,
+    GEOSeries,
+    GEOSample,
+    # OrganismForPairing,
+    # GEOSeriesRelations,
+    # ExternalRelation,
     OntologySearchResults,
     OntologySearchDocs,
     OntologySynonyms,
@@ -29,84 +30,88 @@ class OrganismSerializer(serializers.ModelSerializer):
         fields = ['id', 'name']
 
 
-class PlatformSerializer(serializers.ModelSerializer):
-    """Serializer for Platform model."""
+class GEOPlatformSerializer(serializers.ModelSerializer):
+    """Serializer for GEOPlatform model."""
     
     class Meta:
-        model = Platform
+        model = GEOPlatform
         fields = ['platform_id', 'created_at', 'updated_at']
 
 
-class SeriesSerializer(serializers.ModelSerializer):
-    """Serializer for Series model."""
+class GEOSeriesSerializer(serializers.ModelSerializer):
+    """Serializer for GEOSeries model."""
     
     class Meta:
-        model = Series
+        model = GEOSeries
         fields = ['series_id', 'doc', 'created_at', 'updated_at']
 
 
-class SampleSerializer(serializers.ModelSerializer):
-    """Serializer for Sample model."""
+class GEOSampleSerializer(serializers.ModelSerializer):
+    """Serializer for GEOSample model."""
+
+    id = serializers.CharField(source='gsm', read_only=True)
+    # description = serializers.CharField(source='doc', read_only=True)
     
     class Meta:
-        model = Sample
-        fields = ['sample_id', 'doc', 'created_at', 'updated_at']
+        model = GEOSample
+        # fields = ['sample_id', 'doc', 'created_at', 'updated_at']
+        fields = ['id', 'description', 'data_processing']
 
 
 # ===========================================================================
 # === Join tables / relations
 # ===========================================================================
 
-class OrganismForPairingSerializer(serializers.ModelSerializer):
-    """Serializer for OrganismForPairing model."""
-    organism_name = serializers.CharField(source='organism.name', read_only=True)
+# class OrganismForPairingSerializer(serializers.ModelSerializer):
+#     """Serializer for OrganismForPairing model."""
+#     organism_name = serializers.CharField(source='organism.name', read_only=True)
 
-    class Meta:
-        model = OrganismForPairing
-        fields = [
-            'id',
-            'organism',
-            'organism_name',
-            'status',
-            'series',
-            'sample',
-            'platform',
-        ]
+#     class Meta:
+#         model = OrganismForPairing
+#         fields = [
+#             'id',
+#             'organism',
+#             'organism_name',
+#             'status',
+#             'series',
+#             'sample',
+#             'platform',
+#         ]
 
 
-class SeriesRelationsSerializer(serializers.ModelSerializer):
-    """Serializer for SeriesRelations model."""
-    series_id = serializers.CharField(source='series.series_id', read_only=True)
-    sample_ids = serializers.SerializerMethodField()
-    platform_ids = serializers.SerializerMethodField()
+# class GEOSeriesRelationsSerializer(serializers.ModelSerializer):
+#     """Serializer for GEOSeriesRelations model."""
+#     series_id = serializers.CharField(source='series.series_id', read_only=True)
+#     sample_ids = serializers.SerializerMethodField()
+#     platform_ids = serializers.SerializerMethodField()
     
-    class Meta:
-        model = SeriesRelations
-        fields = [
-            'id',
-            'series',
-            'series_id',
-            'samples',
-            'sample_ids',
-            'platforms',
-            'platform_ids',
-        ]
+#     class Meta:
+#         model = GEOSeriesRelations
+#         fields = [
+#             'id',
+#             'series',
+#             'series_id',
+#             'samples',
+#             'sample_ids',
+#             'platforms',
+#             'platform_ids',
+#         ]
     
-    def get_sample_ids(self, obj):
-        """Return list of sample IDs."""
-        return [sample.sample_id for sample in obj.samples.all()]
+#     def get_sample_ids(self, obj):
+#         """Return list of sample IDs."""
+#         return [sample.sample_id for sample in obj.samples.all()]
     
-    def get_platform_ids(self, obj):
-        """Return list of platform IDs."""
-        return [platform.platform_id for platform in obj.platforms.all()]
+#     def get_platform_ids(self, obj):
+#         """Return list of platform IDs."""
+#         return [platform.platform_id for platform in obj.platforms.all()]
 
 
-class ExternalRelationSerializer(serializers.ModelSerializer):
-    """Serializer for ExternalRelation model."""
+# class ExternalRelationSerializer(serializers.ModelSerializer):
+#     """Serializer for ExternalRelation model."""
     
-    class Meta:
-        model = ExternalRelation
-        fields = ['id', 'from_entity', 'to_entity', 'relation_type']
+#     class Meta:
+#         model = ExternalRelation
+#         fields = ['id', 'from_entity', 'to_entity', 'relation_type']
 
 
 # ===========================================================================
@@ -185,13 +190,24 @@ class OntologyTermsSerializer(serializers.ModelSerializer):
         ]
 
 # ===========================================================================
-# === GEO Series Metadata
+# === GEO Metadata
 # ===========================================================================
 
-class GEOSeriesMetadataSerializer(serializers.ModelSerializer):
-    """Serializer for GEOSeriesMetadata model."""
+class GEOSampleSerializer(serializers.ModelSerializer):
+    """Serializer for GEOSample model."""
 
-    samples = serializers.IntegerField(read_only=True)
+    id = serializers.CharField(source='gsm', read_only=True)
+    # description = serializers.CharField(source='doc', read_only=True)
+    
+    class Meta:
+        model = GEOSample
+        # fields = ['sample_id', 'doc', 'created_at', 'updated_at']
+        fields = ['id', 'description', 'data_processing']
+
+class GEOSeriesSerializer(serializers.ModelSerializer):
+    """Serializer for GEOSeries model."""
+
+    samples_ct = serializers.IntegerField(read_only=True)
 
     confidence = serializers.SerializerMethodField()
     def get_confidence(self, obj):
@@ -210,9 +226,9 @@ class GEOSeriesMetadataSerializer(serializers.ModelSerializer):
         child=serializers.CharField(),
         read_only=True
     )
-    
+
     class Meta:
-        model = GEOSeriesMetadata
+        model = GEOSeries
         fields = [
             'title',
             'gse',
@@ -236,7 +252,7 @@ class GEOSeriesMetadataSerializer(serializers.ModelSerializer):
             'confidence',
 
             # from joining with api_sample count
-            'samples',
+            'samples_ct',
 
             # from joining with api_seriesdatabase
             'database',

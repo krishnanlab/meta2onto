@@ -13,7 +13,7 @@ from django.db import transaction, connection
 import pyarrow.parquet as pq
 
 from api.models import (
-    SearchTerm, Series
+    SearchTerm, GEOSeries
 )
 
 # ============================================================================
@@ -47,7 +47,7 @@ def import_search_terms(path: Path, batch_size:int = DEFAULT_BATCH_SIZE):
             # first, insert all samples that might be missing
             for row in rows:
                 if row['ID'].startswith('GSE'):
-                    Series.objects.get_or_create(series_id=row['ID'])
+                    GEOSeries.objects.get_or_create(series_id=row['ID'])
 
             # now, bulk create SearchTerm entries
             SearchTerm.objects.bulk_create([
