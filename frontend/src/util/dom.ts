@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { deepMap, onlyText } from "react-children-utilities";
 import { pick } from "lodash";
-import { waitFor } from "@/util/misc";
+import { waitFor, waitForStable } from "@/util/misc";
 
 export type Theme = Record<`--${string}`, string>;
 
@@ -73,6 +73,7 @@ const validSelector = (selector: unknown) => {
 export const scrollToSelector = async (
   selector: string,
   options: ScrollIntoViewOptions = { behavior: "smooth" },
+  waitForLayoutShift = false,
 ) => {
   if (!validSelector(selector)) return;
   if (!selector) return;
@@ -81,6 +82,9 @@ export const scrollToSelector = async (
   const element = await waitFor(() => document.querySelector(selector));
   if (!element) return;
 
+  /** wait for layout shifts to stabilize */
+  if (waitForLayoutShift) await waitForStable(() => getDocBbox(element).top);
+
   /** scroll to element */
   scrollTo(element, options);
 };
@@ -88,8 +92,7 @@ export const scrollToSelector = async (
 /** if element is first child of section, change element to section itself */
 const elementOrSection = <El extends Element>(element: El) => {
   const section = element.closest("section");
-  return section &&
-    element.matches("section > :first-child, section > :first-child *")
+  return section && element.matches("section > :first-child")
     ? section
     : element;
 };

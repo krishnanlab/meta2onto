@@ -18,8 +18,7 @@ import Home from "@/pages/Home";
 import NotFound from "@/pages/NotFound";
 import Search from "@/pages/Search";
 import Testbed from "@/pages/Testbed";
-import { getDocBbox, glow, scrollTo } from "@/util/dom";
-import { waitFor, waitForStable } from "@/util/misc";
+import { scrollToSelector } from "@/util/dom";
 import { redirectPath, redirectState } from "@/util/url";
 
 /** app entrypoint */
@@ -37,7 +36,7 @@ const Layout = () => {
   const { hash } = useLocation();
 
   useEffect(() => {
-    scrollToHash(hash);
+    scrollToSelector(hash);
   }, [hash]);
 
   return (
@@ -112,18 +111,3 @@ const queryClient = new QueryClient({
     mutations: { retry: 2, retryDelay: (retry) => 200 * retry },
   },
 });
-
-/** scroll to target of url hash on page */
-const scrollToHash = async (hash: string, waitForLayoutShift = false) => {
-  if (!hash) return;
-
-  /** wait for element to appear */
-  const element = await waitFor(() => document.querySelector(hash));
-  if (!element) return;
-
-  /** wait for layout shifts to stabilize */
-  if (waitForLayoutShift) await waitForStable(() => getDocBbox(element).top);
-
-  scrollTo(element);
-  glow(element);
-};

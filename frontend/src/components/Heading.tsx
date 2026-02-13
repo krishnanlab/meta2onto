@@ -1,6 +1,5 @@
 import type { JSX, ReactNode } from "react";
 import { useRef } from "react";
-import clsx from "clsx";
 import Link from "@/components/Link";
 import { renderText } from "@/util/dom";
 import { slugify } from "@/util/string";
@@ -30,17 +29,10 @@ export default function Heading({ level, anchor, className, children }: Props) {
   const id = anchor ?? slugify(renderText(children));
 
   return (
-    <Link to={"#" + id} className={clsx("group", className)}>
-      <Tag
-        id={id}
-        ref={ref}
-        className="
-          transition-colors
-          group-hover:text-accent
-        "
-      >
+    <Tag id={id} ref={ref} className={className}>
+      <Link to={"#" + id} className="contents! text-current no-underline">
         {children}
-      </Tag>
-    </Link>
+      </Link>
+    </Tag>
   );
 }
