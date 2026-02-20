@@ -5,7 +5,7 @@ volumes:
 
 services:
   frontend:
-    command: sh -c "bun install && bun run build --outdir /opt/dist"
+    command: sh -c "bun install && bun run build --outDir /tmp/dist && rm -rf /opt/dist/* && mv /tmp/dist /opt/dist"
     volumes:
       - frontend_built:/opt/dist
 
@@ -20,5 +20,7 @@ services:
       - frontend_built:/opt/frontend/:ro
       - caddy_data:/data
       - caddy_config:/config
+    env_file:
+      - .env
     depends_on:
       - backend
