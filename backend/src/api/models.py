@@ -89,18 +89,6 @@ class GEOSeriesManager(models.Manager):
             query=query, limit=max_results
         )
 
-        # # annotate samples count
-        # qs = result.annotate(
-        #     samples_ct=Subquery(
-        #         GEOSeriesRelations.objects
-        #             .filter(series_id=OuterRef("gse"))
-        #             .values("series_id")
-        #             .annotate(c=models.Count("samples"))
-        #             .values("c")[:1],
-        #         output_field=IntegerField(),
-        #     ),
-        # )
-
         qs = result.annotate(
             samples_ct=Subquery(
                 GEOSample.objects
@@ -315,46 +303,6 @@ class GEOSeriesToGEOPlatforms(models.Model):
 # === Join tables / relations
 # ===========================================================================---------
 
-# class OrganismForPairing(models.Model):
-#     """
-#     Organism and status for a (GEOSeries, GEOSample, GEOPlatform) triplet.
-
-#     Originates from ids__level-sample.parquet
-#     """
-#     organism = models.ForeignKey(Organism, on_delete=models.CASCADE)
-#     status = models.CharField(null=True, blank=True)
-
-#     series = models.ForeignKey(
-#         GEOSeries, related_name='organism_pairings',
-#         null=True, blank=True,
-#         on_delete=models.DO_NOTHING,
-#         db_constraint=False,
-#     )
-#     sample = models.ForeignKey(
-#         GEOSample, related_name='organism_pairings',
-#         null=True, blank=True,
-#         on_delete=models.DO_NOTHING,
-#         db_constraint=False,
-#     )
-#     platform = models.ForeignKey(
-#         GEOPlatform, related_name='organism_pairings',
-#         null=True, blank=True,
-#         on_delete=models.DO_NOTHING,
-#         db_constraint=False,
-#     )
-
-#     class Meta:
-#         unique_together = ('series', 'sample', 'platform')
-#         indexes = [
-#             models.Index(fields=['series']),
-#             models.Index(fields=['sample']),
-#             models.Index(fields=['platform']),
-#             models.Index(fields=['series', 'sample', 'platform']),
-#         ]
-
-#     def __str__(self):
-#         return f'Organism {self.organism.name} (series {self.series_id}, sample {self.sample_id} platform {self.platform_id})'
-
 class GEOSeriesRelations(models.Model):
     """
     Relation between a single GEOSeries and multiple GEOSamples and/or GEOPlatforms.
@@ -372,79 +320,6 @@ class GEOSeriesRelations(models.Model):
     samples = models.ManyToManyField(GEOSample, related_name='series_relations')
     platforms = models.ManyToManyField(GEOPlatform, related_name='series_relations')
 
-# class ExternalRelation(models.Model):
-#     """
-#     Relation to external entities, e.g. URLs.
-
-#     Originates from ids__level-series.parquet, specifically the 'relations' column,
-#     which contains entries like the following:
-    
-#     BioProject: <URL>
-#     SRA: <URL>
-#     NA: <URL> (not sure if this is a literal NA)
-#     ArrayExpress: <URL>
-#     Peptidome: <URL>
-#     SuperGEOSeries of: <series ID>
-#     SubGEOSeries of:  <series ID>
-#     Reanalyzed by: <series ID>
-#     Superseded by: <series ID>
-#     Alternative to: <series ID>
-#     Reanalysis of: <sample ID>
-#     Affiliated with: <series ID> | <sample ID>
-#     Supersedes: <series ID> | <sample ID>
-#     """
-
-#     series = models.ForeignKey(
-#         GEOSeries, related_name='external_relations',
-#         null=True, blank=True,
-#         on_delete=models.DO_NOTHING,
-#         db_constraint=False,
-#     )
-
-#     relation_type = models.CharField(max_length=128)
-
-  
-#     to_url= models.CharField(null=True, blank=True, max_length=512)
-#     to_sample = models.ForeignKey(
-#         GEOSample, related_name='external_sample_relations',
-#         null=True, blank=True,
-#         on_delete=models.DO_NOTHING,
-#         db_constraint=False,
-#     )
-#     to_series = models.ForeignKey(
-#         GEOSample, related_name='external_series_relations',
-#         null=True, blank=True,
-#         on_delete=models.DO_NOTHING,
-#         db_constraint=False,
-#     )
-
-#     def to_entity(self):
-#         """
-#         Return the target entity of the relation, whether GEOSample, GEOSeries, or URL.
-#         """
-#         if self.to_sample:
-#             return self.to_sample.sample_id
-#         elif self.to_series:
-#             return self.to_series.series_id
-#         else:
-#             return self.to_url
-        
-#     def to_entity_by_type(self):
-#         """
-#         Return the target entity of the relation, based on relation_type.
-#         """
-#         if self.relation_type in ['SuperGEOSeries of', 'SubGEOSeries of', 'Reanalyzed by', 'Superseded by', 'Alternative to']:
-#             return self.to_series.series_id if self.to_series else None
-#         elif self.relation_type in ['Reanalysis of']:
-#             return self.to_sample.sample_id if self.to_sample else None
-#         elif self.relation_type in ['Reanalysis of']:
-#             return self.to_sample.sample_id if self.to_sample else None
-#         else:
-#             return self.to_url
-
-#     def __str__(self):
-#         return f"{self.from_entity} --{self.relation_type}--> {self.to_entity}"
-    
 
 class GEOSeriesDatabase(models.Model):
     """
@@ -571,11 +446,7 @@ class OntologySearchResultsManager(models.Manager):
         )
         return qs
 
-# note that this table doesn't actually exist; it's intended to conform to the results of the
-# search_onto postgres function, which returns the following columns:
-# id varchar, name varchar, ontology varchar, type varchar,
-# synonym varchar, scope varchar,
-# sim real, scope_weight real, overall_rank real
+
 class OntologySearchResults(models.Model):
     """
     Ontology search results with term details and similarity scores.

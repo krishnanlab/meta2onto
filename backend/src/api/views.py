@@ -17,27 +17,21 @@ from rest_framework.response import Response
 from .models import (
     Cart,
     CartItem,
-    # ExternalRelation,
     GEOPlatform,
     GEOSample,
     GEOSeries,
     GEOSeriesToGEOPlatforms,
     OntologySearchResults, Organism,
-    # OrganismForPairing,
     GEOPlatform, SearchTerm, GEOSeries,
-    # GEOSeriesRelations
 )
 from .serializers import (
     CartSerializer,
-    # ExternalRelationSerializer,
     GEOSampleSerializer,
     GEOSeriesSerializer,
     OntologySearchResultsSerializer,
-    # OrganismForPairingSerializer,
     OrganismSerializer,
     GEOPlatformSerializer,
     SearchTermSerializer,
-    # GEOSeriesRelationsSerializer,
     GEOSeriesSerializer
 )
 
@@ -146,75 +140,12 @@ class GEOSampleViewSet(viewsets.ReadOnlyModelViewSet):
     ReadOnly API endpoint for viewing GEOSamples.
     Accessible at /api/samples/
     """
-    # queryset = GEOSample.objects.all()
-    # serializer_class = GEOSampleSerializer
     queryset = GEOSample.objects.all()
     serializer_class = GEOSampleSerializer
     filter_backends = [SearchFilter, OrderingFilter]
     search_fields = ['sample_id', 'doc', 'search_terms__term']
     ordering_fields = ['sample_id', 'created_at', 'updated_at']
     ordering = ['sample_id']
-
-
-# ===========================================================================---------
-# === Join tables / relations
-# ===========================================================================---------
-
-# class OrganismForPairingViewSet(viewsets.ReadOnlyModelViewSet):
-#     """
-#     ReadOnly API endpoint for viewing OrganismForPairing relationships.
-#     Accessible at /api/organism-pairings/
-#     """
-#     queryset = OrganismForPairing.objects.select_related(
-#         'organism', 'series', 'sample', 'platform'
-#     ).all()
-#     # queryset = OrganismForPairing.objects.all()
-#     serializer_class = OrganismForPairingSerializer
-#     pagination_class = LargeEntityPagination
-#     # filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-#     # filterset_fields = ['organism', 'series', 'sample', 'platform', 'status']
-#     # search_fields = ['status', 'organism__name']
-#     # ordering_fields = ['id', 'series', 'sample', 'platform']
-#     # ordering = ['id']
-#     filter_backends = [SearchFilter, OrderingFilter]
-#     search_fields = ['status', 'organism__name']
-#     ordering_fields = ['id', 'series', 'sample', 'platform']
-#     ordering = ['id']
-
-# @method_decorator(cache_page(60 * 5), name='list')
-# @method_decorator(cache_page(60 * 5), name='retrieve')
-# class GEOSeriesRelationsViewSet(viewsets.ReadOnlyModelViewSet):
-#     """
-#     ReadOnly API endpoint for viewing GEOSeriesRelations.
-#     Accessible at /api/series-relations/
-#     Cached for 5 minutes to improve performance.
-#     """
-#     queryset = GEOSeriesRelations.objects.prefetch_related(
-#         'samples', 'platforms'
-#     ).select_related('series').all()
-#     serializer_class = GEOSeriesRelationsSerializer
-#     pagination_class = LargeEntityPagination
-#     # filter_backends = [DjangoFilterBackend, OrderingFilter]
-#     # filterset_fields = ['series']
-#     filter_backends = [OrderingFilter]
-#     ordering_fields = ['id', 'series']
-#     ordering = ['id']
-
-
-# class ExternalRelationViewSet(viewsets.ReadOnlyModelViewSet):
-#     """
-#     ReadOnly API endpoint for viewing ExternalRelations.
-#     Accessible at /api/external-relations/
-#     """
-#     queryset = ExternalRelation.objects.all()
-#     serializer_class = ExternalRelationSerializer
-#     pagination_class = LargeEntityPagination
-#     # filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-#     # filterset_fields = ['from_entity', 'to_entity', 'relation_type']
-#     filter_backends = [SearchFilter, OrderingFilter]
-#     search_fields = ['from_entity', 'to_entity', 'relation_type']
-#     ordering_fields = ['id', 'from_entity', 'to_entity', 'relation_type']
-#     ordering = ['id']
 
 
 # ===========================================================================

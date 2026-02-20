@@ -7,9 +7,6 @@ from .models import (
     SearchTerm,
     GEOSeries,
     GEOSample,
-    # OrganismForPairing,
-    # GEOSeriesRelations,
-    # ExternalRelation,
     OntologySearchResults,
     OntologySearchDocs,
     OntologySynonyms,
@@ -56,63 +53,6 @@ class GEOSampleSerializer(serializers.ModelSerializer):
         model = GEOSample
         # fields = ['sample_id', 'doc', 'created_at', 'updated_at']
         fields = ['id', 'description', 'data_processing']
-
-
-# ===========================================================================
-# === Join tables / relations
-# ===========================================================================
-
-# class OrganismForPairingSerializer(serializers.ModelSerializer):
-#     """Serializer for OrganismForPairing model."""
-#     organism_name = serializers.CharField(source='organism.name', read_only=True)
-
-#     class Meta:
-#         model = OrganismForPairing
-#         fields = [
-#             'id',
-#             'organism',
-#             'organism_name',
-#             'status',
-#             'series',
-#             'sample',
-#             'platform',
-#         ]
-
-
-# class GEOSeriesRelationsSerializer(serializers.ModelSerializer):
-#     """Serializer for GEOSeriesRelations model."""
-#     series_id = serializers.CharField(source='series.series_id', read_only=True)
-#     sample_ids = serializers.SerializerMethodField()
-#     platform_ids = serializers.SerializerMethodField()
-    
-#     class Meta:
-#         model = GEOSeriesRelations
-#         fields = [
-#             'id',
-#             'series',
-#             'series_id',
-#             'samples',
-#             'sample_ids',
-#             'platforms',
-#             'platform_ids',
-#         ]
-    
-#     def get_sample_ids(self, obj):
-#         """Return list of sample IDs."""
-#         return [sample.sample_id for sample in obj.samples.all()]
-    
-#     def get_platform_ids(self, obj):
-#         """Return list of platform IDs."""
-#         return [platform.platform_id for platform in obj.platforms.all()]
-
-
-# class ExternalRelationSerializer(serializers.ModelSerializer):
-#     """Serializer for ExternalRelation model."""
-    
-#     class Meta:
-#         model = ExternalRelation
-#         fields = ['id', 'from_entity', 'to_entity', 'relation_type']
-
 
 # ===========================================================================
 # === Search-related Entities
