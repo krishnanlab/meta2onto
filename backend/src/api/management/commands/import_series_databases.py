@@ -39,15 +39,16 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 from django.utils.dateparse import parse_datetime
 
-from api.models import (
-    GEOSeriesDatabase
-)
+from api.models import GEOSeriesDatabase
 
 # ============================================================================
 # === Utilities
 # ============================================================================
 
-def _iter_parquet_rows(path: Path, columns: Optional[list[str]] = None) -> Iterable[dict]:
+
+def _iter_parquet_rows(
+    path: Path, columns: Optional[list[str]] = None
+) -> Iterable[dict]:
     """
     Efficiently iterate Parquet rows via row groups to keep memory bounded.
     Yields dicts with Python-native values.
@@ -62,9 +63,13 @@ def _iter_parquet_rows(path: Path, columns: Optional[list[str]] = None) -> Itera
         for i in range(N):
             yield {k: batch[k][i] for k in keys}
 
+
 def _total_batches(pf: pq.ParquetFile, batch_size: int) -> int:
-    total_rows = sum(pf.metadata.row_group(i).num_rows for i in range(pf.num_row_groups))
+    total_rows = sum(
+        pf.metadata.row_group(i).num_rows for i in range(pf.num_row_groups)
+    )
     return math.ceil(total_rows / batch_size)
+
 
 # ============================================================================
 # === Importers
@@ -73,8 +78,9 @@ def _total_batches(pf: pq.ParquetFile, batch_size: int) -> int:
 # size of batches to process at a time
 DEFAULT_BATCH_SIZE = 5000
 
+
 @transaction.atomic
-def import_corpus_level_sample(path: Path, batch_size:int = DEFAULT_BATCH_SIZE):
+def import_corpus_level_sample(path: Path, batch_size: int = DEFAULT_BATCH_SIZE):
     """
     corpus__level-sample.parquet
       columns: index (sample_id), docs
@@ -82,11 +88,17 @@ def import_corpus_level_sample(path: Path, batch_size:int = DEFAULT_BATCH_SIZE):
 
     pf = pq.ParquetFile(path)
 
-    for batch in tqdm(pf.iter_batches(batch_size=batch_size), total=_total_batches(pf, batch_size), desc="Importing GEOSample"):
+    for batch in tqdm(
+        pf.iter_batches(batch_size=batch_size),
+        total=_total_batches(pf, batch_size),
+        desc="Importing GEOSample",
+    ):
         rows = batch.to_pylist()
-        GEOSample.objects.bulk_create([
-            GEOSample(sample_id=row['index'], doc=row['doc']) for row in rows
-        ], ignore_conflicts=True)
+        GEOSample.objects.bulk_create(
+            [GEOSample(sample_id=row["index"], doc=row["doc"]) for row in rows],
+            ignore_conflicts=True,
+        )
+
 
 @transaction.atomic
 def import_corpus_level_series(path: Path, batch_size: int = DEFAULT_BATCH_SIZE):
@@ -97,11 +109,17 @@ def import_corpus_level_series(path: Path, batch_size: int = DEFAULT_BATCH_SIZE)
 
     pf = pq.ParquetFile(path)
 
-    for batch in tqdm(pf.iter_batches(batch_size=batch_size), total=_total_batches(pf, batch_size), desc="Importing GEOSeries"):
+    for batch in tqdm(
+        pf.iter_batches(batch_size=batch_size),
+        total=_total_batches(pf, batch_size),
+        desc="Importing GEOSeries",
+    ):
         rows = batch.to_pylist()
-        GEOSeries.objects.bulk_create([
-            GEOSeries(series_id=row['index'], doc=row['doc']) for row in rows
-        ], ignore_conflicts=True)
+        GEOSeries.objects.bulk_create(
+            [GEOSeries(series_id=row["index"], doc=row["doc"]) for row in rows],
+            ignore_conflicts=True,
+        )
+
 
 def import_ids_level_sample(path: Path, batch_size: int = DEFAULT_BATCH_SIZE):
     """
@@ -125,7 +143,11 @@ def import_ids_level_sample(path: Path, batch_size: int = DEFAULT_BATCH_SIZE):
     sample_set = set()
     series_set = set()
 
-    for batch in tqdm(pf.iter_batches(batch_size=batch_size), total=_total_batches(pf, batch_size), desc="Importing OrganismForPairing"):
+    for batch in tqdm(
+        pf.iter_batches(batch_size=batch_size),
+        total=_total_batches(pf, batch_size),
+        desc="Importing OrganismForPairing",
+    ):
         with transaction.atomic():
             rows = batch.to_pylist()
 
@@ -151,14 +173,19 @@ def import_ids_level_sample(path: Path, batch_size: int = DEFAULT_BATCH_SIZE):
                     series_set.add(row["series"])
                     GEOSeries.objects.get_or_create(series_id=row["series"])
 
-            OrganismForPairing.objects.bulk_create([
-                OrganismForPairing(
-                    sample_id=row["sample"],
-                    series_id=row["series"],
-                    platform_id=row["platform"],
-                    organism=organism_cache[row["organism"]]
-                ) for row in rows
-            ], ignore_conflicts=True)
+            OrganismForPairing.objects.bulk_create(
+                [
+                    OrganismForPairing(
+                        sample_id=row["sample"],
+                        series_id=row["series"],
+                        platform_id=row["platform"],
+                        organism=organism_cache[row["organism"]],
+                    )
+                    for row in rows
+                ],
+                ignore_conflicts=True,
+            )
+
 
 def import_series_databases(path: Path, batch_size: int = DEFAULT_BATCH_SIZE):
     """
@@ -178,13 +205,17 @@ def import_series_databases(path: Path, batch_size: int = DEFAULT_BATCH_SIZE):
     pf = pq.ParquetFile(path)
 
     db_relations = (
-        'BioProject',
-        'SRA',
-        'ArrayExpress',
-        'Peptidome',
+        "BioProject",
+        "SRA",
+        "ArrayExpress",
+        "Peptidome",
     )
 
-    for batch in tqdm(pf.iter_batches(batch_size=batch_size), total=_total_batches(pf, batch_size), desc="Importing GEOSeriesRelations"):
+    for batch in tqdm(
+        pf.iter_batches(batch_size=batch_size),
+        total=_total_batches(pf, batch_size),
+        desc="Importing GEOSeriesRelations",
+    ):
         with transaction.atomic():
             rows = batch.to_pylist()
 
@@ -193,26 +224,29 @@ def import_series_databases(path: Path, batch_size: int = DEFAULT_BATCH_SIZE):
                 relations = [x for x in str(row["relations"]).split("||") if x]
 
                 for rel in relations:
-                    if rel == 'NA':
+                    if rel == "NA":
                         continue
-                
+
                     try:
                         rel_type, rel_value = rel.split(":", 1)
                     except ValueError:
-                        print(f"Skipping malformed relation entry for series {series_id}: {rel}", flush=True)
+                        print(
+                            f"Skipping malformed relation entry for series {series_id}: {rel}",
+                            flush=True,
+                        )
                         continue
 
                     if rel_type in db_relations:
                         # create GEOSeriesRelations entry
                         GEOSeriesDatabase.objects.get_or_create(
-                            series_id=series_id,
-                            database_name=rel_type,
-                            url=rel_value
+                            series_id=series_id, database_name=rel_type, url=rel_value
                         )
+
 
 # ============================================================================
 # === entrypoint
 # ============================================================================
+
 
 class Command(BaseCommand):
     help = "Import ids__level-series.parquet id, relation columns into GEOSeriesDatabase model."
@@ -221,7 +255,7 @@ class Command(BaseCommand):
         parser.add_argument(
             "--root",
             required=True,
-            help="Directory containing the ids__level-series.parquet file."
+            help="Directory containing the ids__level-series.parquet file.",
         )
         parser.add_argument("--ids-series", default="ids__level-series.parquet")
 
@@ -229,7 +263,7 @@ class Command(BaseCommand):
         parser.add_argument(
             "--clear-existing",
             action="store_true",
-            help="Clear existing GEOSeriesDatabase data before import."
+            help="Clear existing GEOSeriesDatabase data before import.",
         )
 
     def handle(self, *args, **opts):
@@ -239,7 +273,9 @@ class Command(BaseCommand):
 
         ids_series = root / opts["ids_series"]
 
-        self.stdout.write(self.style.MIGRATE_HEADING("Starting GEOSeriesDatabase import"))
+        self.stdout.write(
+            self.style.MIGRATE_HEADING("Starting GEOSeriesDatabase import")
+        )
 
         # Order matters:
         # 1. create simple ID->doc mappings from the corpus inputs (corpus__*)
@@ -247,11 +283,11 @@ class Command(BaseCommand):
 
         if opts["clear_existing"]:
             with transaction.atomic():
-                self.stdout.write(self.style.WARNING("Clearing existing GEOSeriesDatabase data..."))
-
-                models_to_clear = (
-                   GEOSeriesDatabase,
+                self.stdout.write(
+                    self.style.WARNING("Clearing existing GEOSeriesDatabase data...")
                 )
+
+                models_to_clear = (GEOSeriesDatabase,)
 
                 with connection.cursor() as cursor:
                     cursor.execute(

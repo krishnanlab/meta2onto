@@ -13,8 +13,10 @@ from django_cte.raw import raw_cte_sql
 
 from api.utils.results import dictfetchall
 
+
 class TimeStampedModel(models.Model):
     """Abstract base with created/modified timestamps."""
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -32,15 +34,18 @@ class Organism(models.Model):
     Organism name or taxon identifier (free-text tolerant).
     Examples: 'Homo sapiens', 'Mus musculus', '9606'
     """
+
     name = models.CharField(unique=True)
 
     def __str__(self):
         return self.name
 
+
 # ===========================================================================
 # === Core entities
 # === from GEOmetadb, https://gbnci.cancer.gov/geo/
 # ===========================================================================
+
 
 class GEOSeriesManager(models.Manager):
     @classmethod
@@ -70,13 +75,11 @@ class GEOSeriesManager(models.Manager):
             GEOSeries.objects.all(),
             gse=hits.col.series_id,
             _join_type=INNER,  # keeps GSE rows even if no match; use INNER if you only want matches
-        ).annotate(
-            prob=hits.col.prob
-        )
+        ).annotate(prob=hits.col.prob)
 
         return with_cte(hits, select=qs)
 
-    def search(self, query:str, max_results:int=50, order_by:str='relevance'):
+    def search(self, query: str, max_results: int = 50, order_by: str = "relevance"):
         """
         Fetch GEO sample metadata by sample ID (GSM*).
 
@@ -85,17 +88,14 @@ class GEOSeriesManager(models.Manager):
         introduces the search_onto function.
         """
 
-        result = GEOSeriesManager.search_gse_with_prob(
-            query=query, limit=max_results
-        )
+        result = GEOSeriesManager.search_gse_with_prob(query=query, limit=max_results)
 
         qs = result.annotate(
             samples_ct=Subquery(
-                GEOSample.objects
-                    .filter(series_id=OuterRef("gse"))
-                    .values("series_id")
-                    .annotate(c=models.Count("gsm"))
-                    .values("c")[:1],
+                GEOSample.objects.filter(series_id=OuterRef("gse"))
+                .values("series_id")
+                .annotate(c=models.Count("gsm"))
+                .values("c")[:1],
                 output_field=IntegerField(),
             ),
         )
@@ -108,6 +108,7 @@ class GEOSeriesManager(models.Manager):
             qs = qs.order_by("-samples_ct")
 
         return qs
+
 
 class GEOSeries(models.Model):
     """
@@ -151,17 +152,20 @@ class GEOSeries(models.Model):
             return inlined_db
         else:
             return list(
-                GEOSeriesDatabase.objects.filter(series_id=self.gse).values_list('database_name', flat=True)
+                GEOSeriesDatabase.objects.filter(series_id=self.gse).values_list(
+                    "database_name", flat=True
+                )
             )
 
     class Meta:
         indexes = [
-            models.Index(fields=['gse']),
+            models.Index(fields=["gse"]),
         ]
 
     def __str__(self):
         return f"GEO Metadata for {self.gse}"
-    
+
+
 class GEOSample(models.Model):
     """
     the "gsm" table from GEOmetadb.
@@ -172,7 +176,9 @@ class GEOSample(models.Model):
     gsm = models.CharField(primary_key=True, help_text="GEOSample ID")
     title = models.TextField(null=True, blank=True)
     # series_id = models.TextField(null=True, blank=True)
-    gpl_raw = models.TextField(null=True, blank=True, db_column="gpl", help_text="GEOPlatform ID")
+    gpl_raw = models.TextField(
+        null=True, blank=True, db_column="gpl", help_text="GEOPlatform ID"
+    )
     status = models.TextField(null=True, blank=True)
     submission_date = models.TextField(null=True, blank=True)
     last_update_date = models.TextField(null=True, blank=True)
@@ -230,14 +236,15 @@ class GEOSample(models.Model):
 
     class Meta:
         indexes = [
-            models.Index(fields=['gsm']),
-            models.Index(fields=['series']),
-            models.Index(fields=['gpl_raw']),
+            models.Index(fields=["gsm"]),
+            models.Index(fields=["series"]),
+            models.Index(fields=["gpl_raw"]),
         ]
 
     def __str__(self):
         return f"GEOSample Metadata for {self.gsm}"
-    
+
+
 class GEOPlatform(models.Model):
     """
     the "gpl" table from GEOmetadb.
@@ -267,15 +274,17 @@ class GEOPlatform(models.Model):
 
     class Meta:
         indexes = [
-            models.Index(fields=['gpl']),
+            models.Index(fields=["gpl"]),
         ]
 
     def __str__(self):
         return f"GEO Platform Metadata for {self.gpl}"
-    
+
+
 # ----
 # - lookup tables for GEO relations
 # ----
+
 
 class GEOSeriesToGEOPlatforms(models.Model):
     """
@@ -292,7 +301,7 @@ class GEOSeriesToGEOPlatforms(models.Model):
 
     class Meta:
         indexes = [
-            models.Index(fields=['gse']),
+            models.Index(fields=["gse"]),
         ]
 
     def __str__(self):
@@ -303,6 +312,7 @@ class GEOSeriesToGEOPlatforms(models.Model):
 # === Join tables / relations
 # ===========================================================================---------
 
+
 class GEOSeriesRelations(models.Model):
     """
     Relation between a single GEOSeries and multiple GEOSamples and/or GEOPlatforms.
@@ -311,14 +321,16 @@ class GEOSeriesRelations(models.Model):
     """
 
     series = models.ForeignKey(
-        GEOSeries, related_name='series_relations',
-        null=True, blank=True,
+        GEOSeries,
+        related_name="series_relations",
+        null=True,
+        blank=True,
         on_delete=models.DO_NOTHING,
         db_constraint=False,
     )
 
-    samples = models.ManyToManyField(GEOSample, related_name='series_relations')
-    platforms = models.ManyToManyField(GEOPlatform, related_name='series_relations')
+    samples = models.ManyToManyField(GEOSample, related_name="series_relations")
+    platforms = models.ManyToManyField(GEOPlatform, related_name="series_relations")
 
 
 class GEOSeriesDatabase(models.Model):
@@ -334,8 +346,10 @@ class GEOSeriesDatabase(models.Model):
     """
 
     series = models.ForeignKey(
-        GEOSeries, related_name='databases',
-        null=True, blank=True,
+        GEOSeries,
+        related_name="databases",
+        null=True,
+        blank=True,
         on_delete=models.DO_NOTHING,
         db_constraint=False,
     )
@@ -344,16 +358,18 @@ class GEOSeriesDatabase(models.Model):
 
     class Meta:
         indexes = [
-            models.Index(fields=['series']),
-            models.Index(fields=['database_name']),
+            models.Index(fields=["series"]),
+            models.Index(fields=["database_name"]),
         ]
 
     def __str__(self):
         return f"{self.series.series_id} in {self.database_name}"
 
+
 # ===========================================================================
 # === Search-related Entities
 # ===========================================================================
+
 
 class SearchTermManager(models.Manager):
     def search(self, query):
@@ -363,17 +379,18 @@ class SearchTermManager(models.Manager):
         qs = (
             self.get_queryset()
             .annotate(similarity=TrigramSimilarity("related_words", query))
-            .filter(similarity__gt=0.3) 
+            .filter(similarity__gt=0.3)
             .order_by("-similarity")[:10]
         )
-        # reduce queryset to only what rows will match in 
+        # reduce queryset to only what rows will match in
         return qs
+
 
 class SearchTerm(models.Model):
     """
     Searchable terms extracted from the corpus for indexing and search.
 
-    This is used to populate the autocomplete search box; see 
+    This is used to populate the autocomplete search box; see
     backend.src.api.views.ontology_search for how the actual fetching
     of matching GEOSeries is performed.
 
@@ -382,10 +399,12 @@ class SearchTerm(models.Model):
 
     objects = SearchTermManager()
 
-    term = models.CharField(max_length=256) # ontology term
+    term = models.CharField(max_length=256)  # ontology term
     series = models.ForeignKey(
-        GEOSeries, related_name='search_terms', 
-        null=True, blank=True,
+        GEOSeries,
+        related_name="search_terms",
+        null=True,
+        blank=True,
         on_delete=models.DO_NOTHING,
         db_constraint=False,
     )
@@ -396,7 +415,7 @@ class SearchTerm(models.Model):
     class Meta:
         indexes = [
             # index term for exact matches
-            models.Index(fields=['term']),
+            models.Index(fields=["term"]),
             GinIndex(
                 name="term_related_words_trgm_gin",
                 fields=["related_words"],
@@ -412,8 +431,9 @@ class SearchTerm(models.Model):
 # === Ontology search terms from meta-hq
 # ===========================================================================
 
+
 class OntologySearchResultsManager(models.Manager):
-    def search(self, query:str, max_results:int=50):
+    def search(self, query: str, max_results: int = 50):
         """
         Perform a search for the given query string across ontology terms + synonyms.
 
@@ -423,11 +443,12 @@ class OntologySearchResultsManager(models.Manager):
             """
             SELECT * FROM search_onto(%(query)s, %(max_results)s)
             LIMIT %(max_results)s
-            """, {'query': query, 'max_results': max_results}
+            """,
+            {"query": query, "max_results": max_results},
         )
         return qs
 
-    def search_series(self, query:str, max_results:int=50):
+    def search_series(self, query: str, max_results: int = 50):
         """
         Perform a search for the given query string across ontology terms;
         joins the ontology terms against api_searchterm to get associated GEOSeries.
@@ -442,7 +463,8 @@ class OntologySearchResultsManager(models.Manager):
             INNER JOIN api_series AS sx ON sx.series_id = st.series_id
             INNER JOIN api_GEOSeries AS gse ON gse.gse = sx.series_id
             LIMIT %(max_results)s
-            """, {'query': query, 'max_results': max_results}
+            """,
+            {"query": query, "max_results": max_results},
         )
         return qs
 
@@ -474,13 +496,15 @@ class OntologySearchResults(models.Model):
     class Meta:
         managed = False
 
+
 class OntologySearchDocs(models.Model):
     """
     Ontology search documents with term details and synonyms.
     """
+
     term_id = models.CharField(max_length=256)
     ontology = models.CharField(max_length=128)
-    type = models.CharField(max_length=128, db_column='type')
+    type = models.CharField(max_length=128, db_column="type")
     name = models.CharField(max_length=512)
     syn_exact = models.JSONField(null=True, blank=True)
     syn_narrow = models.JSONField(null=True, blank=True)
@@ -489,8 +513,8 @@ class OntologySearchDocs(models.Model):
 
     class Meta:
         indexes = [
-            models.Index(fields=['term_id']),
-            models.Index(fields=['ontology']),
+            models.Index(fields=["term_id"]),
+            models.Index(fields=["ontology"]),
         ]
 
     def __str__(self):
@@ -501,26 +525,25 @@ class OntologySynonyms(models.Model):
     """
     Ontology term synonyms with scope.
     """
+
     term_id = models.CharField(max_length=256)
     synonym = models.CharField(max_length=512)
-    scope = models.CharField(max_length=64, db_column='scope')
+    scope = models.CharField(max_length=64, db_column="scope")
 
     class Meta:
         indexes = [
-            models.Index(fields=['term_id']),
-            models.Index(fields=['synonym']),
-
+            models.Index(fields=["term_id"]),
+            models.Index(fields=["synonym"]),
             # Full-text GIN index on synonym (to_tsvector('simple', synonym))
             GinIndex(
-                SearchVector('synonym', config='simple'),
-                name='api_ontosyn_syn_tsv_idx',
+                SearchVector("synonym", config="simple"),
+                name="api_ontosyn_syn_tsv_idx",
             ),
-
             # Trigram GIN index on synonym (synonym gin_trgm_ops)
             GinIndex(
-                fields=['synonym'],
-                name='api_ontosyn_syn_trgm_idx',
-                opclasses=['gin_trgm_ops'],
+                fields=["synonym"],
+                name="api_ontosyn_syn_trgm_idx",
+                opclasses=["gin_trgm_ops"],
             ),
         ]
 
@@ -532,28 +555,27 @@ class OntologyTerms(models.Model):
     """
     Ontology terms with basic metadata.
     """
+
     id = models.CharField(max_length=256, primary_key=True)
     name = models.CharField(max_length=512)
     ontology = models.CharField(max_length=128)
-    type = models.CharField(max_length=128, db_column='type')
+    type = models.CharField(max_length=128, db_column="type")
 
     class Meta:
         indexes = [
-            models.Index(fields=['id']),
-            models.Index(fields=['ontology']),
-            models.Index(fields=['type']),
-
+            models.Index(fields=["id"]),
+            models.Index(fields=["ontology"]),
+            models.Index(fields=["type"]),
             # Full-text GIN index on name (to_tsvector('simple', name))
             GinIndex(
-                SearchVector('name', config='simple'),
-                name='api_ontoterms_name_tsv_idx',
+                SearchVector("name", config="simple"),
+                name="api_ontoterms_name_tsv_idx",
             ),
-
             # Trigram GIN index on name (name gin_trgm_ops)
             GinIndex(
-                fields=['name'],
-                name='api_ontoterms_name_trgm_idx',
-                opclasses=['gin_trgm_ops'],
+                fields=["name"],
+                name="api_ontoterms_name_trgm_idx",
+                opclasses=["gin_trgm_ops"],
             ),
         ]
 
@@ -565,6 +587,7 @@ class OntologyTerms(models.Model):
 # === Cart server-side state
 # ===========================================================================
 
+
 class CartItem(models.Model):
     """
     An item in a user's cart.
@@ -573,12 +596,13 @@ class CartItem(models.Model):
     series = models.ForeignKey(GEOSeries, on_delete=models.CASCADE)
     added_at = models.DateTimeField(null=True, blank=True)
     cart = models.ForeignKey(
-        'Cart', null=True, blank=True, on_delete=models.CASCADE, related_name='items'
+        "Cart", null=True, blank=True, on_delete=models.CASCADE, related_name="items"
     )
 
     def __str__(self):
         return f"Cart item series {self.series.series_id}"
-    
+
+
 class Cart(models.Model):
     """
     A cart, identified by a unique ID.

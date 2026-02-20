@@ -8,11 +8,14 @@ from django.db import connection, transaction
 
 from api.models import GEOPlatform, GEOSeries, GEOSeriesToGEOPlatforms
 
+
 class Command(BaseCommand):
-    help = 'Construct mapping between GEOSeries and their GEOPlatforms'
+    help = "Construct mapping between GEOSeries and their GEOPlatforms"
 
     def handle(self, *args, **options):
-        self.stdout.write('Starting construction of GEOSeries to GEOPlatform mapping...')
+        self.stdout.write(
+            "Starting construction of GEOSeries to GEOPlatform mapping..."
+        )
 
         # Clear existing mappings
         GEOSeriesToGEOPlatforms.objects.all().delete()
@@ -36,4 +39,8 @@ class Command(BaseCommand):
             with connection.cursor() as cursor:
                 cursor.execute(copy_sql)
 
-        self.stdout.write(self.style.SUCCESS('Successfully constructed GEOSeries to GEOPlatform mapping.'))
+        self.stdout.write(
+            self.style.SUCCESS(
+                "Successfully constructed GEOSeries to GEOPlatform mapping."
+            )
+        )

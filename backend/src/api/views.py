@@ -21,8 +21,11 @@ from .models import (
     GEOSample,
     GEOSeries,
     GEOSeriesToGEOPlatforms,
-    OntologySearchResults, Organism,
-    GEOPlatform, SearchTerm, GEOSeries,
+    OntologySearchResults,
+    Organism,
+    GEOPlatform,
+    SearchTerm,
+    GEOSeries,
 )
 from .serializers import (
     CartSerializer,
@@ -32,17 +35,19 @@ from .serializers import (
     OrganismSerializer,
     GEOPlatformSerializer,
     SearchTermSerializer,
-    GEOSeriesSerializer
+    GEOSeriesSerializer,
 )
 
 # ===========================================================================
 # === Helpers
 # ===========================================================================
 
+
 class LargeEntityPagination(LimitOffsetPagination):
     """
     Reduces the size of pages for large entity listings to improve performance.
     """
+
     default_limit = 5
 
 
@@ -50,46 +55,53 @@ class GEOSeriesSearchPagination(LimitOffsetPagination):
     """Limit/offset pagination that always returns facets with page metadata."""
 
     def get_paginated_response(self, data):  # type: ignore[override]
-        return Response({
-            'count': self.count,
-            'next': self.get_next_link(),
-            'previous': self.get_previous_link(),
-            'results': data,
-            'facets': getattr(self, 'facets', {}),
-        })
+        return Response(
+            {
+                "count": self.count,
+                "next": self.get_next_link(),
+                "previous": self.get_previous_link(),
+                "results": data,
+                "facets": getattr(self, "facets", {}),
+            }
+        )
 
 
 # ===========================================================================
 # === Reference Types
 # ===========================================================================
 
+
 class OrganismViewSet(viewsets.ReadOnlyModelViewSet):
     """
     ReadOnly API endpoint for viewing Organisms.
     Accessible at /api/organisms/
     """
+
     queryset = Organism.objects.all()
     serializer_class = OrganismSerializer
     filter_backends = [SearchFilter, OrderingFilter]
-    search_fields = ['name']
-    ordering_fields = ['id', 'name']
-    ordering = ['id']
+    search_fields = ["name"]
+    ordering_fields = ["id", "name"]
+    ordering = ["id"]
+
 
 # ===========================================================================
 # === Core Entities
 # ===========================================================================
+
 
 class GEOPlatformViewSet(viewsets.ReadOnlyModelViewSet):
     """
     ReadOnly API endpoint for viewing GEOPlatforms.
     Accessible at /api/platforms/
     """
+
     queryset = GEOPlatform.objects.all()
     serializer_class = GEOPlatformSerializer
     filter_backends = [SearchFilter, OrderingFilter]
-    search_fields = ['platform_id']
-    ordering_fields = ['platform_id', 'created_at', 'updated_at']
-    ordering = ['platform_id']
+    search_fields = ["platform_id"]
+    ordering_fields = ["platform_id", "created_at", "updated_at"]
+    ordering = ["platform_id"]
 
 
 class GEOSeriesViewSet(viewsets.ReadOnlyModelViewSet):
@@ -97,35 +109,38 @@ class GEOSeriesViewSet(viewsets.ReadOnlyModelViewSet):
     ReadOnly API endpoint for viewing GEOSeries.
     Accessible at /api/series/
     """
+
     queryset = GEOSeries.objects.all()
     serializer_class = GEOSeriesSerializer
     filter_backends = [SearchFilter, OrderingFilter]
     # search_fields = ['series_id', 'doc', 'search_terms__term']
-    search_fields = ['search_terms__term']
-    ordering_fields = ['series_id', 'created_at', 'updated_at']
-    ordering = ['series_id']
+    search_fields = ["search_terms__term"]
+    ordering_fields = ["series_id", "created_at", "updated_at"]
+    ordering = ["series_id"]
 
     # provide a /samples action to get samples for a series
-    @action(detail=True, methods=['get'], url_path='samples', permission_classes=[AllowAny])
+    @action(
+        detail=True, methods=["get"], url_path="samples", permission_classes=[AllowAny]
+    )
     def samples(self, request, pk=None):
         series = self.get_object()
         # samples = series.series_relations.first().samples.all()
-        samples = GEOSample.objects.filter(
-            series_id=series.series_id
-        ).all()
+        samples = GEOSample.objects.filter(series_id=series.series_id).all()
         page = self.paginate_queryset(samples)
         if page is not None:
             serializer = GEOSampleSerializer(page, many=True)
             return self.get_paginated_response(serializer.data)
         serializer = GEOSampleSerializer(samples, many=True)
         return Response(serializer.data)
-    
+
     # provide a /lookup action to get series by a list of ids
     @method_decorator(csrf_exempt)
-    @action(detail=False, methods=['post'], url_path='lookup', permission_classes=[AllowAny])
+    @action(
+        detail=False, methods=["post"], url_path="lookup", permission_classes=[AllowAny]
+    )
     def lookup(self, request):
         # takes a list of series_ids in the body
-        series_ids = request.data.get('ids', [])
+        series_ids = request.data.get("ids", [])
         queryset = GEOSample.objects.filter(series_id__in=series_ids)
         page = self.paginate_queryset(queryset)
         if page is not None:
@@ -140,80 +155,87 @@ class GEOSampleViewSet(viewsets.ReadOnlyModelViewSet):
     ReadOnly API endpoint for viewing GEOSamples.
     Accessible at /api/samples/
     """
+
     queryset = GEOSample.objects.all()
     serializer_class = GEOSampleSerializer
     filter_backends = [SearchFilter, OrderingFilter]
-    search_fields = ['sample_id', 'doc', 'search_terms__term']
-    ordering_fields = ['sample_id', 'created_at', 'updated_at']
-    ordering = ['sample_id']
+    search_fields = ["sample_id", "doc", "search_terms__term"]
+    ordering_fields = ["sample_id", "created_at", "updated_at"]
+    ordering = ["sample_id"]
 
 
 # ===========================================================================
 # === Search-related Entities
 # ===========================================================================
 
+
 class SearchTermViewSet(viewsets.ReadOnlyModelViewSet):
     """
     ReadOnly API endpoint for viewing SearchTerms.
     Accessible at /api/search-terms/
     """
+
     queryset = SearchTerm.objects.all()
     serializer_class = SearchTermSerializer
     filter_backends = [SearchFilter, OrderingFilter]
-    search_fields = ['term', 'related_words', 'sample_id']
-    ordering_fields = ['id', 'term', 'prob', 'log2_prob_prior']
-    ordering = ['id']
+    search_fields = ["term", "related_words", "sample_id"]
+    ordering_fields = ["id", "term", "prob", "log2_prob_prior"]
+    ordering = ["id"]
 
 
 # ===========================================================================
 # === Ontology search terms from meta-hq
 # ===========================================================================
 
-@api_view(['GET'])
+
+@api_view(["GET"])
 @permission_classes([AllowAny])
 def ontology_search(request):
     """
     API endpoint for searching ontology terms.
     Accessible at /api/ontology-search/
-    
+
     Query parameters:
     - query (required): The search query string
     - max_results (optional): Maximum number of results to return (default: 50)
     """
-    query = request.query_params.get('query')
-    max_results = request.query_params.get('max_results', 50)
-    
+    query = request.query_params.get("query")
+    max_results = request.query_params.get("max_results", 50)
+
     if not query:
         # return an empty list if no query is provided
         return Response([])
-    
+
     try:
         max_results = int(max_results)
     except ValueError:
         return Response(
-            {'error': 'max_results must be an integer'},
-            status=status.HTTP_400_BAD_REQUEST
+            {"error": "max_results must be an integer"},
+            status=status.HTTP_400_BAD_REQUEST,
         )
-    
+
     results = OntologySearchResults.objects.search(query, max_results)
     serializer = OntologySearchResultsSerializer(results, many=True)
     return Response(serializer.data)
 
+
 # ===========================================================================
 # === GEO Series Metadata
 # ===========================================================================
+
 
 class GEOSeriesViewSet(viewsets.ReadOnlyModelViewSet):
     """
     ReadOnly API endpoint for viewing GEO Series Metadata.
     Accessible at /api/series/
     """
+
     queryset = GEOSeries.objects.all()
     serializer_class = GEOSeriesSerializer
     filter_backends = [SearchFilter, OrderingFilter]
-    search_fields = ['gse', 'title', 'summary']
-    ordering_fields = ['gse', 'title']
-    ordering = ['gse']
+    search_fields = ["gse", "title", "summary"]
+    ordering_fields = ["gse", "title"]
+    ordering = ["gse"]
     pagination_class = GEOSeriesSearchPagination
 
     def _build_facets(self, queryset):
@@ -222,27 +244,29 @@ class GEOSeriesViewSet(viewsets.ReadOnlyModelViewSet):
         # annotate with confidence levels
         annotated_qs = queryset.annotate(
             confidence_level=models.Case(
-                models.When(prob__gte=0.8, then=models.Value('high')),
-                models.When(prob__gte=0.5, then=models.Value('medium')),
-                models.When(prob__lt=0.5, then=models.Value('low')),
-                default=models.Value('unknown'),
+                models.When(prob__gte=0.8, then=models.Value("high")),
+                models.When(prob__gte=0.5, then=models.Value("medium")),
+                models.When(prob__lt=0.5, then=models.Value("low")),
+                default=models.Value("unknown"),
                 output_field=models.CharField(),
             )
         )
 
         # join the 'gpl' field from GEOSample to this queryset
         annotated_qs = annotated_qs.annotate(
-            samples_ct=models.Count('samples', distinct=True)
+            samples_ct=models.Count("samples", distinct=True)
         )
 
         # annotate with study size buckets
         # (small: <10, medium: 10-50, large: >50)
         annotated_qs = annotated_qs.annotate(
             study_size=models.Case(
-                models.When(samples_ct__lt=10, then=models.Value('small')),
-                models.When(samples_ct__gte=10, samples_ct__lte=50, then=models.Value('medium')),
-                models.When(samples_ct__gt=50, then=models.Value('large')),
-                default=models.Value('unknown'),
+                models.When(samples_ct__lt=10, then=models.Value("small")),
+                models.When(
+                    samples_ct__gte=10, samples_ct__lte=50, then=models.Value("medium")
+                ),
+                models.When(samples_ct__gt=50, then=models.Value("large")),
+                default=models.Value("unknown"),
                 output_field=models.CharField(),
             )
         )
@@ -252,8 +276,7 @@ class GEOSeriesViewSet(viewsets.ReadOnlyModelViewSet):
 
         # 2) Flatten platforms arrays into one stream of GPLs
         platform_gpls = (
-            GEOSeriesToGEOPlatforms.objects
-            .filter(gse__in=gse_list)
+            GEOSeriesToGEOPlatforms.objects.filter(gse__in=gse_list)
             .annotate(
                 gpl=Func(F("platforms"), function="unnest", output_field=CharField())
             )
@@ -265,49 +288,51 @@ class GEOSeriesViewSet(viewsets.ReadOnlyModelViewSet):
         platforms_dict = Counter(platforms_qs.values_list("technology", flat=True))
 
         # compute counts for each confidence level
-        confidence_counts = annotated_qs.values('confidence_level').annotate(
-            count=models.Count('gse')
+        confidence_counts = annotated_qs.values("confidence_level").annotate(
+            count=models.Count("gse")
         )
 
         # compute counts for each study size
-        study_size_counts = annotated_qs.values('study_size').annotate(
-            count=models.Count('gse')
+        study_size_counts = annotated_qs.values("study_size").annotate(
+            count=models.Count("gse")
         )
-        
+
         return {
-            'study_size': {
-                entry['study_size']: entry['count']
-                for entry in study_size_counts
+            "study_size": {
+                entry["study_size"]: entry["count"] for entry in study_size_counts
             },
-            'confidence': {
-                entry['confidence_level']: entry['count']
-                for entry in confidence_counts
+            "confidence": {
+                entry["confidence_level"]: entry["count"] for entry in confidence_counts
             },
-            'platforms': dict(platforms_dict)
+            "platforms": dict(platforms_dict),
         }
 
     # allow searching through an action
-    @action(detail=False, methods=['get'], url_path='search', permission_classes=[AllowAny])
+    @action(
+        detail=False, methods=["get"], url_path="search", permission_classes=[AllowAny]
+    )
     def search(self, request):
-        query = request.query_params.get('query')
-        ordering = request.query_params.get('ordering')
-        offset = request.query_params.get('offset')
-        limit = request.query_params.get('limit')
+        query = request.query_params.get("query")
+        ordering = request.query_params.get("ordering")
+        offset = request.query_params.get("offset")
+        limit = request.query_params.get("limit")
         if not query:
             # return an empty response
-            return Response({
-                'count': 0,
-                'next': None,
-                'previous': None,
-                'results': [],
-                'facets': {}
-            })
-        
+            return Response(
+                {
+                    "count": 0,
+                    "next": None,
+                    "previous": None,
+                    "results": [],
+                    "facets": {},
+                }
+            )
+
             # return Response(
             #     {'error': 'query parameter is required'},
             #     status=status.HTTP_400_BAD_REQUEST
             # )
-        
+
         results = GEOSeries.objects.search(query, order_by=ordering)
         facets = self._build_facets(results)
 
@@ -322,40 +347,42 @@ class GEOSeriesViewSet(viewsets.ReadOnlyModelViewSet):
             self.paginator.facets = facets
 
         # if confidence is provided, filter to confidence=high
-        confidence = request.query_params.get('confidence')
-        if confidence in ['high', 'medium', 'low', 'unknown']:
-            if confidence == 'high':
+        confidence = request.query_params.get("confidence")
+        if confidence in ["high", "medium", "low", "unknown"]:
+            if confidence == "high":
                 results = results.filter(prob__gte=0.8)
-            elif confidence == 'medium':
+            elif confidence == "medium":
                 results = results.filter(prob__gte=0.5, prob__lt=0.8)
-            elif confidence == 'low':
+            elif confidence == "low":
                 results = results.filter(prob__lt=0.5)
-            elif confidence == 'unknown':
+            elif confidence == "unknown":
                 results = results.filter(prob__isnull=True)
 
         # if study_size is provided, filter results by large, medium, small
-        study_size = request.query_params.get('study_size')
-        if study_size in ['small', 'medium', 'large']:
-            if study_size == 'small':
+        study_size = request.query_params.get("study_size")
+        if study_size in ["small", "medium", "large"]:
+            if study_size == "small":
                 results = results.filter(samples_ct__lt=10)
-            elif study_size == 'medium':
+            elif study_size == "medium":
                 results = results.filter(samples_ct__gte=10, samples_ct__lte=50)
-            elif study_size == 'large':
+            elif study_size == "large":
                 results = results.filter(samples_ct__gt=50)
 
         # if platforms is provided, do the following:
         # 1. query GEOSeriesToPlatforms to get the gpl values with 'technology' equal to the passed platforms
         # 2. use GEOSeriesToPlatforms to get the gse values for gpl values that occur in the 'platforms' ArrayField
         # 3. filter results to only those gse values
-        platforms = request.query_params.getlist('platforms')
+        platforms = request.query_params.getlist("platforms")
         if platforms:
-            gpls = GEOPlatform.objects.filter(
-                technology__in=platforms
-            ).values_list('gpl', flat=True)
+            gpls = GEOPlatform.objects.filter(technology__in=platforms).values_list(
+                "gpl", flat=True
+            )
 
-            gse_values = GEOSeriesToGEOPlatforms.objects.filter(
-                platforms__overlap=list(gpls)
-            ).values_list('gse', flat=True).distinct()
+            gse_values = (
+                GEOSeriesToGEOPlatforms.objects.filter(platforms__overlap=list(gpls))
+                .values_list("gse", flat=True)
+                .distinct()
+            )
 
             results = results.filter(gse__in=list(gse_values))
 
@@ -365,22 +392,26 @@ class GEOSeriesViewSet(viewsets.ReadOnlyModelViewSet):
         if page is not None:
             serializer = self.get_serializer(page, many=True)
             return self.get_paginated_response(serializer.data)
-        
+
         serializer = self.get_serializer(results, many=True)
-        return Response({
-            'count': len(serializer.data),
-            'next': None,
-            'previous': None,
-            'results': serializer.data,
-            'facets': facets
-        })
+        return Response(
+            {
+                "count": len(serializer.data),
+                "next": None,
+                "previous": None,
+                "results": serializer.data,
+                "facets": facets,
+            }
+        )
 
     # provide a /lookup action to get series by a list of ids
     @method_decorator(csrf_exempt)
-    @action(detail=False, methods=['post'], url_path='lookup', permission_classes=[AllowAny])
+    @action(
+        detail=False, methods=["post"], url_path="lookup", permission_classes=[AllowAny]
+    )
     def lookup(self, request):
         # takes a list of series_ids in the body
-        series_ids = request.data.get('ids', [])
+        series_ids = request.data.get("ids", [])
         queryset = self.get_queryset().filter(gse__in=series_ids)
         page = self.paginate_queryset(queryset)
         if page is not None:
@@ -388,6 +419,7 @@ class GEOSeriesViewSet(viewsets.ReadOnlyModelViewSet):
             return self.get_paginated_response(serializer.data)
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
+
 
 # ===========================================================================
 # === Cart share, download views
@@ -400,18 +432,20 @@ class CsrfExemptSessionAuthentication(SessionAuthentication):
     def enforce_csrf(self, request):
         return  # no-op
 
-@method_decorator(csrf_exempt, name='dispatch')
+
+@method_decorator(csrf_exempt, name="dispatch")
 class CartViewSet(viewsets.ModelViewSet):
     """
     API endpoint for viewing and managing Carts.
     Accessible at /api/cart/
     """
+
     queryset = Cart.objects.all()
     serializer_class = CartSerializer
     filter_backends = [SearchFilter, OrderingFilter]
-    search_fields = ['name']
-    ordering_fields = ['id', 'name', 'created_at']
-    ordering = ['id']
+    search_fields = ["name"]
+    ordering_fields = ["id", "name", "created_at"]
+    ordering = ["id"]
     authentication_classes = [CsrfExemptSessionAuthentication]
     permission_classes = [AllowAny]
 
@@ -419,7 +453,7 @@ class CartViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         """
         Create a new cart with the given name.
-        
+
         Expects a JSON body with the following structure:
         {
             "studies": [
@@ -439,40 +473,37 @@ class CartViewSet(viewsets.ModelViewSet):
             "name": "yowza"
         }
         """
-        
+
         with transaction.atomic():
             # create a Cart object
-            series_list = request.data.get('studies', [])
-            cart_name = request.data['name']
-            cart = Cart.objects.create(
-                name=cart_name
-            )
+            series_list = request.data.get("studies", [])
+            cart_name = request.data["name"]
+            cart = Cart.objects.create(name=cart_name)
 
             # create CartItem objects for each series
             for series_data in series_list:
-                series_id = series_data['id']
-                added_at = series_data.get('added')
+                series_id = series_data["id"]
+                added_at = series_data.get("added")
                 try:
                     series = GEOSeries.objects.get(series_id=series_id)
-                    CartItem.objects.create(
-                        series=series,
-                        added_at=added_at,
-                        cart=cart
-                    )
+                    CartItem.objects.create(series=series, added_at=added_at, cart=cart)
                 except GEOSeries.DoesNotExist:
                     continue  # skip invalid series ids
 
             serializer = self.get_serializer(cart)
-            return Response(
-                serializer.data, status=status.HTTP_201_CREATED
-            )
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     # provide a /download action to download cart contents
-    @action(detail=False, methods=['post'], url_path='download', permission_classes=[AllowAny])
+    @action(
+        detail=False,
+        methods=["post"],
+        url_path="download",
+        permission_classes=[AllowAny],
+    )
     def download(self, request):
         """
         API endpoint for downloading cart contents.
-        
+
         Expects a JSON body with the following structure:
         {
             "ids": [
@@ -481,50 +512,50 @@ class CartViewSet(viewsets.ModelViewSet):
                 "GSE45968"
             ]
         }
-        
+
         Query parameters:
         - type (optional): 'json' or 'csv' (default: 'json')
         - filename (optional): desired filename (default: 'cart_download')
         """
-        series_ids = request.data.get('ids', [])
-        download_type = request.query_params.get('type', 'json')
-        filename = request.query_params.get('filename', 'cart_download')
-        
+        series_ids = request.data.get("ids", [])
+        download_type = request.query_params.get("type", "json")
+        filename = request.query_params.get("filename", "cart_download")
+
         series_qs = GEOSeries.objects.filter(gse__in=series_ids)
-        
-        if download_type == 'json':
+
+        if download_type == "json":
             # prepare JSON response
             data = {
-                'studies': [
+                "studies": [
                     {
-                        'id': series.gse,
-                        'title': series.title,
-                        'summary': series.summary,
+                        "id": series.gse,
+                        "title": series.title,
+                        "summary": series.summary,
                     }
                     for series in series_qs
                 ]
             }
-            response = Response(data, content_type='application/json')
-            response['Content-Disposition'] = f'attachment; filename="{filename}.json"'
+            response = Response(data, content_type="application/json")
+            response["Content-Disposition"] = f'attachment; filename="{filename}.json"'
             return response
-        
-        elif download_type == 'csv':
+
+        elif download_type == "csv":
             # prepare CSV response
-            response = HttpResponse(content_type='text/csv; charset=utf-8')
-            response['Content-Disposition'] = f'attachment; filename="{filename}.csv"'
+            response = HttpResponse(content_type="text/csv; charset=utf-8")
+            response["Content-Disposition"] = f'attachment; filename="{filename}.csv"'
 
             # Helps Excel correctly detect UTF-8
-            response.write('\ufeff')
+            response.write("\ufeff")
 
             writer = csv.writer(response)
-            writer.writerow(['GEOSeries ID', 'Title', 'Summary'])
+            writer.writerow(["GEOSeries ID", "Title", "Summary"])
             for series in series_qs:
                 writer.writerow([series.gse, series.title, series.summary])
 
             return response
-        
+
         else:
             return Response(
-                {'error': 'Unsupported download type'},
-                status=status.HTTP_400_BAD_REQUEST
+                {"error": "Unsupported download type"},
+                status=status.HTTP_400_BAD_REQUEST,
             )

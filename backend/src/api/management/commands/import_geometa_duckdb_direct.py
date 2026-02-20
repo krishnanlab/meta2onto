@@ -27,19 +27,18 @@ import duckdb
 import gc
 import psycopg2
 
-from api.models import (
-    GEOSeries, GEOSample, GEOPlatform
-)
+from api.models import GEOSeries, GEOSample, GEOPlatform
 
 from django.conf import settings
 from django.db import reset_queries
 
 # before the import loop
-connections['default'].force_debug_cursor = False
+connections["default"].force_debug_cursor = False
 
 # ============================================================================
 # === entrypoint
 # ============================================================================
+
 
 def _truncate_cells(row, max_length=65535):
     """Truncate any cell in the row that exceeds max_length."""
@@ -47,6 +46,7 @@ def _truncate_cells(row, max_length=65535):
         (val[:max_length] if isinstance(val, str) and len(val) > max_length else val)
         for val in row
     )
+
 
 def _normalize_cell_for_csv(val):
     """Convert Python value to CSV-safe representation.
@@ -58,9 +58,11 @@ def _normalize_cell_for_csv(val):
         return "\\N"
     return str(val)
 
+
 def _quote_ident(name: str) -> str:
     """Safely double-quote a SQL identifier (table/column)."""
     return '"' + name.replace('"', '""') + '"'
+
 
 class Command(BaseCommand):
     help = "Import GEOmetadb's gse table into a meta2onto model."
@@ -69,7 +71,7 @@ class Command(BaseCommand):
         parser.add_argument(
             "--root",
             required=True,
-            help="Directory containing the GEOmetadb__gse_gsm_gpl.duckdb file"
+            help="Directory containing the GEOmetadb__gse_gsm_gpl.duckdb file",
         )
         parser.add_argument("--geometadb-db", default="GEOmetadb__gse_gsm_gpl.duckdb")
 
@@ -77,10 +79,19 @@ class Command(BaseCommand):
         parser.add_argument(
             "--clear-existing",
             action="store_true",
-            help="Clear existing search data before import."
+            help="Clear existing search data before import.",
         )
 
-    def _copy_from_duckdb(self, src_table: str, model, cols: tuple, chunk_size: int = 10000, verbose: bool = True, con=None, path_to_db: Path = None):
+    def _copy_from_duckdb(
+        self,
+        src_table: str,
+        model,
+        cols: tuple,
+        chunk_size: int = 10000,
+        verbose: bool = True,
+        con=None,
+        path_to_db: Path = None,
+    ):
         """Stream rows from DuckDB, write to temp CSV, and COPY into Postgres.
 
         - src_table: DuckDB source table name (gse/gsm/gpl)
@@ -89,14 +100,18 @@ class Command(BaseCommand):
         - chunk_size: number of rows to fetch from DuckDB per iteration
         """
         if verbose:
-            self.stdout.write(self.style.HTTP_INFO(
-                f"→ COPY {src_table} → {_quote_ident(model._meta.db_table)} with chunk size {chunk_size}..."
-            ))
+            self.stdout.write(
+                self.style.HTTP_INFO(
+                    f"→ COPY {src_table} → {_quote_ident(model._meta.db_table)} with chunk size {chunk_size}..."
+                )
+            )
 
         if con is None:
             if path_to_db is None:
                 raise ValueError("Either 'con' or 'path_to_db' must be provided.")
-            con = duckdb.connect(database=str(path_to_db), read_only=True, config={'memory_limit': "8GB"})
+            con = duckdb.connect(
+                database=str(path_to_db), read_only=True, config={"memory_limit": "8GB"}
+            )
 
         # Count total rows for progress
         cursor = con.execute(f"SELECT COUNT(*) FROM {src_table}")
@@ -105,14 +120,18 @@ class Command(BaseCommand):
             self.stdout.write(self.style.HTTP_INFO(f"  → {total_rows} rows to import."))
 
         # Prepare temp CSV file
-        temp_csv = tempfile.NamedTemporaryFile(mode="w", newline="", suffix=f"_{src_table}.csv", delete=False)
+        temp_csv = tempfile.NamedTemporaryFile(
+            mode="w", newline="", suffix=f"_{src_table}.csv", delete=False
+        )
         csv_path = Path(temp_csv.name)
-        writer = csv.writer(temp_csv, quoting=csv.QUOTE_MINIMAL, lineterminator='\n')
+        writer = csv.writer(temp_csv, quoting=csv.QUOTE_MINIMAL, lineterminator="\n")
 
         # Stream from DuckDB → CSV
         cursor = con.execute(f"SELECT {', '.join(cols)} FROM {src_table}")
         written = 0
-        with tqdm(total=total_rows, desc=f"Writing {src_table} CSV", unit="rows") as pbar:
+        with tqdm(
+            total=total_rows, desc=f"Writing {src_table} CSV", unit="rows"
+        ) as pbar:
             while True:
                 if settings.DEBUG:
                     reset_queries()
@@ -135,7 +154,9 @@ class Command(BaseCommand):
         temp_csv.close()
 
         if verbose:
-            self.stdout.write(self.style.HTTP_INFO(f"  → CSV ready: {csv_path} ({written} rows)"))
+            self.stdout.write(
+                self.style.HTTP_INFO(f"  → CSV ready: {csv_path} ({written} rows)")
+            )
 
         # COPY into Postgres
         dest_table = model._meta.db_table
@@ -148,15 +169,15 @@ class Command(BaseCommand):
         # Connect directly with psycopg2 to get a real cursor with copy_expert
         conn_settings = connection.settings_dict
         pg_conn = psycopg2.connect(
-            host=conn_settings.get('HOST'),
-            port=conn_settings.get('PORT', 5432),
-            database=conn_settings.get('NAME'),
-            user=conn_settings.get('USER'),
-            password=conn_settings.get('PASSWORD'),
+            host=conn_settings.get("HOST"),
+            port=conn_settings.get("PORT", 5432),
+            database=conn_settings.get("NAME"),
+            user=conn_settings.get("USER"),
+            password=conn_settings.get("PASSWORD"),
         )
         pg_cursor = pg_conn.cursor()
         try:
-            with csv_path.open('r') as f:
+            with csv_path.open("r") as f:
                 pg_cursor.copy_expert(copy_sql, f)
             pg_conn.commit()
         except Exception:
@@ -173,8 +194,9 @@ class Command(BaseCommand):
             pass
 
         if verbose:
-            self.stdout.write(self.style.SUCCESS(f"✓ {model.__name__} imported via COPY"))
-
+            self.stdout.write(
+                self.style.SUCCESS(f"✓ {model.__name__} imported via COPY")
+            )
 
     def handle(self, *args, **opts):
         root = Path(opts["root"]).expanduser().resolve()
@@ -187,10 +209,14 @@ class Command(BaseCommand):
 
         if opts["clear_existing"]:
             with transaction.atomic():
-                self.stdout.write(self.style.WARNING("Clearing existing GEOmetadb data..."))
+                self.stdout.write(
+                    self.style.WARNING("Clearing existing GEOmetadb data...")
+                )
 
                 models_to_clear = (
-                    GEOSeries, GEOSample, GEOPlatform,
+                    GEOSeries,
+                    GEOSample,
+                    GEOPlatform,
                 )
 
                 with connection.cursor() as cursor:
@@ -199,7 +225,7 @@ class Command(BaseCommand):
                             ", ".join(f'"{t._meta.db_table}"' for t in models_to_clear)
                         )
                     )
-                
+
         self.stdout.write(self.style.HTTP_INFO(f"Importing: {geometadb_db}"))
 
         # con = duckdb.connect(database=str(geometadb_db), read_only=True, config={'memory_limit': "8GB"})
@@ -210,22 +236,22 @@ class Command(BaseCommand):
             src_table="gse",
             model=GEOSeries,
             cols=(
-                'title',
-                'gse',
-                'status',
-                'submission_date',
-                'last_update_date',
-                'pubmed_id',
-                'summary',
-                'type',
-                'web_link',
-                'overall_design',
-                'repeats',
-                'repeats_sample_list',
-                'variable',
-                'variable_description',
-                'contact',
-                'supplementary_file',
+                "title",
+                "gse",
+                "status",
+                "submission_date",
+                "last_update_date",
+                "pubmed_id",
+                "summary",
+                "type",
+                "web_link",
+                "overall_design",
+                "repeats",
+                "repeats_sample_list",
+                "variable",
+                "variable_description",
+                "contact",
+                "supplementary_file",
             ),
             chunk_size=10000,
         )
@@ -236,37 +262,37 @@ class Command(BaseCommand):
             src_table="gsm",
             model=GEOSample,
             cols=(
-                'gsm',
-                'title',
-                'series_id',
-                'gpl',
-                'status',
-                'submission_date',
-                'last_update_date',
-                'type',
-                'source_name_ch1',
-                'organism_ch1',
-                'characteristics_ch1',
-                'molecule_ch1',
-                'label_ch1',
-                'treatment_protocol_ch1',
-                'extract_protocol_ch1',
-                'label_protocol_ch1',
-                'source_name_ch2',
-                'organism_ch2',
-                'characteristics_ch2',
-                'molecule_ch2',
-                'label_ch2',
-                'treatment_protocol_ch2',
-                'extract_protocol_ch2',
-                'label_protocol_ch2',
-                'hyb_protocol',
-                'description',
-                'data_processing',
-                'contact',
-                'supplementary_file',
-                'data_row_count',
-                'channel_count',
+                "gsm",
+                "title",
+                "series_id",
+                "gpl",
+                "status",
+                "submission_date",
+                "last_update_date",
+                "type",
+                "source_name_ch1",
+                "organism_ch1",
+                "characteristics_ch1",
+                "molecule_ch1",
+                "label_ch1",
+                "treatment_protocol_ch1",
+                "extract_protocol_ch1",
+                "label_protocol_ch1",
+                "source_name_ch2",
+                "organism_ch2",
+                "characteristics_ch2",
+                "molecule_ch2",
+                "label_ch2",
+                "treatment_protocol_ch2",
+                "extract_protocol_ch2",
+                "label_protocol_ch2",
+                "hyb_protocol",
+                "description",
+                "data_processing",
+                "contact",
+                "supplementary_file",
+                "data_row_count",
+                "channel_count",
             ),
             chunk_size=10000,
         )
@@ -277,25 +303,25 @@ class Command(BaseCommand):
             src_table="gpl",
             model=GEOPlatform,
             cols=(
-                'gpl',
-                'title',
-                'status',
-                'submission_date',
-                'last_update_date',
-                'technology',
-                'distribution',
-                'organism',
-                'manufacturer',
-                'manufacture_protocol',
-                'coating',
-                'catalog_number',
-                'support',
-                'description',
-                'web_link',
-                'contact',
-                'data_row_count',
-                'supplementary_file',
-                'bioc_package',
+                "gpl",
+                "title",
+                "status",
+                "submission_date",
+                "last_update_date",
+                "technology",
+                "distribution",
+                "organism",
+                "manufacturer",
+                "manufacture_protocol",
+                "coating",
+                "catalog_number",
+                "support",
+                "description",
+                "web_link",
+                "contact",
+                "data_row_count",
+                "supplementary_file",
+                "bioc_package",
             ),
             chunk_size=10000,
         )

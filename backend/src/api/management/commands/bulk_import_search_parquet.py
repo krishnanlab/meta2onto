@@ -10,11 +10,14 @@ import pyarrow.compute as pc
 
 from api.models import SearchTerm
 
+
 class Command(BaseCommand):
     help = "Import SearchTerm rows from a Parquet file using PostgreSQL COPY"
 
     def add_arguments(self, parser):
-        parser.add_argument("parquet_path", help="Path to meta2onto_example_predictions.parquet")
+        parser.add_argument(
+            "parquet_path", help="Path to meta2onto_example_predictions.parquet"
+        )
         parser.add_argument(
             "--table",
             default=SearchTerm._meta.db_table,
@@ -38,7 +41,9 @@ class Command(BaseCommand):
         # 2) Select and rename columns to match DB schema
         # Parquet: term, ID, prob, log2(prob/prior), related_words
         # DB:      term, sample_id, prob, log2_prob_prior, related_words
-        table = table.select(["term", "ID", "prob", "log2(prob/prior)", "related_words"])
+        table = table.select(
+            ["term", "ID", "prob", "log2(prob/prior)", "related_words"]
+        )
         table = table.rename_columns(
             ["term", "sample_id", "prob", "log2_prob_prior", "related_words"]
         )
