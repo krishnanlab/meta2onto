@@ -419,6 +419,20 @@ class GEOSeriesViewSet(viewsets.ReadOnlyModelViewSet):
             return self.get_paginated_response(serializer.data)
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
+    
+    # nest /samples to find related samples for a series
+    @action(
+        detail=True, methods=["get"], url_path="samples", permission_classes=[AllowAny]
+    )
+    def samples(self, request, pk=None):
+        series = self.get_object()
+        samples = GEOSample.objects.filter(series_id=series.gse).all()
+        page = self.paginate_queryset(samples)
+        if page is not None:
+            serializer = GEOSampleSerializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        serializer = GEOSampleSerializer(samples, many=True)
+        return Response(serializer.data)
 
 
 # ===========================================================================
