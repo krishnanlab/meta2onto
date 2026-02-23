@@ -1,3 +1,8 @@
+import type { ColumnSort } from "@tanstack/react-table";
+import type { Cart } from "@/api/types";
+import type { Database } from "@/components/Database";
+import type { Limit } from "@/components/Pagination";
+import type { LocalCart } from "@/state/cart";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router";
 import {
@@ -6,7 +11,6 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
-import type { ColumnSort } from "@tanstack/react-table";
 import clsx from "clsx";
 import { useAtomValue } from "jotai";
 import {
@@ -29,7 +33,20 @@ import {
   shareCart,
   studyBatchLookup,
 } from "@/api/api";
-import type { Cart } from "@/api/types";
+import ActionButton, { copy } from "@/components/ActionButton";
+import Ago from "@/components/Ago";
+import BigRadios from "@/components/BigRadios";
+import Button from "@/components/Button";
+import DatabaseBadge, { databases } from "@/components/Database";
+import Dialog from "@/components/Dialog";
+import Heading from "@/components/Heading";
+import Link from "@/components/Link";
+import Meta from "@/components/Meta";
+import Pagination from "@/components/Pagination";
+import Popover from "@/components/Popover";
+import Status, { showStatus } from "@/components/Status";
+import Table from "@/components/Table";
+import Textbox from "@/components/Textbox";
 import {
   addCreatedCart,
   cartAtom,
@@ -37,22 +54,7 @@ import {
   clearCreatedCarts,
   createdCartsAtom,
   removeFromCart,
-  type LocalCart,
-} from "@/cart";
-import ActionButton, { copy } from "@/components/ActionButton";
-import Ago from "@/components/Ago";
-import BigRadios from "@/components/BigRadios";
-import Button from "@/components/Button";
-import Database, { databases } from "@/components/Database";
-import Dialog from "@/components/Dialog";
-import Heading from "@/components/Heading";
-import Link from "@/components/Link";
-import Meta from "@/components/Meta";
-import Pagination, { type Limit } from "@/components/Pagination";
-import Popover from "@/components/Popover";
-import Status, { showStatus } from "@/components/Status";
-import Table from "@/components/Table";
-import Textbox from "@/components/Textbox";
+} from "@/state/cart";
 import { downloadSh } from "@/util/download";
 import { highlightBash } from "@/util/highlighting";
 import { formatNumber } from "@/util/string";
@@ -68,14 +70,14 @@ export default function Cart() {
   const shared = !!id;
 
   /** look up study ids from cart id */
-  const studyIdsQuery = useQuery({
+  const cartLookupQuery = useQuery({
     queryKey: ["cart-lookup", id],
     queryFn: () => cartLookup(id),
     enabled: shared,
   });
 
   /** remote, shared cart */
-  const sharedCart = studyIdsQuery.data;
+  const sharedCart = cartLookupQuery.data;
 
   /** cart study ids */
   const studyIds = ((localCart || sharedCart).studies || []).map(
@@ -86,7 +88,7 @@ export default function Cart() {
   const size = studyIds.length || 0;
 
   /** cart name */
-  const name = studyIdsQuery.data?.name || id;
+  const name = cartLookupQuery.data?.name || id;
 
   /** custom cart name for sharing */
   const [shareName, setShareName] = useState(name);
@@ -97,7 +99,7 @@ export default function Cart() {
   const [limit, setLimit] = useState<Limit>("10");
 
   /** look up study details from study ids */
-  const studyDetailsQuery = useQuery({
+  const studyBatchLookupQuery = useQuery({
     queryKey: ["study-batch-lookup", id, ordering, offset, limit],
     queryFn: () =>
       studyBatchLookup({
@@ -115,7 +117,7 @@ export default function Cart() {
   if (!size) queryClient.resetQueries({ queryKey: ["study-batch-lookup"] });
 
   /** full study details */
-  const studyDetails = studyDetailsQuery.data?.results || [];
+  const studyDetails = studyBatchLookupQuery.data?.results || [];
 
   /** page title */
   const title = shared ? `Shared cart "${name}"` : `Data Cart`;
@@ -151,23 +153,23 @@ export default function Cart() {
         <Heading level={1}>{title}</Heading>
       </section>
 
-      {shared && showStatus({ query: studyIdsQuery }) ? (
+      {shared && showStatus({ query: cartLookupQuery }) ? (
         <section>
-          <Status query={studyIdsQuery} />
+          <Status query={cartLookupQuery} />
         </section>
       ) : (
         <>
           <section>
-            <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex flex-wrap items-center justify-between gap-8">
               {/* cart details */}
-              <div className="flex flex-wrap gap-4">
+              <div className="flex flex-wrap gap-8">
                 <span className="font-medium">
                   {size ? formatNumber(size) : 0} items
                 </span>
               </div>
 
               {/* cart actions */}
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-4">
                 {!shared && <Clear size={size} />}
 
                 {!shared && (
@@ -194,14 +196,14 @@ export default function Cart() {
 
                         {shareUrl && (
                           <>
-                            <div className="flex flex-col gap-2">
+                            <div className="flex flex-col gap-4">
                               <p>Cart saved to:</p>
                               <Textbox
                                 readOnly
                                 value={String(shareUrl)}
                                 onFocus={(event) => event.target.select()}
                               />
-                              <div className="flex flex-wrap items-center gap-2">
+                              <div className="flex flex-wrap items-center gap-4">
                                 <ActionButton
                                   onClick={() => copy(String(shareUrl))}
                                 >
@@ -221,7 +223,7 @@ export default function Cart() {
                                 </Button>
                               </div>
                             </div>
-                            <div className="flex flex-col gap-2">
+                            <div className="flex flex-col gap-4">
                               <p>Start fresh cart:</p>
                               <Clear size={size} />
                             </div>
@@ -294,9 +296,9 @@ export default function Cart() {
           {/* cart contents */}
           <section>
             {!size && (
-              <div className="flex flex-col items-center gap-4">
+              <div className="flex flex-col items-center gap-8">
                 <div>No studies yet</div>
-                <Button to="/search">
+                <Button to="/">
                   <Plus />
                   Search
                 </Button>
@@ -304,7 +306,7 @@ export default function Cart() {
             )}
 
             <Status
-              query={studyDetailsQuery}
+              query={studyBatchLookupQuery}
               loading={`Loading ${studyIds.length} studies`}
             />
 
@@ -313,19 +315,19 @@ export default function Cart() {
                 <Table
                   cols={[
                     {
-                      key: "gse",
+                      key: "id",
                       name: "ID",
                     },
                     {
-                      key: "title",
+                      key: "name",
                       name: "Name",
                     },
                     {
-                      key: "samples",
+                      key: "sample_count",
                       name: "Samples",
                     },
                     {
-                      key: "submission_date",
+                      key: "submitted_at",
                       name: "Date",
                       render: (date) => <Ago date={date} />,
                     },
@@ -334,7 +336,7 @@ export default function Cart() {
                       name: "Databases",
                       render: (database) =>
                         database.map((database, index) => (
-                          <Database key={index} database={database} />
+                          <DatabaseBadge key={index} database={database} />
                         )),
                     },
                     {
@@ -343,7 +345,7 @@ export default function Cart() {
                       render: (added) => <Ago date={added} />,
                     },
                     {
-                      key: "gse",
+                      key: "id",
                       name: "",
                       sortable: false,
                       render: (id) => (
@@ -356,7 +358,7 @@ export default function Cart() {
                   rows={studyDetails.map((study) => ({
                     ...study,
                     added:
-                      localCart?.studies.find((s) => s.id === study.gse)
+                      localCart?.studies.find((s) => s.id === study.id)
                         ?.added ?? "2025-01-01T00:00:00.000Z",
                   }))}
                   sort={ordering}
@@ -385,7 +387,7 @@ export default function Cart() {
 
             <div
               className={clsx(
-                "grid max-w-max gap-4 self-center",
+                "grid max-w-max gap-8 self-center",
                 createdCarts.length === 1
                   ? "grid-cols-1"
                   : createdCarts.length === 2
@@ -405,8 +407,7 @@ export default function Cart() {
                   key={index}
                   to={`/cart/${id}`}
                   className="
-                    flex flex-col items-start gap-2 rounded-sm border
-                    border-slate-300 p-2
+                    flex flex-col items-start gap-4 rounded-sm p-4 shadow-md
                   "
                 >
                   <strong>{name || id}</strong>
@@ -414,6 +415,8 @@ export default function Cart() {
                 </Link>
               ))}
             </div>
+
+            <br />
 
             {!!createdCarts.length && (
               <Button
@@ -456,14 +459,14 @@ const DownloadScript = ({
   name: string;
   cart: LocalCart | Cart;
 }) => {
-  const [database, setDatabase] = useState(databases[0]?.id ?? "");
+  const [database, setDatabase] = useState(databases[0].id as Database["id"]);
 
   /** script text */
   const script = getCartScript(cart, database);
 
   return (
     <>
-      <div className="flex flex-col gap-4 overflow-y-auto">
+      <div className="flex flex-col gap-2 overflow-y-auto">
         <BigRadios
           className="w-200 max-w-full"
           label={
@@ -473,23 +476,25 @@ const DownloadScript = ({
           }
           options={databases.map(({ id }) => ({
             value: id,
-            render: <Database database={id} full={true} />,
+            render: <DatabaseBadge database={id} full={true} />,
           }))}
           value={database}
           onChange={setDatabase}
         />
 
-        <div className="flex flex-col gap-2">
-          <span>
+        <br />
+
+        <div className="flex flex-col gap-4">
+          <div>
             <strong>Bash script</strong> to download cart directly from database
-          </span>
+          </div>
           <code>
             <pre dangerouslySetInnerHTML={{ __html: highlightBash(script) }} />
           </code>
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-4">
         <Button onClick={() => downloadSh(script, name || "cart")}>
           <Download />
           Download

@@ -1,56 +1,88 @@
-export type Model = {
-  id: string;
-  type: string;
-  name: string;
-  description: string;
-  series_id: string;
-};
+import z from "zod";
 
-export type ModelSearch = Model[];
+export const ontology = z.object({
+  id: z.string(),
+  type: z.string(),
+  name: z.string(),
+  description: z.string(),
+  series: z.string(),
+});
 
-export type Study = {
-  gse: string;
-  title: string;
-  summary: string;
-  confidence: { name: string; value: number };
-  submission_date: string;
-  platform: string;
-  database: string[];
-  samples_ct: number | null;
-};
+export type Ontology = z.infer<typeof ontology>;
 
-export type StudySearch = {
-  count: number;
-  results: Study[];
-  facets: {
-    [facet: string]: {
-      [value: string]: number;
-    };
-  };
-};
+export const ontologies = z.array(ontology);
 
-export type Sample = {
-  // sample_id: string;
-  // doc: string;
-  // created_at: string;
-  // updated_at: string;
-  id: string;
-  description: string;
-  data_processing: string;
-};
+export type Ontologies = z.infer<typeof ontologies>;
 
-export type StudySamples = {
-  count: number;
-  results: Sample[];
-};
+export const study = z.object({
+  id: z.string(),
+  name: z.string(),
+  description: z.string(),
+  confidence: z.object({
+    name: z.string(),
+    value: z.number(),
+  }),
+  submitted_at: z.iso.datetime(),
+  platform: z.string(),
+  database: z.array(z.string()),
+  classification: z.string(),
+  sample_count: z.number(),
+  keywords: z.array(z.string()),
+});
 
-export type Cart = {
-  id: string;
-  name: string;
-  created_at: string;
-  studies: { id: string; added: string }[];
-};
+export type Study = z.infer<typeof study>;
 
-export type CartDownload = {
-  link: string;
-};
+export const studies = z.object({
+  count: z.number(),
+  results: z.array(study),
+  facets: z.record(
+    z.string(),
+    z.record(z.string(), z.union([z.number(), z.string()])),
+  ),
+});
+
+export type Studies = z.infer<typeof studies>;
+
+export const sample = z.object({
+  id: z.string(),
+  type: z.string(),
+  description: z.string(),
+  created_at: z.iso.datetime(),
+  updated_at: z.iso.datetime(),
+});
+
+export type Sample = z.infer<typeof sample>;
+
+export const samples = z.object({
+  count: z.number(),
+  results: z.array(sample),
+});
+
+export type Samples = z.infer<typeof samples>;
+
+export const cart = z.object({
+  id: z.string(),
+  name: z.string(),
+  created_at: z.string(),
+  studies: z.array(
+    z.object({
+      id: z.string(),
+      added: z.string(),
+    }),
+  ),
+});
+
+export type Cart = z.infer<typeof cart>;
+
+export const feedback = z.object({
+  rating: z.number().min(-1).max(1),
+  qualities: z.array(z.string()),
+  keywords: z.record(z.string(), z.string()),
+  elaborate: z.string(),
+});
+
+export type Feedback = z.infer<typeof feedback>;
+
+export const feedbacks = z.record(z.string(), feedback);
+
+export type Feedbacks = z.infer<typeof feedbacks>;

@@ -1,6 +1,9 @@
+import type { Cart, Feedback } from "@/api/types";
+import type { LocalCart, ShareCart } from "@/state/cart";
+import z from "zod";
 import { api, request } from "@/api";
-import type { Cart, ModelSearch, StudySamples, StudySearch } from "@/api/types";
-import type { LocalCart, ShareCart } from "@/cart";
+import { cart, ontologies, samples, studies } from "@/api/types";
+import { dbLink, getDb } from "@/components/Database";
 import { downloadBlob } from "@/util/download";
 
 /** type to color map */
@@ -9,14 +12,14 @@ export const typeColor: Record<string, string> = {
   disease: "bg-indigo-700/70",
   anatomy: "bg-rose-700/70",
   pathway: "bg-orange-700/70",
-  default: "bg-gray-700/70",
+  default: "bg-slate-700/70",
 };
 
-/** search for models */
-export const modelSearch = async (search: string) => {
-  const url = new URL(`${api}/ontology-search/`);
+/** search for ontologies */
+export const ontologySearch = async (search: string) => {
+  const url = new URL(`${api}/ontology/search/`);
   url.searchParams.set("query", search);
-  const data = request<ModelSearch>(url);
+  const data = request(url, ontologies);
   return data;
 };
 
@@ -28,14 +31,14 @@ export const studySearch = async ({
   limit = 100,
   facets = {} as Record<string, string[]>,
 }) => {
-  const url = new URL(`${api}/series/search/`);
+  const url = new URL(`${api}/study/search/`);
   url.searchParams.set("query", search);
   url.searchParams.set("ordering", ordering);
   url.searchParams.set("offset", String(offset));
   url.searchParams.set("limit", String(limit));
   for (const [facet, values] of Object.entries(facets))
     for (const value of values) url.searchParams.append(facet, value);
-  const data = await request<StudySearch>(url);
+  const data = await request(url, studies);
   return data;
 };
 
@@ -46,8 +49,8 @@ export const studyBatchLookup = async ({
   offset = 0,
   limit = 100,
 }) => {
-  const url = new URL(`${api}/series/lookup/`);
-  // url.searchParams.set("ordering", ordering);
+  const url = new URL(`${api}/geo-metadata/lookup/`);
+  url.searchParams.set("ordering", ordering);
   url.searchParams.set("offset", String(offset));
   url.searchParams.set("limit", String(limit));
   const options = {
@@ -55,35 +58,58 @@ export const studyBatchLookup = async ({
     headers: { "Content-Type": "application/json" },
     body: { ids },
   };
-  const data = await request<StudySearch>(url, options);
+  const data = await request(url, studies, options);
   return data;
 };
 
 /** lookup all samples for a study */
-export const studySamples = async ({ id = "", offset = 0, limit = 10 }) => {
-  const url = new URL(`${api}/series/${id}/samples/`);
+export const studySamples = async ({
+  id = "",
+  search = "",
+  ordering = "",
+  offset = 0,
+  limit = 10,
+}) => {
+  const url = new URL(`${api}/study/${id}/samples/`);
+  url.searchParams.set("query", search);
+  url.searchParams.set("ordering", ordering);
   url.searchParams.set("offset", String(offset));
   url.searchParams.set("limit", String(limit));
-  const data = request<StudySamples>(url);
+  const data = request(url, samples);
   return data;
+};
+
+/** submit study feedback */
+export const studyFeedback = async (
+  id: string,
+  feedback: Feedback,
+  user: { name: string; email: string },
+) => {
+  const url = new URL(`${api}/study/feedback/`);
+  const options = {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: { id, user, ...feedback },
+  } as const;
+  await request(url, z.unknown(), options);
 };
 
 /** lookup a cart by id */
 export const cartLookup = async (id: string) => {
   const url = new URL(`${api}/cart/${id}/`);
-  const data = request<Cart>(url);
+  const data = request(url, cart);
   return data;
 };
 
 /** share cart */
-export const shareCart = async (cart: ShareCart) => {
+export const shareCart = async (shareCart: ShareCart) => {
   const url = new URL(`${api}/cart/`);
   const options = {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: cart,
+    body: shareCart,
   };
-  const data = request<Cart>(url, options);
+  const data = request(url, cart, options);
   return data;
 };
 
@@ -102,20 +128,14 @@ export const downloadCart = async (
     body: { ids },
     parse: "blob",
   } as const;
-  const data = await request<Blob>(url, options);
+  const data = await request(url, z.instanceof(Blob), options);
   if (type === "csv") downloadBlob(data, filename, "csv");
   if (type === "json") downloadBlob(data, filename, "json");
 };
 
-/** download links for each database */
-const downloadTemplates: Record<string, string> = {
-  "Refine.bio": "https://www.refine.bio/v1/download/$ID.zip",
-};
-
 /** get download bash script */
-export const getCartScript = (cart: Cart | LocalCart, database: string) => {
-  const template = downloadTemplates[database] ?? "";
-  return [
+export const getCartScript = (cart: Cart | LocalCart, database: string) =>
+  [
     `#!/bin/bash`,
     `# Meta2Onto data cart download script`,
     `# Generated: ${new Date().toISOString()}`,
@@ -124,7 +144,7 @@ export const getCartScript = (cart: Cart | LocalCart, database: string) => {
     `# Studies: ${cart.studies.length}`,
     ...cart.studies.map(({ id }) => [
       `# Download ${id} from ${database}`,
-      `wget "${template.replace(/\$ID/g, id)}" -O ${id}_${database}.zip`,
+      `wget "${dbLink(getDb(database).link, id)}" -O ${id}_${database}.zip`,
     ]),
     `# Extract`,
     `for file in *.zip; do unzip "$file"; done`,
@@ -134,4 +154,3 @@ export const getCartScript = (cart: Cart | LocalCart, database: string) => {
     .map((line) => line.trimEnd())
     .filter(Boolean)
     .join("\n");
-};

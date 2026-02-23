@@ -1,21 +1,42 @@
+import type { RefObject } from "react";
+import type { Ontologies } from "@/api/types";
 import { useState } from "react";
-import type { ReactNode } from "react";
 import { useNavigate, useParams } from "react-router";
 import { useDebounce } from "@reactuses/core";
 import { useQuery } from "@tanstack/react-query";
 import clsx from "clsx";
 import { History, Lightbulb } from "lucide-react";
-import { modelSearch, typeColor } from "@/api/api";
-import type { Model } from "@/api/types";
+import { ontologySearch, typeColor } from "@/api/api";
 import Autocomplete from "@/components/Autocomplete";
-import Link from "@/components/Link";
 import Rings from "@/components/Rings";
 import Status, { showStatus } from "@/components/Status";
-import { addSearch, getHistory } from "@/search";
+import { addSearch, getHistory } from "@/state/search";
 import { useChanged } from "@/util/hooks";
 
 /** example searches */
-const examples = ["Hepatocyte", "Breast cancer", "Alzheimer's disease"];
+const examples: Ontologies = [
+  {
+    id: "Hepatocyte",
+    name: "Hepatocyte",
+    type: "",
+    description: "",
+    series: "",
+  },
+  {
+    id: "Breast cancer",
+    name: "Breast cancer",
+    type: "",
+    description: "",
+    series: "",
+  },
+  {
+    id: "Alzheimer's disease",
+    name: "Alzheimer's disease",
+    type: "",
+    description: "",
+    series: "",
+  },
+];
 
 export default function Home() {
   return (
@@ -25,12 +46,7 @@ export default function Home() {
           relative z-0 overflow-hidden bg-theme-light py-20! text-center narrow
         "
       >
-        <Rings
-          className="
-            absolute top-1/2 left-1/2 -z-10 w-full max-w-200 -translate-1/2
-            text-[hsl(220,50%,50%,0.25)]
-          "
-        />
+        <Rings />
 
         <hgroup className="flex flex-col items-center gap-y-1 narrow">
           <h1 className="sr-only">Home</h1>
@@ -45,19 +61,6 @@ export default function Home() {
         </hgroup>
 
         <SearchBox />
-
-        {/* examples */}
-        <p className="flex flex-wrap items-center justify-center gap-4">
-          <span className="flex items-center gap-1 text-slate-500">
-            <Lightbulb />
-            Try
-          </span>
-          {examples.map((example) => (
-            <Link key={example} to={`/search/${example}`}>
-              {example}
-            </Link>
-          ))}
-        </p>
       </section>
 
       <section>
@@ -85,7 +88,13 @@ export default function Home() {
   );
 }
 
-export const SearchBox = () => {
+export const SearchBox = ({
+  inputRef,
+  className,
+}: {
+  inputRef?: RefObject<HTMLInputElement | null>;
+  className?: string;
+}) => {
   const navigate = useNavigate();
 
   /** search string state (immediate) */
@@ -99,25 +108,37 @@ export const SearchBox = () => {
   const searchChanged = useChanged(params.search);
   if (searchChanged && params.search) setSearch(params.search);
 
-  /** debounced search string, update only after 300ms of inactivity */
-  const debouncedSearch = useDebounce(search, 300);
-
-  /** model search results */
-  const query = useQuery({
-    queryKey: ["model-search", search],
-    queryFn: () => debouncedSearch != "" ? modelSearch(debouncedSearch) : Promise.resolve([]),
+  /** ontology search results */
+  const ontologySearchQuery = useQuery({
+    queryKey: ["ontology-search", search],
+    queryFn: () => ontologySearch(search),
   });
 
   /** search results */
-  const results: (Model & { icon?: ReactNode })[] = search.trim()
-    ? (query.data ?? [])
-    : getHistory().map((search) => ({
-        ...search,
-        icon: <History className="text-slate-400" />,
-      }));
+  const results = search.trim()
+    ? /** actual search results */
+      (ontologySearchQuery.data?.map((result) => ({
+        ...result,
+        icon: <></>,
+      })) ?? [])
+    : /** if nothing typed in search box... */
+      /** show search history */
+      [
+        ...getHistory()
+          .list.slice(0, 10)
+          .map(({ search }) => ({
+            ...search,
+            icon: <History className="text-slate-400" />,
+          })),
+        ...examples.map((example) => ({
+          ...example,
+          icon: <Lightbulb className="text-slate-400" />,
+        })),
+      ];
 
   return (
     <Autocomplete
+      inputRef={inputRef}
       search={_search}
       setSearch={setSearch}
       placeholder="Search..."
@@ -127,33 +148,41 @@ export const SearchBox = () => {
           content: (
             <>
               {icon}
-              <span
-                className={clsx(
-                  "rounded px-1 py-0.5 text-sm  text-white",
-                  typeColor[type] ?? typeColor["default"],
-                )}
-              >
-                {type}
-              </span>
-              <span
-                className="grow truncate font-normal"
-                dangerouslySetInnerHTML={{ __html: name }}
-              />
-              <span className="text-right text-slate-500">{id}</span>
+              {type && (
+                <span
+                  className={clsx(
+                    "rounded-md px-1 text-sm  text-white",
+                    typeColor[type] ?? typeColor["default"],
+                  )}
+                >
+                  {type}
+                </span>
+              )}
+              {name && (
+                <span
+                  className="grow truncate font-normal"
+                  dangerouslySetInnerHTML={{ __html: name }}
+                />
+              )}
+              {id && <span className="text-right text-slate-500">{id}</span>}
             </>
           ),
         })) ?? []
       }
       onSelect={(id) => {
         if (!id?.trim()) return;
-        const model = query.data?.find((model) => model.id === id);
-        if (model) addSearch(model);
-        navigate(`/search/${model?.name ?? ""}`);
+        const result = ontologySearchQuery.data?.find(
+          (result) => result.id === id,
+        );
+        if (result) addSearch(result);
+        navigate(`/search/${result?.id ?? ""}?raw=${_search}`);
       }}
       status={
-        showStatus({ query }) && <Status query={query} className="contents!" />
+        showStatus({ query: ontologySearchQuery }) && (
+          <Status query={ontologySearchQuery} className="contents!" />
+        )
       }
-      className="bg-white"
+      className={className}
     />
   );
 };

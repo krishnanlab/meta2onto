@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { useElementSize, useWindowScroll } from "@reactuses/core";
+import { useElementSize } from "@reactuses/core";
 import clsx from "clsx";
 import { useAtomValue } from "jotai";
 import { Menu, ShoppingCart, X } from "lucide-react";
-import { cartAtom } from "@/cart";
 import Button from "@/components/Button";
 import Logo from "@/components/Logo";
 import Tooltip from "@/components/Tooltip";
+import { cartAtom } from "@/state/cart";
 
 const { VITE_TITLE: title } = import.meta.env;
 
@@ -20,7 +20,6 @@ export default function Header() {
   /** cart state */
   const cart = useAtomValue(cartAtom);
 
-  const { y } = useWindowScroll();
   /** nav menu expanded/collapsed state */
   const [open, setOpen] = useState(false);
 
@@ -37,21 +36,17 @@ export default function Header() {
   return (
     <header
       ref={ref}
-      className={clsx(
-        `
-          sticky top-0 z-10 flex flex-row flex-wrap items-center justify-between
-          bg-theme-dark text-white
-        `,
-        y > 0 ? "gap-2 p-2" : "gap-4 p-4",
-      )}
+      className="
+        sticky top-0 z-10 flex flex-row flex-wrap items-center justify-between
+        gap-4 bg-theme-dark p-4 text-white
+        [&_a,&_button]:text-white
+        [&_a,&_button]:hover:bg-slate-800
+      "
     >
       {/* title */}
       <a
         href="/"
-        className="
-          flex items-center gap-2 text-2xl tracking-wider text-white!
-          hover:text-slate-300!
-        "
+        className="flex items-center gap-2 rounded-md text-2xl tracking-wider"
       >
         <Logo color="currentColor" className="h-8" />
         {title}
@@ -65,10 +60,7 @@ export default function Header() {
             return () => (toggleRef = undefined);
           }}
           color="none"
-          className="
-            text-current!
-            sm:hidden
-          "
+          className="sm:hidden"
           onClick={() => setOpen(!open)}
           aria-expanded={open}
           aria-controls="nav"
@@ -82,17 +74,16 @@ export default function Header() {
         className={clsx(
           `
             flex flex-wrap items-center justify-center gap-4 text-xl
-            leading-none
             max-xs:flex-col
           `,
           !open && "max-sm:hidden",
           open && "max-sm:w-full",
         )}
       >
-        <Button to="/about" color="none" className="text-current!">
+        <Button to="/about" color="none">
           About
         </Button>
-        <Button to="/search" color="none" className="text-current!">
+        <Button to="/search" color="none">
           Search
         </Button>
         <Button

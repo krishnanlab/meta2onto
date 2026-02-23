@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import {
   ChevronLeft,
   ChevronRight,
@@ -26,6 +27,7 @@ type Props = {
   setOffset: (offset: number) => void;
   limit: Limit;
   setLimit: (limit: Limit) => void;
+  children?: ReactNode;
 };
 
 /** pagination controls */
@@ -35,6 +37,7 @@ export default function Pagination({
   setOffset,
   limit,
   setLimit,
+  children,
 }: Props) {
   if (!count) return null;
 
@@ -46,7 +49,7 @@ export default function Pagination({
     sleep().then(() => setOffset(Math.floor(offset / _limit) * _limit));
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-2">
+    <div className="flex flex-wrap items-center justify-between gap-8">
       {/* pagination */}
       <div className="flex items-center">
         <Button
@@ -98,20 +101,20 @@ export default function Pagination({
         </Button>
       </div>
 
+      {children}
+
       {/* filters */}
       <div>
         {/* per page */}
-        <label>
-          Per page
-          <Select
-            value={
-              limitOptions.find((option) => option.value === limit)?.value ??
-              limitOptions[1].value
-            }
-            options={limitOptions}
-            onChange={(value) => setLimit(value)}
-          />
-        </label>
+        <Select
+          label="Per page"
+          value={
+            limitOptions.find((option) => option.value === limit)?.value ??
+            limitOptions[1].value
+          }
+          options={limitOptions}
+          onChange={(value) => setLimit(value)}
+        />
       </div>
     </div>
   );

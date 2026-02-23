@@ -1,4 +1,10 @@
 import type { ReactNode } from "react";
+import type {
+  Cell,
+  NoInfer,
+  PaginationState,
+  SortingState,
+} from "@tanstack/react-table";
 import {
   createColumnHelper,
   flexRender,
@@ -12,17 +18,13 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import type {
-  NoInfer,
-  PaginationState,
-  SortingState,
-} from "@tanstack/react-table";
 import { ArrowUpDown, MoveDown, MoveUp } from "lucide-react";
 import Button from "@/components/Button";
+import Tooltip from "@/components/Tooltip";
 import { formatDate, formatNumber } from "@/util/string";
 
 type Props<Datum extends object> = {
-  cols: _Col<Datum>[];
+  cols: readonly _Col<Datum>[];
   rows: Datum[];
   sort?: SortingState[number];
   onSort?: (sort: SortingState[number]) => void;
@@ -32,7 +34,7 @@ type Props<Datum extends object> = {
   onPerPage?: (perPage: PaginationState["pageSize"]) => void;
 };
 
-type Col<
+export type Col<
   Datum extends object = object,
   Key extends keyof Datum = keyof Datum,
 > = {
@@ -112,6 +114,7 @@ export default function Table<Datum extends object>({
     getColumnCanGlobalFilter: () => true,
     autoResetPageIndex: true,
     columnResizeMode: "onChange",
+    manualPagination: true,
     state: { sorting, pagination },
     onSortingChange: (updater) => {
       /** https://github.com/TanStack/table/discussions/4005 */
@@ -136,13 +139,9 @@ export default function Table<Datum extends object>({
         >
           <thead>
             {table.getHeaderGroups().map((headerGroup) => (
-              <tr key={headerGroup.id}>
+              <tr key={headerGroup.id} className="bg-slate-100">
                 {headerGroup.headers.map((header, index) => (
-                  <th
-                    key={header.id}
-                    className="bg-slate-50"
-                    aria-colindex={index + 1}
-                  >
+                  <th key={header.id} aria-colindex={index + 1}>
                     {header.isPlaceholder ? null : (
                       <div className="flex items-center gap-2 p-2">
                         {/* header label */}
@@ -183,6 +182,10 @@ export default function Table<Datum extends object>({
               table.getRowModel().rows.map((row, index) => (
                 <tr
                   key={row.id}
+                  className="
+                    odd:bg-white
+                    even:bg-slate-50
+                  "
                   aria-rowindex={
                     table.getState().pagination.pageIndex *
                       table.getState().pagination.pageSize +
@@ -190,22 +193,34 @@ export default function Table<Datum extends object>({
                     1
                   }
                 >
-                  {row.getVisibleCells().map((cell) => (
-                    <td key={cell.id} className="border-b border-slate-100">
-                      <div className="flex flex-wrap items-center gap-2 p-2">
-                        {flexRender(
+                  {row.getVisibleCells().map((cell) => {
+                    const render =
+                      index > 0 && getCellAbove(cell) ? (
+                        /** repeat cell above */
+                        <Tooltip content="Same as above">
+                          <span tabIndex={0}>...</span>
+                        </Tooltip>
+                      ) : (
+                        /** render as normal */
+                        flexRender(
                           cell.column.columnDef.cell,
                           cell.getContext(),
-                        )}
-                      </div>
-                    </td>
-                  ))}
+                        )
+                      );
+                    return (
+                      <td key={cell.id}>
+                        <div className="flex flex-wrap items-center gap-2 p-2">
+                          {render}
+                        </div>
+                      </td>
+                    );
+                  })}
                 </tr>
               ))
             ) : (
               <tr>
                 <td className="p-2 text-slate-500" colSpan={cols.length}>
-                  No Rows
+                  No rows
                 </td>
               </tr>
             )}
@@ -229,3 +244,11 @@ const defaultFormat = (cell: unknown) => {
   if (typeof cell === "string") return cell;
   return String(cell);
 };
+
+/** get cell above current cell */
+const getCellAbove = <Datum, Value>(cell: Cell<Datum, Value>) =>
+  cell.column
+    .getFacetedRowModel()
+    .flatRows[cell.row.index - 1]?.getAllCells()
+    .find((c) => c.column.id === cell.column.id)
+    ?.getValue() === cell.getValue();
