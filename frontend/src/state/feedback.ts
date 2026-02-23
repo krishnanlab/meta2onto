@@ -7,6 +7,7 @@ import { setAtom, storageAtom } from "@/util/atoms";
 export const feedbackAtom = storageAtom("feedback", {}, feedbacks);
 
 export const defaultFeedback: Feedback = {
+  rating: 0,
   qualities: [],
   keywords: {},
   elaborate: "",

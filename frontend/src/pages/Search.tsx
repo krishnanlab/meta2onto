@@ -13,11 +13,12 @@ import { isEmpty, size, upperFirst } from "lodash";
 import {
   Calendar,
   Check,
+  CircleSmall,
   Dna,
   Hash,
   LoaderCircle,
   Logs,
-  MessageCircleWarning,
+  Minus,
   Plus,
   RefreshCcw,
   ThumbsDown,
@@ -32,6 +33,7 @@ import DatabaseBadge from "@/components/Database";
 import Dialog from "@/components/Dialog";
 import { getCartRef } from "@/components/Header";
 import Heading from "@/components/Heading";
+import Link from "@/components/Link";
 import Meta from "@/components/Meta";
 import Meter from "@/components/Meter";
 import Pagination from "@/components/Pagination";
@@ -41,6 +43,7 @@ import Slider from "@/components/Slider";
 import Status from "@/components/Status";
 import Table from "@/components/Table";
 import Textbox from "@/components/Textbox";
+import Tooltip from "@/components/Tooltip";
 import { SearchBox } from "@/pages/Home";
 import { addToCart, cartAtom, inCart, removeFromCart } from "@/state/cart";
 import { clearFeedback, feedbackAtom, setFeedback } from "@/state/feedback";
@@ -301,30 +304,45 @@ const Results = ({
   offset: number;
   limit: LimitOption;
   query: UseQueryResult<Studies>;
-}) => (
-  <div className="flex flex-col gap-8">
-    {/* query status */}
-    <Status query={query} />
+}) => {
+  const anyFeedback = !!Object.values(useAtomValue(feedbackAtom)).length;
 
-    {/* results */}
-    {query.data?.results.map((result, index) => (
-      <Result key={index} {...result} />
-    ))}
+  return (
+    <div className="flex flex-col gap-8">
+      {anyFeedback && (
+        <p>
+          We especially appreciate feedback on{" "}
+          <Link to="?Classification=Neutral">
+            studies not in our training set
+          </Link>
+          !
+        </p>
+      )}
 
-    {/* pagination */}
-    <Pagination
-      count={query.data?.count ?? 0}
-      offset={offset}
-      setOffset={(page) =>
-        setParams((params) => params.set("offset", String(page)))
-      }
-      limit={limit}
-      setLimit={(limit) => setParams((params) => params.set("limit", limit))}
-    />
-  </div>
-);
+      {/* query status */}
+      <Status query={query} />
 
-const userIdKey = "user-self-id";
+      {/* results */}
+      {query.data?.results.map((result, index) => (
+        <Result key={index} {...result} />
+      ))}
+
+      {/* pagination */}
+      <Pagination
+        count={query.data?.count ?? 0}
+        offset={offset}
+        setOffset={(page) =>
+          setParams((params) => params.set("offset", String(page)))
+        }
+        limit={limit}
+        setLimit={(limit) => setParams((params) => params.set("limit", limit))}
+      />
+    </div>
+  );
+};
+
+const userNameKey = "user-name";
+const userEmailKey = "user-email";
 
 /** search result */
 const Result = ({
@@ -336,6 +354,7 @@ const Result = ({
   sample_count,
   submitted_at,
   platform,
+  classification,
   keywords,
 }: Study) => {
   /** current cart state */
@@ -345,13 +364,56 @@ const Result = ({
   const feedback = useAtomValue(feedbackAtom)[id];
 
   /** user self-identification */
-  const [user] = useLocalStorage(userIdKey, "");
+  const [userName] = useLocalStorage(userNameKey, "");
+  const [userEmail] = useLocalStorage(userEmailKey, "");
 
+  /** study top-level details */
+  const details = [
+    {
+      icon: Hash,
+      text: id,
+      tooltip: "ID of study",
+    },
+    {
+      icon: Calendar,
+      text: formatDate(submitted_at),
+      tooltip: "Date study was submitted",
+    },
+    {
+      icon: Dna,
+      text: platform,
+      tooltip: "Platform used in study",
+    },
+    {
+      icon:
+        classification === "Positive"
+          ? Plus
+          : classification === "Negative"
+            ? Minus
+            : CircleSmall,
+      text: classification,
+      tooltip: "Classification of study in model training",
+    },
+  ] as const;
+
+  /** feedback mutation */
   const mutation = useMutation({
     mutationKey: ["study-samples"],
     mutationFn: async () =>
-      feedback && (await studyFeedback(id, feedback, user || "")),
+      feedback &&
+      (await studyFeedback(id, feedback, {
+        name: userName ?? "",
+        email: userEmail ?? "",
+      })),
   });
+
+  /** feedback mutation status */
+  const status =
+    mutation.status === "error" ? (
+      <TriangleAlert />
+    ) : mutation.status === "pending" ? (
+      <LoaderCircle className="animate-spin" />
+    ) : null;
 
   return (
     <div className="flex flex-col gap-4 rounded-sm p-6 shadow-md">
@@ -363,17 +425,13 @@ const Result = ({
 
       {/* details */}
       <div className="flex flex-wrap gap-x-8 gap-y-4">
-        {(
-          [
-            [Hash, id],
-            [Calendar, formatDate(submitted_at)],
-            [Dna, platform],
-          ] as const
-        ).map(([Icon, text], index) => (
-          <div key={index} className="flex items-center gap-2 text-slate-500">
-            <Icon />
-            <span>{text}</span>
-          </div>
+        {details.map(({ icon: Icon, text, tooltip }, index) => (
+          <Tooltip key={index} content={tooltip}>
+            <div className="flex items-center gap-2 text-slate-500">
+              <Icon />
+              <span>{text}</span>
+            </div>
+          </Tooltip>
         ))}
       </div>
 
@@ -394,26 +452,35 @@ const Result = ({
         </div>
 
         {/* actions */}
-        <div className="ml-auto flex flex-wrap gap-4">
+        <div className="ml-auto flex flex-wrap items-center justify-center gap-4">
           {/* feedback */}
+
           {confidence.value > feedbackThreshold && (
-            <Popover
-              content={<FeedbackPopup id={id} keywords={keywords} />}
-              onClose={mutation.mutate}
-            >
-              <Button color="none">
-                {mutation.status === "error" ? (
-                  <TriangleAlert />
-                ) : mutation.status === "pending" ? (
-                  <LoaderCircle className="animate-spin" />
-                ) : feedback ? (
-                  <Check />
-                ) : (
-                  <MessageCircleWarning />
-                )}
-                Feedback
+            <>
+              <Button
+                color={feedback?.rating === 1 ? "theme" : "none"}
+                onClick={() => {
+                  setFeedback(id, "rating", (old) => (old === 1 ? 0 : 1));
+                  mutation.mutate();
+                }}
+                aria-label="Thumbs up this study"
+                aria-disabled={!!status}
+              >
+                {status || <ThumbsUp />}
               </Button>
-            </Popover>
+              <Popover
+                content={<ThumbsDownPopup id={id} keywords={keywords} />}
+                onClose={mutation.mutate}
+              >
+                <Button
+                  color={feedback?.rating === -1 ? "theme" : "none"}
+                  aria-label="Thumbs down this study"
+                  aria-disabled={!!status}
+                >
+                  {status || <ThumbsDown />}
+                </Button>
+              </Popover>
+            </>
           )}
 
           {/* samples */}
@@ -462,8 +529,8 @@ const qualities = [
   "Sed do eiusmod tempor incididunt",
 ];
 
-/** study feedback */
-const FeedbackPopup = ({
+/** study negative feedback popup */
+const ThumbsDownPopup = ({
   id,
   keywords,
 }: {
@@ -474,7 +541,11 @@ const FeedbackPopup = ({
   const feedback = useAtomValue(feedbackAtom)[id];
 
   /** user self-identification */
-  const [user, setUser] = useLocalStorage(userIdKey, "");
+  const [userName, setUserName] = useLocalStorage(userNameKey, "");
+  const [userEmail, setUserEmail] = useLocalStorage(userEmailKey, "");
+
+  /** give negative rating, to be called on any change to popup */
+  const thumbsDown = () => setFeedback(id, "rating", -1);
 
   return (
     <div
@@ -497,6 +568,7 @@ const FeedbackPopup = ({
             key={index}
             value={feedback?.qualities?.includes(quality) ?? false}
             onChange={(value) => {
+              thumbsDown();
               /** uncheck */
               if (!value)
                 setFeedback(id, "qualities", (old) =>
@@ -531,12 +603,13 @@ const FeedbackPopup = ({
                   ? "text-emerald-600!"
                   : "text-slate-300!",
               )}
-              onClick={() =>
+              onClick={() => {
+                thumbsDown();
                 setFeedback(id, "keywords", (old) => ({
                   ...old,
                   [keyword]: old[keyword] === "good" ? "" : "good",
-                }))
-              }
+                }));
+              }}
               aria-label="Up-vote keyword"
             >
               <ThumbsUp />
@@ -549,12 +622,13 @@ const FeedbackPopup = ({
                   ? "text-red-600!"
                   : "text-slate-300!",
               )}
-              onClick={() =>
+              onClick={() => {
+                thumbsDown();
                 setFeedback(id, "keywords", (old) => ({
                   ...old,
                   [keyword]: old[keyword] === "bad" ? "" : "bad",
-                }))
-              }
+                }));
+              }}
               aria-label="Down-vote keyword"
             >
               <ThumbsDown />
@@ -569,14 +643,23 @@ const FeedbackPopup = ({
         className="col-span-full mt-2 resize-none"
         placeholder="Elaborate"
         value={feedback?.elaborate ?? ""}
-        onChange={(value) => setFeedback(id, "elaborate", value)}
+        onChange={(value) => {
+          thumbsDown();
+          setFeedback(id, "elaborate", value);
+        }}
       />
 
       <div className="col-span-full flex items-center justify-end gap-4 pt-2">
         <Textbox
-          value={user || ""}
-          onChange={setUser}
-          placeholder="Name/contact/etc. (opt-in)"
+          value={userName || ""}
+          onChange={setUserName}
+          placeholder="Name (opt-in)"
+          className="grow"
+        />
+        <Textbox
+          value={userEmail || ""}
+          onChange={setUserEmail}
+          placeholder="Email (opt-in)"
           className="grow"
         />
         <Button color="none" onClick={() => clearFeedback(id)}>

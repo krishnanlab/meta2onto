@@ -83,7 +83,7 @@ export const studySamples = async ({
 export const studyFeedback = async (
   id: string,
   feedback: Feedback,
-  user: string,
+  user: { name: string; email: string },
 ) => {
   const url = new URL(`${api}/study/feedback/`);
   const options = {

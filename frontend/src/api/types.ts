@@ -25,6 +25,7 @@ export const study = z.object({
   submitted_at: z.iso.datetime(),
   platform: z.string(),
   database: z.array(z.string()),
+  classification: z.string(),
   sample_count: z.number(),
   keywords: z.array(z.string()),
 });
@@ -74,6 +75,7 @@ export const cart = z.object({
 export type Cart = z.infer<typeof cart>;
 
 export const feedback = z.object({
+  rating: z.number().min(-1).max(1),
   qualities: z.array(z.string()),
   keywords: z.record(z.string(), z.string()),
   elaborate: z.string(),

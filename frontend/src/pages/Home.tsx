@@ -5,22 +5,12 @@ import { useNavigate, useParams } from "react-router";
 import { useDebounce } from "@reactuses/core";
 import { useQuery } from "@tanstack/react-query";
 import clsx from "clsx";
-import { useAtomValue } from "jotai";
-import {
-  BookCheck,
-  History,
-  Lightbulb,
-  ScanSearch,
-  Trash2,
-} from "lucide-react";
+import { History, Lightbulb } from "lucide-react";
 import { ontologySearch, typeColor } from "@/api/api";
 import Autocomplete from "@/components/Autocomplete";
-import Button from "@/components/Button";
-import Heading from "@/components/Heading";
 import Rings from "@/components/Rings";
 import Status, { showStatus } from "@/components/Status";
-import { feedbackAtom } from "@/state/feedback";
-import { addSearch, getHistory, searchHistoryAtom } from "@/state/search";
+import { addSearch, getHistory } from "@/state/search";
 import { useChanged } from "@/util/hooks";
 
 /** example searches */
@@ -72,8 +62,6 @@ export default function Home() {
 
         <SearchBox />
       </section>
-
-      <Stats />
 
       <section>
         <p>
@@ -196,89 +184,5 @@ export const SearchBox = ({
       }
       className={className}
     />
-  );
-};
-
-/** user's app stats */
-const Stats = () => {
-  const history = getHistory(useAtomValue(searchHistoryAtom));
-  const feedback = useAtomValue(feedbackAtom);
-
-  const uniqueSearches = Object.keys(history.grouped).length.toLocaleString();
-  const studyFeedbacks = Object.keys(feedback).length.toLocaleString();
-
-  const stats = [
-    {
-      Icon: ScanSearch,
-      value: uniqueSearches,
-      label: (
-        <>
-          Made <b>{uniqueSearches}</b> unique searches
-        </>
-      ),
-      color: "text-yellow-500",
-    },
-    {
-      Icon: BookCheck,
-      value: studyFeedbacks,
-      label: (
-        <>
-          Provided feedback on <b>{studyFeedbacks}</b> studies
-        </>
-      ),
-      color: "text-emerald-500",
-    },
-  ];
-
-  return (
-    <section>
-      <Heading level={2}>Your Stats</Heading>
-
-      <em className="self-center">On this device, you've...</em>
-
-      <div
-        className="
-          grid grid-cols-[repeat(auto-fit,minmax(0,auto))] justify-center gap-4
-        "
-      >
-        {stats.map(({ Icon, value, label, color }, index) => (
-          <div key={index} className="flex w-40 flex-col items-center gap-4">
-            <div
-              className={clsx(
-                `
-                  flex aspect-square w-1/2 items-center justify-center gap-2
-                  rounded-full bg-current/10 text-2xl
-                `,
-                color,
-              )}
-            >
-              <Icon />
-              <span className="text-black">{value}</span>
-            </div>
-            <div className="text-center text-balance">{label}</div>
-          </div>
-        ))}
-      </div>
-
-      <Button
-        className="self-center"
-        color="accent"
-        onClick={() => {
-          if (
-            window.confirm(
-              `Clear all ${import.meta.env.VITE_TITLE} info saved on this device? No undo.
-              
-(Does not affect info already sent to us, such as previously submitted feedback.)`,
-            )
-          ) {
-            window.localStorage.clear();
-            window.location.reload();
-          }
-        }}
-      >
-        <Trash2 />
-        Clear
-      </Button>
-    </section>
   );
 };

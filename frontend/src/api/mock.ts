@@ -88,11 +88,9 @@ const fakePlatform = () => sample(["RNA-seq", "scRNA-seq", "Microarray"]);
 const fakeDatabase = () =>
   ["GEO", "SRA", "Refine.bio", "ARCHS4"].filter(() => Math.random() > 0.5);
 
+const fakeClassification = () => sample(["Positive", "Negative", "Neutral"]);
+
 const fakeFacets = () => ({
-  Platform: {
-    "RNA-seq": random(0, 200),
-    Microarray: random(0, 200),
-  },
   "Study Size": {
     label: "samples",
     min: 0,
@@ -102,6 +100,15 @@ const fakeFacets = () => ({
     label: "%",
     min: 0,
     max: 100,
+  },
+  Classification: {
+    Positive: random(0, 20),
+    Negative: random(0, 20),
+    Neutral: random(0, 20),
+  },
+  Platform: {
+    "RNA-seq": random(0, 200),
+    Microarray: random(0, 200),
   },
 });
 
@@ -135,6 +142,7 @@ const fakeStudies: Study[] = range(100).map(() => ({
   submitted_at: fakeDate(),
   platform: fakePlatform(),
   database: fakeDatabase(),
+  classification: fakeClassification(),
   sample_count: random(1, 200),
   keywords: [],
 }));
