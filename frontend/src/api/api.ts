@@ -49,7 +49,7 @@ export const studyBatchLookup = async ({
   offset = 0,
   limit = 100,
 }) => {
-  const url = new URL(`${api}/study/lookup/`);
+  const url = new URL(`${api}/geo-metadata/lookup/`);
   url.searchParams.set("ordering", ordering);
   url.searchParams.set("offset", String(offset));
   url.searchParams.set("limit", String(limit));

@@ -14,9 +14,11 @@ import os
 
 from pathlib import Path
 
+
 def is_truthy(value):
     """Convert various string representations of truthy values to boolean True."""
     return str(value).lower() in {"true", "1", "t", "yes", "y"}
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -26,17 +28,17 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "django-insecure-6r-2sgcio%&6mghfx&r+@*$wm=67ws5mhq(9bf*%-!poln^!ry")
+SECRET_KEY = os.environ.get(
+    "DJANGO_SECRET_KEY",
+    "django-insecure-6r-2sgcio%&6mghfx&r+@*$wm=67ws5mhq(9bf*%-!poln^!ry",
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = is_truthy(os.environ.get("DJANGO_DEBUG", "1"))
 
 DOMAIN = os.environ.get("DOMAIN", "localhost")
 
-ALLOWED_HOSTS = [
-    "localhost",
-    DOMAIN
-]
+ALLOWED_HOSTS = ["localhost", DOMAIN]
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3050",
@@ -56,15 +58,14 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-
     # first-party optional apps
     "django.contrib.postgres",
-
     # third party apps
     "rest_framework",
     "corsheaders",
     "django_filters",
-
+    "drf_spectacular",
+    "django_extensions",
     # local apps
     "api",
 ]
@@ -106,7 +107,7 @@ WSGI_APPLICATION = "meta2onto.wsgi.application"
 DATABASES = {
     # sql database via psycopg
     "default": {
-        "ENGINE": 'django.db.backends.postgresql',
+        "ENGINE": "django.db.backends.postgresql",
         "NAME": os.environ.get("POSTGRES_DB", "meta2onto"),
         "USER": os.environ.get("POSTGRES_USER", "meta2onto"),
         "PASSWORD": os.environ["POSTGRES_PASSWORD"],

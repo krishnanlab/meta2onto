@@ -1,1 +1,4 @@
 geo_metadata/*
+GEOmetadb.sqlite
+GEOmetadb__gse.duckdb
+meta2onto_example_predictions.parquet

@@ -1,6 +1,9 @@
 """
 Import GEO Parquet dumps into normalized Django models.
 
+DEPRECATION: this script is deprecated in favor of importing the data from
+GEOmetadb. expect this script to be removed once the transition is complete.
+
 Expected input files (Parquet format):
   - ids__level-sample.parquet
   - ids__level-series.parquet
@@ -11,16 +14,16 @@ These should all be under the 'root' data folder specified as the one required
 CLI argument.
 
 There are three main entities represented:
-- Sample (GSM)
-- Series (GSE)
-- Platform (GPL)
+- GEOSample (GSM)
+- GEOSeries (GSE)
+- GEOPlatform (GPL)
 
 The "ids__level-*.parquet" files contain structured metadata and relationships
 between these entities, while the "corpus__level-*.parquet" files contain
-textual documents associated with each Sample or Series for indexing/search.
+textual documents associated with each GEOSample or GEOSeries for indexing/search.
 
-Platforms and Organisms are created as needed. Series-Platform relationships,
-Sample-Series memberships, Series-Series relations, and external links are also
+GEOPlatforms and Organisms are created as needed. GEOSeries-GEOPlatform relationships,
+GEOSample-GEOSeries memberships, GEOSeries-GEOSeries relations, and external links are also
 created based on the data in the Parquet files.
 """
 
@@ -40,15 +43,22 @@ import pyarrow.parquet as pq
 from django.utils.dateparse import parse_datetime
 
 from api.models import (
-    Sample, Series, Platform, Organism,
-    OrganismForPairing, SeriesRelations
+    GEOSample,
+    GEOSeries,
+    GEOPlatform,
+    Organism,
+    OrganismForPairing,
+    GEOSeriesRelations,
 )
 
 # ============================================================================
 # === Utilities
 # ============================================================================
 
-def _iter_parquet_rows(path: Path, columns: Optional[list[str]] = None) -> Iterable[dict]:
+
+def _iter_parquet_rows(
+    path: Path, columns: Optional[list[str]] = None
+) -> Iterable[dict]:
     """
     Efficiently iterate Parquet rows via row groups to keep memory bounded.
     Yields dicts with Python-native values.
@@ -63,9 +73,13 @@ def _iter_parquet_rows(path: Path, columns: Optional[list[str]] = None) -> Itera
         for i in range(N):
             yield {k: batch[k][i] for k in keys}
 
+
 def _total_batches(pf: pq.ParquetFile, batch_size: int) -> int:
-    total_rows = sum(pf.metadata.row_group(i).num_rows for i in range(pf.num_row_groups))
+    total_rows = sum(
+        pf.metadata.row_group(i).num_rows for i in range(pf.num_row_groups)
+    )
     return math.ceil(total_rows / batch_size)
+
 
 # ============================================================================
 # === Importers
@@ -74,8 +88,9 @@ def _total_batches(pf: pq.ParquetFile, batch_size: int) -> int:
 # size of batches to process at a time
 DEFAULT_BATCH_SIZE = 5000
 
+
 @transaction.atomic
-def import_corpus_level_sample(path: Path, batch_size:int = DEFAULT_BATCH_SIZE):
+def import_corpus_level_sample(path: Path, batch_size: int = DEFAULT_BATCH_SIZE):
     """
     corpus__level-sample.parquet
       columns: index (sample_id), docs
@@ -83,11 +98,17 @@ def import_corpus_level_sample(path: Path, batch_size:int = DEFAULT_BATCH_SIZE):
 
     pf = pq.ParquetFile(path)
 
-    for batch in tqdm(pf.iter_batches(batch_size=batch_size), total=_total_batches(pf, batch_size), desc="Importing Sample"):
+    for batch in tqdm(
+        pf.iter_batches(batch_size=batch_size),
+        total=_total_batches(pf, batch_size),
+        desc="Importing GEOSample",
+    ):
         rows = batch.to_pylist()
-        Sample.objects.bulk_create([
-            Sample(sample_id=row['index'], doc=row['doc']) for row in rows
-        ], ignore_conflicts=True)
+        GEOSample.objects.bulk_create(
+            [GEOSample(sample_id=row["index"], doc=row["doc"]) for row in rows],
+            ignore_conflicts=True,
+        )
+
 
 @transaction.atomic
 def import_corpus_level_series(path: Path, batch_size: int = DEFAULT_BATCH_SIZE):
@@ -98,11 +119,17 @@ def import_corpus_level_series(path: Path, batch_size: int = DEFAULT_BATCH_SIZE)
 
     pf = pq.ParquetFile(path)
 
-    for batch in tqdm(pf.iter_batches(batch_size=batch_size), total=_total_batches(pf, batch_size), desc="Importing Series"):
+    for batch in tqdm(
+        pf.iter_batches(batch_size=batch_size),
+        total=_total_batches(pf, batch_size),
+        desc="Importing GEOSeries",
+    ):
         rows = batch.to_pylist()
-        Series.objects.bulk_create([
-            Series(series_id=row['index'], doc=row['doc']) for row in rows
-        ], ignore_conflicts=True)
+        GEOSeries.objects.bulk_create(
+            [GEOSeries(series_id=row["index"], doc=row["doc"]) for row in rows],
+            ignore_conflicts=True,
+        )
+
 
 def import_ids_level_sample(path: Path, batch_size: int = DEFAULT_BATCH_SIZE):
     """
@@ -126,7 +153,11 @@ def import_ids_level_sample(path: Path, batch_size: int = DEFAULT_BATCH_SIZE):
     sample_set = set()
     series_set = set()
 
-    for batch in tqdm(pf.iter_batches(batch_size=batch_size), total=_total_batches(pf, batch_size), desc="Importing OrganismForPairing"):
+    for batch in tqdm(
+        pf.iter_batches(batch_size=batch_size),
+        total=_total_batches(pf, batch_size),
+        desc="Importing OrganismForPairing",
+    ):
         with transaction.atomic():
             rows = batch.to_pylist()
 
@@ -140,26 +171,31 @@ def import_ids_level_sample(path: Path, batch_size: int = DEFAULT_BATCH_SIZE):
                 if row["platform"] not in platform_set:
                     platform_set.add(row["platform"])
                     # use get_or_create rather than create just in case it's already there
-                    Platform.objects.get_or_create(platform_id=row["platform"])
+                    GEOPlatform.objects.get_or_create(platform_id=row["platform"])
 
                 # check if the sample exists; create if not
                 if row["sample"] not in sample_set:
                     sample_set.add(row["sample"])
-                    Sample.objects.get_or_create(sample_id=row["sample"])
+                    GEOSample.objects.get_or_create(sample_id=row["sample"])
 
-                # check if the Series exists; create if not
+                # check if the GEOSeries exists; create if not
                 if row["series"] not in series_set:
                     series_set.add(row["series"])
-                    Series.objects.get_or_create(series_id=row["series"])
+                    GEOSeries.objects.get_or_create(series_id=row["series"])
 
-            OrganismForPairing.objects.bulk_create([
-                OrganismForPairing(
-                    sample_id=row["sample"],
-                    series_id=row["series"],
-                    platform_id=row["platform"],
-                    organism=organism_cache[row["organism"]]
-                ) for row in rows
-            ], ignore_conflicts=True)
+            OrganismForPairing.objects.bulk_create(
+                [
+                    OrganismForPairing(
+                        sample_id=row["sample"],
+                        series_id=row["series"],
+                        platform_id=row["platform"],
+                        organism=organism_cache[row["organism"]],
+                    )
+                    for row in rows
+                ],
+                ignore_conflicts=True,
+            )
+
 
 def import_ids_level_series(path: Path, batch_size: int = DEFAULT_BATCH_SIZE):
     """
@@ -171,69 +207,71 @@ def import_ids_level_series(path: Path, batch_size: int = DEFAULT_BATCH_SIZE):
     - "platforms" and "samples" are "||"-delimited lists of IDs.
     - n_samples is just the number of samples (can be ignored).
     - "relations" is also a "||"-delimited list of <RelationType>:<value> entries;
-        depending on the type of the relation, it can be a Series ID or an external link.
+        depending on the type of the relation, it can be a GEOSeries ID or an external link.
     - "series_type" is a string like "Expression profiling by array"
     - "status" is a string like "Public on YYYY-MM-DD"
     """
 
     pf = pq.ParquetFile(path)
 
-    # presumably at this point all the possible Samples and Platforms already exist
+    # presumably at this point all the possible GEOSamples and GEOPlatforms already exist
 
     # get refs to the through models so we can bulk_create into them
-    SamplesThrough = SeriesRelations.samples.through
-    PlatformsThrough = SeriesRelations.platforms.through
+    GEOSamplesThrough = GEOSeriesRelations.samples.through
+    GEOPlatformsThrough = GEOSeriesRelations.platforms.through
 
-    # delete existing SeriesRelations to avoid conflicts
-    SeriesRelations.objects.all().delete()
+    # delete existing GEOSeriesRelations to avoid conflicts
+    GEOSeriesRelations.objects.all().delete()
 
-    for batch in tqdm(pf.iter_batches(batch_size=batch_size), total=_total_batches(pf, batch_size), desc="Importing SeriesRelations"):
+    for batch in tqdm(
+        pf.iter_batches(batch_size=batch_size),
+        total=_total_batches(pf, batch_size),
+        desc="Importing GEOSeriesRelations",
+    ):
         with transaction.atomic():
             rows = batch.to_pylist()
 
             for row in rows:
-                rel, _ = SeriesRelations.objects.get_or_create(series_id=row['series'])
+                rel, _ = GEOSeriesRelations.objects.get_or_create(
+                    series_id=row["series"]
+                )
                 sample_ids = [x for x in str(row["samples"]).split("||") if x]
                 platform_ids = [x for x in str(row["platforms"]).split("||") if x]
 
-                # ensure each Sample and Platform exists
+                # ensure each GEOSample and GEOPlatform exists
                 for sid in sample_ids:
-                    Sample.objects.get_or_create(sample_id=sid)
+                    GEOSample.objects.get_or_create(sample_id=sid)
 
                 for pid in platform_ids:
-                    Platform.objects.get_or_create(platform_id=pid)
+                    GEOPlatform.objects.get_or_create(platform_id=pid)
 
-                SamplesThrough.objects.bulk_create(
+                GEOSamplesThrough.objects.bulk_create(
                     [
-                        SamplesThrough(
-                            seriesrelations_id=rel.id, sample_id=sid
-                        )
+                        GEOSamplesThrough(seriesrelations_id=rel.id, sample_id=sid)
                         for sid in set(sample_ids)
                     ],
                     ignore_conflicts=True,
                 )
-                PlatformsThrough.objects.bulk_create(
+                GEOPlatformsThrough.objects.bulk_create(
                     [
-                        PlatformsThrough(
-                            seriesrelations_id=rel.id, platform_id=pid
-                        )
+                        GEOPlatformsThrough(seriesrelations_id=rel.id, platform_id=pid)
                         for pid in set(platform_ids)
                     ],
                     ignore_conflicts=True,
                 )
 
+
 # ============================================================================
 # === entrypoint
 # ============================================================================
+
 
 class Command(BaseCommand):
     help = "Import GEO Parquet dumps into normalized Django models."
 
     def add_arguments(self, parser):
         parser.add_argument(
-            "--root",
-            required=True,
-            help="Directory containing the four Parquet files."
+            "--root", required=True, help="Directory containing the four Parquet files."
         )
         parser.add_argument("--ids-sample", default="ids__level-sample.parquet")
         parser.add_argument("--ids-series", default="ids__level-series.parquet")
@@ -248,7 +286,7 @@ class Command(BaseCommand):
         parser.add_argument(
             "--clear-existing",
             action="store_true",
-            help="Clear existing GEO data before import."
+            help="Clear existing GEO data before import.",
         )
 
     def handle(self, *args, **opts):
@@ -273,10 +311,10 @@ class Command(BaseCommand):
 
                 models_to_clear = (
                     OrganismForPairing,
-                    SeriesRelations,
-                    Sample,
-                    Series,
-                    Platform,
+                    GEOSeriesRelations,
+                    GEOSample,
+                    GEOSeries,
+                    GEOPlatform,
                     Organism,
                 )
 
