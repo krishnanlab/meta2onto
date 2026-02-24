@@ -5,13 +5,21 @@ http://{$DOMAIN} {
 
 # Main site (HTTPS is automatic)
 {$DOMAIN} {
-	# /api -> backend:8000, strip the /api prefix
-	handle_path /api/* {
+	# /api -> backend:8000, but don't strip the /api prefix
+	handle /api/* {
 		reverse_proxy backend:8000
 	}
 
-	# Everything else -> frontend:3000 (SPA)
+	# serve /static from /opt/static
+	handle /static/* {
+		root * /opt/static
+	}
+
 	handle {
-		reverse_proxy frontend:3000
+		# serve requests from /opt/frontend/dist/
+		root * /opt/dist
+
+		# try files first, then fallback to index.html for SPA routing
+		try_files {path} /index.html
 	}
 }

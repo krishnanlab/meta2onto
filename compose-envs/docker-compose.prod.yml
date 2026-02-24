@@ -2,8 +2,12 @@ volumes:
   frontend_built:
   caddy_data:
   caddy_config:
+  backend_static:
 
 services:
+  backend:
+    volumes:
+      - backend_static:/opt/static
   frontend:
     command: sh -c "bun install && bun run build --outDir /tmp/dist && rm -rf /opt/dist/* && mv /tmp/dist /opt/dist"
     volumes:
@@ -18,6 +22,7 @@ services:
     volumes:
       - ./services/caddy/Caddyfile:/etc/caddy/Caddyfile
       - frontend_built:/opt/frontend/:ro
+      - backend_static:/opt/static/:ro
       - caddy_data:/data
       - caddy_config:/config
     env_file:
