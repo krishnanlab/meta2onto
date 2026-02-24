@@ -11,15 +11,17 @@ http://{$DOMAIN} {
 	}
 
 	# serve /static from /opt/static
-	handle /static/* {
+	handle_path /static/* {
 		root * /opt/static
+		file_server
 	}
 
 	handle {
 		# serve requests from /opt/frontend/dist/
-		root * /opt/dist
+		root * /opt/frontend/dist
 
 		# try files first, then fallback to index.html for SPA routing
 		try_files {path} /index.html
+		file_server
 	}
 }
