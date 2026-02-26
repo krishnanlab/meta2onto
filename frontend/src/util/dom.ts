@@ -48,16 +48,6 @@ export const getDocBbox = (element: Element) => {
   };
 };
 
-/** scroll to element */
-export const scrollTo = async (
-  element: Element | null | undefined,
-  options: ScrollIntoViewOptions = { behavior: "smooth" },
-) => {
-  if (!element) return;
-  /** scroll to element */
-  elementOrSection(element).scrollIntoView(options);
-};
-
 /** check if css selector is valid */
 const validSelector = (selector: unknown) => {
   if (typeof selector !== "string") return false;
@@ -69,37 +59,55 @@ const validSelector = (selector: unknown) => {
   }
 };
 
-/** scroll to element by selector */
-export const scrollToSelector = async (
-  selector: string,
+/** scroll to element, optionally by selector */
+export const scrollTo = async (
+  element: Element | string | undefined | null,
   options: ScrollIntoViewOptions = { behavior: "smooth" },
   waitForLayoutShift = false,
 ) => {
-  if (!validSelector(selector)) return;
-  if (!selector) return;
+  if (typeof element === "string") {
+    const selector = element;
+    if (!validSelector(selector)) return;
+    /** wait for element to appear */
+    element = await waitFor(() => document.querySelector(selector));
+  }
 
-  /** wait for element to appear */
-  const element = await waitFor(() => document.querySelector(selector));
   if (!element) return;
+
+  /** track if user scrolled */
+  let userScrolled = false;
+  window.addEventListener("scroll", () => (userScrolled = true), {
+    once: true,
+  });
 
   /** wait for layout shifts to stabilize */
   if (waitForLayoutShift) await waitForStable(() => getDocBbox(element).top);
 
+  /** if user scrolled while waiting, abort */
+  if (userScrolled) return;
+
   /** scroll to element */
-  scrollTo(element, options);
+  element.scrollIntoView(options);
 };
 
-/** if element is first child of section, change element to section itself */
-const elementOrSection = <El extends Element>(element: El) => {
-  const section = element.closest("section");
-  return section && element.matches("section > :first-child")
-    ? section
-    : element;
+// find index of first element "in view". model behavior off of wikiwand.com.
+export const firstInView = (elements: Element[]) => {
+  const pagePadding = parseInt(
+    window.getComputedStyle(document.documentElement).scrollPaddingTop,
+  );
+  for (let index = elements.length - 1; index >= 0; index--) {
+    const element = elements[index]!;
+    const elementMargin =
+      parseFloat(window.getComputedStyle(element).scrollMarginTop) || 0;
+    const { top } = element.getBoundingClientRect();
+    if (top - elementMargin < pagePadding) return index;
+  }
+  return 0;
 };
 
 /** glow element */
 export const glow = (element: Element) =>
-  elementOrSection(element).animate(
+  element.animate(
     [
       { boxShadow: "inset 0 0 40px var(--color-accent)", offset: 0 },
       { boxShadow: "inset 0 0 40px transparent", offset: 1 },
