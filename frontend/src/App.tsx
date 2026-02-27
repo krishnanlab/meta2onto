@@ -19,7 +19,7 @@ import NotFound from "@/pages/NotFound";
 import Search from "@/pages/Search";
 import Stats from "@/pages/Stats";
 import Testbed from "@/pages/Testbed";
-import { scrollToSelector } from "@/util/dom";
+import { scrollTo } from "@/util/dom";
 import { redirectPath, redirectState } from "@/util/url";
 
 /** app entrypoint */
@@ -37,7 +37,7 @@ const Layout = () => {
   const { hash } = useLocation();
 
   useEffect(() => {
-    scrollToSelector(hash);
+    scrollTo(hash);
   }, [hash]);
 
   return (
