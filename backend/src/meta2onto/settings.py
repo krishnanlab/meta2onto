@@ -49,6 +49,10 @@ CORS_ALLOWED_ORIGINS = [
 
 CSRF_TRUSTED_ORIGINS = CORS_ALLOWED_ORIGINS
 
+CORS_ALLOW_HEADERS = [
+    'x-user-uuid',
+]
+
 # Application definition
 
 INSTALLED_APPS = [

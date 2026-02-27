@@ -22,7 +22,7 @@ export const study = z.object({
     name: z.string(),
     value: z.number(),
   }),
-  submitted_at: z.iso.datetime(),
+  submitted_at: z.iso.date(),
   platform: z.string(),
   database: z.array(z.string()),
   classification: z.string(),
