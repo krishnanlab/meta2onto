@@ -1,17 +1,14 @@
-from uuid import uuid4
 import uuid
-from django.db import connection, models
+
+from django.db import models
 from django.db.models import CharField, FloatField, IntegerField, OuterRef, Subquery
 from django.db.models.sql.constants import INNER
-from django.db.models.expressions import RawSQL
 from django.contrib.postgres.indexes import GinIndex
 from django.contrib.postgres.search import TrigramSimilarity, SearchVector
 from django.contrib.postgres.fields import ArrayField
 
 from django_cte import CTE, with_cte
 from django_cte.raw import raw_cte_sql
-
-from api.utils.results import dictfetchall
 
 
 class TimeStampedModel(models.Model):

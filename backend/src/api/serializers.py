@@ -2,6 +2,7 @@ from rest_framework import serializers
 from .models import (
     GEOSample,
     GEOSeries,
+    GEOSeriesToGEOPlatforms,
     Organism,
     GEOPlatform,
     SearchTerm,
@@ -77,11 +78,18 @@ class SearchTermSerializer(serializers.ModelSerializer):
 class OntologySearchResultsSerializer(serializers.ModelSerializer):
     """Serializer for OntologySearchResults model."""
 
+    # FIXME: these are dummy values to satisfy frontend typechecking, but
+    # i need to check w/VR to see what he actually wanted it to return
+    description = serializers.CharField(source="name", read_only=True)
+    series = serializers.CharField(source="name", read_only=True)
+
     class Meta:
         model = OntologySearchResults
         fields = [
             "id",
             "name",
+            "description",
+            "series",
             "ontology",
             "type",
             "synonym",
@@ -157,7 +165,11 @@ class GEOSampleSerializer(serializers.ModelSerializer):
 class GEOSeriesSerializer(serializers.ModelSerializer):
     """Serializer for GEOSeries model."""
 
-    samples_ct = serializers.IntegerField(read_only=True)
+    sample_count = serializers.SerializerMethodField(read_only=True)
+
+    def get_sample_count(self, obj):
+        """Get the number of samples associated with this series."""
+        return obj.samples_ct if obj.samples_ct is not None else 0
 
     confidence = serializers.SerializerMethodField()
 
@@ -175,16 +187,54 @@ class GEOSeriesSerializer(serializers.ModelSerializer):
 
     database = serializers.ListField(child=serializers.CharField(), read_only=True)
 
+    # FIXME: renames to support frontend changes; i'm probably going to
+    # keep the db layer the same to ease imports and just rename fields at the
+    # serializer layer.
+    id = serializers.CharField(source="gse", read_only=True)
+    name = serializers.CharField(source="title", read_only=True)
+    submitted_at = serializers.DateTimeField(source="submission_date", read_only=True)
+    description = serializers.CharField(source="summary", read_only=True)
+    # platform = serializers.CharField(source="database", read_only=True)
+
+    platform = serializers.SerializerMethodField()
+
+    def get_platform(self, obj):
+        """Get the platform name associated with this series."""
+        gse_obj = GEOSeriesToGEOPlatforms.objects.filter(gse=obj.gse).first()
+        return str(gse_obj.platforms) if gse_obj else ""
+
+    keywords = serializers.SerializerMethodField()
+
+    def get_keywords(self, obj):
+        """Extract keywords from the series summary."""
+        if obj.summary:
+            # This is a very naive keyword extraction based on splitting the summary into words.
+            # In a real application, you might want to use a more sophisticated method.
+            keywords = set(obj.summary.split())
+            return list(keywords)[:10]  # Return top 10 keywords
+        return []
+    
+    classification = serializers.SerializerMethodField()
+
+    def get_classification(self, obj):
+        """Returns values Positive or Negative; supposed to represent 'Classification of study in model training'?"""
+        # FIXME: figure out how to actually determine this
+        return "Positive"
+
     class Meta:
         model = GEOSeries
         fields = [
-            "title",
-            "gse",
+            # "title",
+            "name",
+            # "gse",
+            "id",
             "status",
-            "submission_date",
+            # "submission_date",
+            "submitted_at",
             "last_update_date",
             "pubmed_id",
-            "summary",
+            "summary", # FIXME: review if still used
+            "description",
             "type",
             "contributor",
             "web_link",
@@ -198,9 +248,13 @@ class GEOSeriesSerializer(serializers.ModelSerializer):
             # from joining with api_searchterm
             "confidence",
             # from joining with api_sample count
-            "samples_ct",
+            "sample_count", # FIXME: review if samples_ct can be remapped to this
             # from joining with api_seriesdatabase
-            "database",
+            "database", # FIXME: review if still used
+            "platform",
+
+            "keywords",
+            "classification",
         ]
 
 

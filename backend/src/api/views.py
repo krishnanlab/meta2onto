@@ -298,13 +298,13 @@ class GEOSeriesViewSet(viewsets.ReadOnlyModelViewSet):
         )
 
         return {
-            "study_size": {
+            "Study Size": {
                 entry["study_size"]: entry["count"] for entry in study_size_counts
             },
-            "confidence": {
+            "Confidence": {
                 entry["confidence_level"]: entry["count"] for entry in confidence_counts
             },
-            "platforms": dict(platforms_dict),
+            "Platforms": dict(platforms_dict),
         }
 
     # allow searching through an action
