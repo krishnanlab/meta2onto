@@ -13,7 +13,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 import os
 
 from pathlib import Path
-
+from corsheaders.defaults import default_headers
 
 def is_truthy(value):
     """Convert various string representations of truthy values to boolean True."""
@@ -49,9 +49,10 @@ CORS_ALLOWED_ORIGINS = [
 
 CSRF_TRUSTED_ORIGINS = CORS_ALLOWED_ORIGINS
 
-CORS_ALLOW_HEADERS = [
+CORS_ALLOW_HEADERS = (
+    *default_headers,
     'x-user-uuid',
-]
+)
 
 # Application definition
 
