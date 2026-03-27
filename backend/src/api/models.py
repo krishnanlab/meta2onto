@@ -3,6 +3,7 @@ import uuid
 from django.db import models
 from django.db.models import CharField, FloatField, IntegerField, OuterRef, Subquery
 from django.db.models.sql.constants import INNER
+from django.core.validators import MinValueValidator, MaxValueValidator
 from django.contrib.postgres.indexes import GinIndex
 from django.contrib.postgres.search import TrigramSimilarity, SearchVector
 from django.contrib.postgres.fields import ArrayField
@@ -584,7 +585,6 @@ class OntologyTerms(models.Model):
 # === Cart server-side state
 # ===========================================================================
 
-
 class CartItem(models.Model):
     """
     An item in a user's cart.
@@ -612,3 +612,36 @@ class Cart(models.Model):
 
     def __str__(self):
         return f"Shared cart {self.name} w/ID {self.id}"
+
+
+# ===========================================================================
+# === Feedback
+# ===========================================================================
+
+class Feedback(TimeStampedModel):
+    """
+    User feedback on search results or the platform in general.
+    """
+
+    # series entity for which feedback is provided
+    series_id = models.ForeignKey(
+        GEOSeries, null=True, blank=True, on_delete=models.SET_NULL, related_name="feedback"
+    )
+
+    # optional info from the submitter
+    user_id = models.CharField(max_length=256, null=True, blank=True)
+    name = models.CharField(max_length=256, null=True, blank=True)
+    email = models.CharField(max_length=256, null=True, blank=True)
+
+    # the actual feedback content
+    rating = models.IntegerField(
+        null=True, blank=True,
+        help_text="Rating from -1 (negative) to 1 (positive)",
+        validators=[MinValueValidator(-1), MaxValueValidator(1)],
+    )
+    qualities = ArrayField(models.CharField(max_length=256), blank=True, default=list)
+    keywords = models.JSONField(null=True, blank=True)
+    elaborate = models.TextField(null=True, blank=True)
+
+    def __str__(self):
+        return f"Feedback from {self.name or 'anonymous'} ({self.email or 'no email'}) at {self.created_at}"

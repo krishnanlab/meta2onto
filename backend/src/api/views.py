@@ -26,6 +26,7 @@ from .models import (
     GEOPlatform,
     SearchTerm,
     GEOSeries,
+    Feedback,
 )
 from .serializers import (
     CartSerializer,
@@ -433,6 +434,32 @@ class GEOSeriesViewSet(viewsets.ReadOnlyModelViewSet):
             return self.get_paginated_response(serializer.data)
         serializer = GEOSampleSerializer(samples, many=True)
         return Response(serializer.data)
+
+    # allow users to post feedback to a study
+    @method_decorator(csrf_exempt)
+    @action(
+        detail=False, methods=["post"], url_path="feedback", permission_classes=[AllowAny]
+    )
+    def feedback(self, request):
+        # construct a Feedback model instance
+        candidate = Feedback(
+            series_id=GEOSeries.objects.get(gse=request.data.get("id")),
+            user_id = request.headers.get("X-User-UUID", ""),
+            name=request.data.get("user", {}).get("name", ""),
+            email=request.data.get("user", {}).get("email", ""),
+            rating=request.data.get("rating"),
+            qualities=request.data.get("qualities", []),
+            keywords=request.data.get("keywords", {}),
+            elaborate=request.data.get("elaborate", ""),
+
+        )
+        try:
+            candidate.save()
+            return Response({"status": "success"}, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            return Response(
+                {"status": "error", "message": str(e)},
+            )
 
 
 
