@@ -38,6 +38,7 @@ from .serializers import (
     SearchTermSerializer,
     GEOSeriesSerializer,
 )
+from .utils.auth import CsrfExemptSessionAuthentication
 
 # ===========================================================================
 # === Helpers
@@ -100,134 +101,14 @@ class GEOPlatformViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = GEOPlatform.objects.all()
     serializer_class = GEOPlatformSerializer
     filter_backends = [SearchFilter, OrderingFilter]
-    search_fields = ["platform_id"]
-    ordering_fields = ["platform_id", "created_at", "updated_at"]
-    ordering = ["platform_id"]
+    search_fields = ["gpl"]
+    ordering_fields = ["gpl"]
+    ordering = ["gpl"]
 
 
 class GEOSeriesViewSet(viewsets.ReadOnlyModelViewSet):
     """
     ReadOnly API endpoint for viewing GEOSeries.
-    Accessible at /api/series/
-    """
-
-    queryset = GEOSeries.objects.all()
-    serializer_class = GEOSeriesSerializer
-    filter_backends = [SearchFilter, OrderingFilter]
-    # search_fields = ['series_id', 'doc', 'search_terms__term']
-    search_fields = ["search_terms__term"]
-    ordering_fields = ["series_id", "created_at", "updated_at"]
-    ordering = ["series_id"]
-
-    # provide a /samples action to get samples for a series
-    @action(
-        detail=True, methods=["get"], url_path="samples", permission_classes=[AllowAny]
-    )
-    def samples(self, request, pk=None):
-        series = self.get_object()
-        # samples = series.series_relations.first().samples.all()
-        samples = GEOSample.objects.filter(series_id=series.series_id).all()
-        page = self.paginate_queryset(samples)
-        if page is not None:
-            serializer = GEOSampleSerializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-        serializer = GEOSampleSerializer(samples, many=True)
-        return Response(serializer.data)
-
-    # provide a /lookup action to get series by a list of ids
-    @method_decorator(csrf_exempt)
-    @action(
-        detail=False, methods=["post"], url_path="lookup", permission_classes=[AllowAny]
-    )
-    def lookup(self, request):
-        # takes a list of series_ids in the body
-        series_ids = request.data.get("ids", [])
-        queryset = GEOSample.objects.filter(series_id__in=series_ids)
-        page = self.paginate_queryset(queryset)
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
-
-
-class GEOSampleViewSet(viewsets.ReadOnlyModelViewSet):
-    """
-    ReadOnly API endpoint for viewing GEOSamples.
-    Accessible at /api/samples/
-    """
-
-    queryset = GEOSample.objects.all()
-    serializer_class = GEOSampleSerializer
-    filter_backends = [SearchFilter, OrderingFilter]
-    search_fields = ["sample_id", "doc", "search_terms__term"]
-    ordering_fields = ["sample_id", "created_at", "updated_at"]
-    ordering = ["sample_id"]
-
-
-# ===========================================================================
-# === Search-related Entities
-# ===========================================================================
-
-
-class SearchTermViewSet(viewsets.ReadOnlyModelViewSet):
-    """
-    ReadOnly API endpoint for viewing SearchTerms.
-    Accessible at /api/search-terms/
-    """
-
-    queryset = SearchTerm.objects.all()
-    serializer_class = SearchTermSerializer
-    filter_backends = [SearchFilter, OrderingFilter]
-    search_fields = ["term", "related_words", "sample_id"]
-    ordering_fields = ["id", "term", "prob", "log2_prob_prior"]
-    ordering = ["id"]
-
-
-# ===========================================================================
-# === Ontology search terms from meta-hq
-# ===========================================================================
-
-
-@api_view(["GET"])
-@permission_classes([AllowAny])
-def ontology_search(request):
-    """
-    API endpoint for searching ontology terms.
-    Accessible at /api/ontology-search/
-
-    Query parameters:
-    - query (required): The search query string
-    - max_results (optional): Maximum number of results to return (default: 50)
-    """
-    query = request.query_params.get("query")
-    max_results = request.query_params.get("max_results", 50)
-
-    if not query:
-        # return an empty list if no query is provided
-        return Response([])
-
-    try:
-        max_results = int(max_results)
-    except ValueError:
-        return Response(
-            {"error": "max_results must be an integer"},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
-
-    results = OntologySearchResults.objects.search(query, max_results)
-    serializer = OntologySearchResultsSerializer(results, many=True)
-    return Response(serializer.data)
-
-
-# ===========================================================================
-# === GEO Series Metadata
-# ===========================================================================
-
-
-class GEOSeriesViewSet(viewsets.ReadOnlyModelViewSet):
-    """
-    ReadOnly API endpoint for viewing GEO Series Metadata.
     Accessible at /api/series/
     """
 
@@ -317,6 +198,7 @@ class GEOSeriesViewSet(viewsets.ReadOnlyModelViewSet):
         ordering = request.query_params.get("ordering")
         offset = request.query_params.get("offset")
         limit = request.query_params.get("limit")
+
         if not query:
             # return an empty response
             return Response(
@@ -328,12 +210,7 @@ class GEOSeriesViewSet(viewsets.ReadOnlyModelViewSet):
                     "facets": {},
                 }
             )
-
-            # return Response(
-            #     {'error': 'query parameter is required'},
-            #     status=status.HTTP_400_BAD_REQUEST
-            # )
-
+        
         results = GEOSeries.objects.search(query, order_by=ordering)
         facets = self._build_facets(results)
 
@@ -434,7 +311,7 @@ class GEOSeriesViewSet(viewsets.ReadOnlyModelViewSet):
             return self.get_paginated_response(serializer.data)
         serializer = GEOSampleSerializer(samples, many=True)
         return Response(serializer.data)
-
+    
     # allow users to post feedback to a study
     @method_decorator(csrf_exempt)
     @action(
@@ -462,18 +339,78 @@ class GEOSeriesViewSet(viewsets.ReadOnlyModelViewSet):
             )
 
 
+class GEOSampleViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    ReadOnly API endpoint for viewing GEOSamples.
+    Accessible at /api/samples/
+    """
+
+    queryset = GEOSample.objects.all()
+    serializer_class = GEOSampleSerializer
+    filter_backends = [SearchFilter, OrderingFilter]
+    search_fields = ["gsm", "doc", "search_terms__term"]
+    ordering_fields = ["gsm", "created_at", "updated_at"]
+    ordering = ["gsm"]
+
+
+# ===========================================================================
+# === Search-related Entities
+# ===========================================================================
+
+
+class SearchTermViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    ReadOnly API endpoint for viewing SearchTerms.
+    Accessible at /api/search-terms/
+    """
+
+    queryset = SearchTerm.objects.all()
+    serializer_class = SearchTermSerializer
+    filter_backends = [SearchFilter, OrderingFilter]
+    search_fields = ["term", "related_words", "sample_id"]
+    ordering_fields = ["id", "term", "prob", "log2_prob_prior"]
+    ordering = ["id"]
+
+
+# ===========================================================================
+# === Ontology search terms from meta-hq
+# ===========================================================================
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def ontology_search(request):
+    """
+    API endpoint for searching ontology terms.
+    Accessible at /api/ontology-search/
+
+    Query parameters:
+    - query (required): The search query string
+    - max_results (optional): Maximum number of results to return (default: 50)
+    """
+    query = request.query_params.get("query")
+    max_results = request.query_params.get("max_results", 50)
+
+    if not query:
+        # return an empty list if no query is provided
+        return Response([])
+
+    try:
+        max_results = int(max_results)
+    except ValueError:
+        return Response(
+            {"error": "max_results must be an integer"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    results = OntologySearchResults.objects.search(query, max_results)
+    serializer = OntologySearchResultsSerializer(results, many=True)
+    return Response(serializer.data)
+
 
 # ===========================================================================
 # === Cart share, download views
 # ===========================================================================
-
-from rest_framework.authentication import SessionAuthentication
-
-
-class CsrfExemptSessionAuthentication(SessionAuthentication):
-    def enforce_csrf(self, request):
-        return  # no-op
-
 
 @method_decorator(csrf_exempt, name="dispatch")
 class CartViewSet(viewsets.ModelViewSet):

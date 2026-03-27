@@ -29,34 +29,6 @@ class OrganismSerializer(serializers.ModelSerializer):
         fields = ["id", "name"]
 
 
-class GEOPlatformSerializer(serializers.ModelSerializer):
-    """Serializer for GEOPlatform model."""
-
-    class Meta:
-        model = GEOPlatform
-        fields = ["platform_id", "created_at", "updated_at"]
-
-
-class GEOSeriesSerializer(serializers.ModelSerializer):
-    """Serializer for GEOSeries model."""
-
-    class Meta:
-        model = GEOSeries
-        fields = ["series_id", "doc", "created_at", "updated_at"]
-
-
-class GEOSampleSerializer(serializers.ModelSerializer):
-    """Serializer for GEOSample model."""
-
-    id = serializers.CharField(source="gsm", read_only=True)
-    # description = serializers.CharField(source='doc', read_only=True)
-
-    class Meta:
-        model = GEOSample
-        # fields = ['sample_id', 'doc', 'created_at', 'updated_at']
-        fields = ["id", "description", "data_processing"]
-
-
 # ===========================================================================
 # === Search-related Entities
 # ===========================================================================
@@ -149,18 +121,12 @@ class OntologyTermsSerializer(serializers.ModelSerializer):
 # === GEO Metadata
 # ===========================================================================
 
-
-class GEOSampleSerializer(serializers.ModelSerializer):
-    """Serializer for GEOSample model."""
-
-    id = serializers.CharField(source="gsm", read_only=True)
-    # description = serializers.CharField(source='doc', read_only=True)
+class GEOPlatformSerializer(serializers.ModelSerializer):
+    """Serializer for GEOPlatform model."""
 
     class Meta:
-        model = GEOSample
-        # fields = ['sample_id', 'doc', 'created_at', 'updated_at']
-        fields = ["id", "description", "data_processing"]
-
+        model = GEOPlatform
+        fields = "__all__"
 
 class GEOSeriesSerializer(serializers.ModelSerializer):
     """Serializer for GEOSeries model."""
@@ -256,6 +222,18 @@ class GEOSeriesSerializer(serializers.ModelSerializer):
             "keywords",
             "classification",
         ]
+
+class GEOSampleSerializer(serializers.ModelSerializer):
+    """Serializer for GEOSample model."""
+
+    id = serializers.CharField(source="gsm", read_only=True)
+    # description = serializers.CharField(source='doc', read_only=True)
+
+    class Meta:
+        model = GEOSample
+        # fields = ['sample_id', 'doc', 'created_at', 'updated_at']
+        fields = "__all__"
+
 
 
 # ===========================================================================
