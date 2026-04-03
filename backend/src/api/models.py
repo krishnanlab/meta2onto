@@ -1,7 +1,8 @@
 import uuid
 
 from django.db import models
-from django.db.models import CharField, FloatField, IntegerField, OuterRef, Subquery
+from django.db.models import CharField, FloatField, IntegerField, OuterRef, Subquery, Count, Value
+from django.db.models.functions import Coalesce
 from django.db.models.sql.constants import INNER
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.contrib.postgres.indexes import GinIndex
@@ -52,10 +53,10 @@ class GEOSeriesManager(models.Manager):
         hits = CTE(
             raw_cte_sql(
                 """
-                SELECT st.series_id AS series_id, st.prob
-                FROM search_onto(%s, %s) so
-                INNER JOIN api_searchterm st ON st.term = so.id
-                LIMIT 100
+                SELECT st.series_id AS series_id, st.confidence as prob
+                FROM api_searchterm st
+                WHERE st.term = %s
+                LIMIT %s
                 """,
                 # params for search_onto(%s, %s)
                 [query, limit],
@@ -72,7 +73,7 @@ class GEOSeriesManager(models.Manager):
         qs = hits.join(
             GEOSeries.objects.all(),
             gse=hits.col.series_id,
-            _join_type=INNER,  # keeps GSE rows even if no match; use INNER if you only want matches
+            _join_type=INNER,  # LEFT keeps GSE rows even if no match; use INNER if you only want matches
         ).annotate(prob=hits.col.prob)
 
         return with_cte(hits, select=qs)
@@ -89,11 +90,15 @@ class GEOSeriesManager(models.Manager):
         result = GEOSeriesManager.search_gse_with_prob(query=query, limit=max_results)
 
         qs = result.annotate(
-            samples_ct=Subquery(
-                GEOSample.objects.filter(series_id=OuterRef("gse"))
-                .values("series_id")
-                .annotate(c=models.Count("gsm"))
-                .values("c")[:1],
+            samples_ct=Coalesce(
+                Subquery(
+                    GEOSample.objects.filter(series_id=OuterRef("gse"))
+                        .values("series_id")
+                        .annotate(c=Count("gsm"))
+                        .values("c")[:1],
+                    output_field=IntegerField(),
+                ),
+                Value(0),
                 output_field=IntegerField(),
             ),
         )
@@ -102,6 +107,10 @@ class GEOSeriesManager(models.Manager):
             qs = qs.order_by("-prob")
         elif order_by == "-relevance":
             qs = qs.order_by("prob")
+        elif order_by == "date":
+            qs = qs.order_by("-submission_date")
+        elif order_by == "-date":
+            qs = qs.order_by("submission_date")
         elif order_by == "samples":
             qs = qs.order_by("-samples_ct")
 

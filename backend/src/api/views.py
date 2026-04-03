@@ -189,7 +189,7 @@ class GEOSeriesViewSet(viewsets.ReadOnlyModelViewSet):
             "Platforms": dict(platforms_dict),
         }
 
-    # allow searching through an action
+    # search by ontology ID (e.g., MONDO:0000270), which consults SearchTerm for series matching the term
     @action(
         detail=False, methods=["get"], url_path="search", permission_classes=[AllowAny]
     )
@@ -225,7 +225,7 @@ class GEOSeriesViewSet(viewsets.ReadOnlyModelViewSet):
             self.paginator.facets = facets
 
         # if confidence is provided, filter to confidence=high
-        confidence = request.query_params.get("confidence")
+        confidence = request.query_params.get("Confidence")
         if confidence in ["high", "medium", "low", "unknown"]:
             if confidence == "high":
                 results = results.filter(prob__gte=0.8)
@@ -237,8 +237,9 @@ class GEOSeriesViewSet(viewsets.ReadOnlyModelViewSet):
                 results = results.filter(prob__isnull=True)
 
         # if study_size is provided, filter results by large, medium, small
-        study_size = request.query_params.get("study_size")
+        study_size = request.query_params.get("Study Size")
         if study_size in ["small", "medium", "large"]:
+            print("Filtering by study size:", study_size, flush=True)
             if study_size == "small":
                 results = results.filter(samples_ct__lt=10)
             elif study_size == "medium":
@@ -250,7 +251,7 @@ class GEOSeriesViewSet(viewsets.ReadOnlyModelViewSet):
         # 1. query GEOSeriesToPlatforms to get the gpl values with 'technology' equal to the passed platforms
         # 2. use GEOSeriesToPlatforms to get the gse values for gpl values that occur in the 'platforms' ArrayField
         # 3. filter results to only those gse values
-        platforms = request.query_params.getlist("platforms")
+        platforms = request.query_params.getlist("Platforms")
         if platforms:
             gpls = GEOPlatform.objects.filter(technology__in=platforms).values_list(
                 "gpl", flat=True
