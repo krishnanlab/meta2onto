@@ -1,20 +1,29 @@
 #!/usr/bin/env bash
 
-SQLITE_DB="${1:-/data/GEOmetadb.sqlite}" 	# path to sqlite file on host
-PGCONT="${PGCONT:-pg17}"            		# docker container name
+# FYI, this script should be run within the db container
+# ensure that sqlite3 is available in the container
+
+SQLITE_DB="${1:-/data/GEOmetadb.sqlite}" 	# path to sqlite file in container
 PGDB="${PGDB:-meta2onto}"          	 		# postgres db
 PGUSER="${PGUSER:-meta2onto}"
 
-echo "SQLite: $SQLITE_DB"
-echo "Postgres: container=$PGCONT db=$PGDB user=$PGUSER"
+# if 1, will install dependencies (sqlite3, iconv) in the container
+INSTALL_DEPS=${INSTALL_DEPS:-0}
 
-psql_in_docker() {
-  # docker exec -i "$PGCONT" 
+if [ "$INSTALL_DEPS" -eq 1 ]; then
+  echo "Installing dependencies (sqlite3, iconv) in the container..."
+  apt-get update && apt-get install -y sqlite3 iconv
+fi
+
+echo "SQLite: $SQLITE_DB"
+echo "Postgres: db=$PGDB user=$PGUSER"
+
+psql_exec() {
   psql -U "$PGUSER" -d "$PGDB" -v ON_ERROR_STOP=1 "$@"
 }
 
 echo "== Pre-load: truncate + drop non-PK indexes =="
-psql_in_docker <<'SQL'
+psql_exec <<'SQL'
 BEGIN;
 
 TRUNCATE api_geosamplemetadata;
@@ -158,14 +167,14 @@ load_one \
    FROM STDIN WITH (FORMAT csv, HEADER false, NULL '', QUOTE '\"', ESCAPE '\"');" || exit 2
 
 echo "== Post-load: analyze =="
-psql_in_docker <<'SQL'
+psql_exec <<'SQL'
 ANALYZE api_geoplatformmetadata;
 ANALYZE api_geoseriesmetadata;
 ANALYZE api_geosamplemetadata;
 SQL
 
 echo "== Recreate secondary indexes (optional; match your previous set) =="
-psql_in_docker <<'SQL'
+psql_exec <<'SQL'
 -- Recreate what you dropped (names match your existing ones)
 CREATE INDEX api_geoplat_gpl_9f2a0a_idx ON api_geoplatformmetadata (gpl);
 CREATE INDEX api_geoplatformmetadata_gpl_ec20c3c4_like ON api_geoplatformmetadata (gpl varchar_pattern_ops);
