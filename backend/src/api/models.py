@@ -392,7 +392,7 @@ class SearchTerm(models.Model):
     backend.src.api.views.ontology_search for how the actual fetching
     of matching GEOSeries is performed.
 
-    Originates from meta2onto_example_predictions.parquet
+    Originates from disease_predictions.parquet and tissue_predictions.parquet
     """
 
     objects = SearchTermManager()
@@ -406,8 +406,7 @@ class SearchTerm(models.Model):
         on_delete=models.DO_NOTHING,
         db_constraint=False,
     )
-    prob = models.FloatField()
-    log2_prob_prior = models.FloatField()
+    confidence = models.FloatField()
     related_words = models.TextField(null=True, blank=True)
 
     class Meta:
