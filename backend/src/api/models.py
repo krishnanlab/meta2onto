@@ -1,7 +1,17 @@
 import uuid
 
 from django.db import models
-from django.db.models import CharField, FloatField, IntegerField, OuterRef, Subquery, Count, Value
+from django.db.models import (
+    Case,
+    When,
+    Value,
+    CharField,
+    IntegerField,
+    FloatField,
+    Count,
+    OuterRef,
+    Subquery,
+)
 from django.db.models.functions import Coalesce
 from django.db.models.sql.constants import INNER
 from django.core.validators import MinValueValidator, MaxValueValidator
@@ -45,22 +55,70 @@ class Organism(models.Model):
 # === from GEOmetadb, https://gbnci.cancer.gov/geo/
 # ===========================================================================
 
-
 class GEOSeriesManager(models.Manager):
-    @classmethod
-    def search_gse_with_prob(cls, query: str, limit: int = 50):
-        # CTE that yields (series_id, prob)
+    def with_samples_count(self, queryset=None):
+        """
+        Annotate each GEOSeries row with samples_ct using a Subquery so the
+        queryset stays one-row-per-series.
+        """
+        if queryset is None:
+            queryset = self.get_queryset()
+
+        return queryset.annotate(
+            samples_ct=Coalesce(
+                Subquery(
+                    GEOSample.objects.filter(series_id=OuterRef("gse"))
+                    .values("series_id")
+                    .annotate(c=Count("gsm"))
+                    .values("c")[:1],
+                    output_field=IntegerField(),
+                ),
+                Value(0),
+                output_field=IntegerField(),
+            )
+        )
+
+    def with_facet_buckets(self, queryset=None):
+        """
+        Annotate a queryset with:
+          - confidence_level, derived from prob
+          - study_size, derived from samples_ct
+        Assumes prob and samples_ct are already present or may be null.
+        """
+        if queryset is None:
+            queryset = self.get_queryset()
+
+        return queryset.annotate(
+            confidence_level=Case(
+                When(prob__gte=0.8, then=Value("high")),
+                When(prob__gte=0.5, then=Value("medium")),
+                When(prob__lt=0.5, then=Value("low")),
+                default=Value("unknown"),
+                output_field=CharField(),
+            ),
+            study_size=Case(
+                When(samples_ct__lt=10, then=Value("small")),
+                When(samples_ct__gte=10, samples_ct__lte=50, then=Value("medium")),
+                When(samples_ct__gt=50, then=Value("large")),
+                default=Value("unknown"),
+                output_field=CharField(),
+            ),
+        )
+
+    def search_gse_with_prob(self, query: str, limit: int = 50):
+        """
+        Returns a queryset of GEOSeries joined to a CTE containing:
+            (series_id, prob)
+        """
         hits = CTE(
             raw_cte_sql(
                 """
-                SELECT st.series_id AS series_id, st.confidence as prob
+                SELECT st.series_id AS series_id, st.confidence AS prob
                 FROM api_searchterm st
                 WHERE st.term = %s
                 LIMIT %s
                 """,
-                # params for search_onto(%s, %s)
                 [query, limit],
-                # tell django-cte the output column types
                 {
                     "series_id": CharField(),
                     "prob": FloatField(),
@@ -69,50 +127,37 @@ class GEOSeriesManager(models.Manager):
             name="hits",
         )
 
-        # Join the CTE to your model on gse = series_id
         qs = hits.join(
-            GEOSeries.objects.all(),
+            self.get_queryset(),
             gse=hits.col.series_id,
-            _join_type=INNER,  # LEFT keeps GSE rows even if no match; use INNER if you only want matches
+            _join_type=INNER,
         ).annotate(prob=hits.col.prob)
 
         return with_cte(hits, select=qs)
 
     def search(self, query: str, max_results: int = 50, order_by: str = "relevance"):
         """
-        Fetch GEO sample metadata by sample ID (GSM*).
-
-        For details about the search_onto method used here, see
-        /backend/src/api/migrations/0012_search_onto_func.py, the migration that
-        introduces the search_onto function.
+        Search GEOSeries and return a stable queryset annotated with:
+          - prob
+          - samples_ct
         """
-
-        result = GEOSeriesManager.search_gse_with_prob(query=query, limit=max_results)
-
-        qs = result.annotate(
-            samples_ct=Coalesce(
-                Subquery(
-                    GEOSample.objects.filter(series_id=OuterRef("gse"))
-                        .values("series_id")
-                        .annotate(c=Count("gsm"))
-                        .values("c")[:1],
-                    output_field=IntegerField(),
-                ),
-                Value(0),
-                output_field=IntegerField(),
-            ),
-        )
+        qs = self.search_gse_with_prob(query=query, limit=max_results)
+        qs = self.with_samples_count(qs)
 
         if order_by == "relevance":
-            qs = qs.order_by("-prob")
+            qs = qs.order_by("-prob", "gse")
         elif order_by == "-relevance":
-            qs = qs.order_by("prob")
+            qs = qs.order_by("prob", "gse")
         elif order_by == "date":
-            qs = qs.order_by("-submission_date")
+            qs = qs.order_by("-submission_date", "gse")
         elif order_by == "-date":
-            qs = qs.order_by("submission_date")
+            qs = qs.order_by("submission_date", "gse")
         elif order_by == "samples":
-            qs = qs.order_by("-samples_ct")
+            qs = qs.order_by("-samples_ct", "gse")
+        elif order_by == "-samples":
+            qs = qs.order_by("samples_ct", "gse")
+        else:
+            qs = qs.order_by("gse")
 
         return qs
 
@@ -144,25 +189,24 @@ class GEOSeries(models.Model):
     contact = models.TextField(null=True, blank=True)
     supplementary_file = models.TextField(null=True, blank=True)
 
-    # from original GEOSeries import
     doc = models.TextField(blank=True, null=True)
 
-    # this is not actually a column, but will be annotated into
-    # the model instances by the custom manager's search() method
+    # runtime annotations
     prob: float | None = None
+    samples_ct: int | None = None
+    confidence_level: str | None = None
+    study_size: str | None = None
 
     @property
     def database(self):
         inlined_db = getattr(self, "_database", None)
-
         if inlined_db is not None:
             return inlined_db
-        else:
-            return list(
-                GEOSeriesDatabase.objects.filter(series_id=self.gse).values_list(
-                    "database_name", flat=True
-                )
+        return list(
+            GEOSeriesDatabase.objects.filter(series_id=self.gse).values_list(
+                "database_name", flat=True
             )
+        )
 
     class Meta:
         indexes = [
@@ -171,7 +215,6 @@ class GEOSeries(models.Model):
 
     def __str__(self):
         return f"GEO Metadata for {self.gse}"
-
 
 class GEOSample(models.Model):
     """

@@ -2,7 +2,19 @@ import csv
 from collections import Counter
 
 from django.db import models, transaction
-from django.db.models import CharField, F, Func
+from django.db.models import (
+    Case,
+    When,
+    Value,
+    Count,
+    OuterRef,
+    Subquery,
+    IntegerField,
+    CharField,
+    F,
+    Func,
+)
+from django.db.models.functions import Coalesce
 from django.http import HttpResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
@@ -120,65 +132,85 @@ class GEOSeriesViewSet(viewsets.ReadOnlyModelViewSet):
     ordering = ["gse"]
     pagination_class = GEOSeriesSearchPagination
 
+    def _with_samples_count(self, queryset):
+        """
+        Keep queryset at one row per GEOSeries while annotating sample counts.
+        """
+        return queryset.annotate(
+            samples_ct=Coalesce(
+                Subquery(
+                    GEOSample.objects.filter(series_id=OuterRef("gse"))
+                    .values("series_id")
+                    .annotate(c=Count("gsm"))
+                    .values("c")[:1],
+                    output_field=IntegerField(),
+                ),
+                Value(0),
+                output_field=IntegerField(),
+            )
+        )
+
+    def _with_facet_buckets(self, queryset):
+        """
+        Add stable bucket annotations used by facets and filters.
+        Assumes prob may or may not be present, and samples_ct is present.
+        """
+        return queryset.annotate(
+            confidence_level=Case(
+                When(prob__gte=0.8, then=Value("high")),
+                When(prob__gte=0.5, then=Value("medium")),
+                When(prob__lt=0.5, then=Value("low")),
+                default=Value("unknown"),
+                output_field=CharField(),
+            ),
+            study_size=Case(
+                When(samples_ct__lt=10, then=Value("small")),
+                When(samples_ct__gte=10, samples_ct__lte=50, then=Value("medium")),
+                When(samples_ct__gt=50, then=Value("large")),
+                default=Value("unknown"),
+                output_field=CharField(),
+            ),
+        )
+
     def _build_facets(self, queryset):
         """Compute facets for the search result set."""
 
-        # annotate with confidence levels
-        annotated_qs = queryset.annotate(
-            confidence_level=models.Case(
-                models.When(prob__gte=0.8, then=models.Value("high")),
-                models.When(prob__gte=0.5, then=models.Value("medium")),
-                models.When(prob__lt=0.5, then=models.Value("low")),
-                default=models.Value("unknown"),
-                output_field=models.CharField(),
-            )
+        annotated_qs = self._with_samples_count(queryset)
+        annotated_qs = self._with_facet_buckets(annotated_qs).order_by()
+
+        # confidence facet
+        confidence_counts = annotated_qs.values("confidence_level").annotate(
+            count=Count("gse")
         )
 
-        # join the 'gpl' field from GEOSample to this queryset
-        annotated_qs = annotated_qs.annotate(
-            samples_ct=models.Count("samples", distinct=True)
+        # study size facet
+        study_size_counts = annotated_qs.values("study_size").annotate(
+            count=Count("gse")
         )
 
-        # annotate with study size buckets
-        # (small: <10, medium: 10-50, large: >50)
-        annotated_qs = annotated_qs.annotate(
-            study_size=models.Case(
-                models.When(samples_ct__lt=10, then=models.Value("small")),
-                models.When(
-                    samples_ct__gte=10, samples_ct__lte=50, then=models.Value("medium")
-                ),
-                models.When(samples_ct__gt=50, then=models.Value("large")),
-                default=models.Value("unknown"),
-                output_field=models.CharField(),
-            )
-        )
-
-        # 1) Get the GSEs as a plain Python list (break out of django-cte's Query object)
+        # platform facet
         gse_list = list(queryset.values_list("gse", flat=True))
 
-        # 2) Flatten platforms arrays into one stream of GPLs
-        platform_gpls = (
-            GEOSeriesToGEOPlatforms.objects.filter(gse__in=gse_list)
+        platform_counts_qs = (
+            GEOSeriesToGEOPlatforms.objects
+            .filter(gse__in=gse_list)
             .annotate(
                 gpl=Func(F("platforms"), function="unnest", output_field=CharField())
             )
-            .values_list("gpl", flat=True)
+            .values("gse", "gpl")
+            .distinct()
         )
 
-        # 3) Join to platform metadata + count titles
-        platforms_qs = GEOPlatform.objects.filter(gpl__in=platform_gpls)
-        platforms_dict = Counter(platforms_qs.values_list("technology", flat=True))
-
-        # compute counts for each confidence level
-        confidence_counts = annotated_qs.values("confidence_level").annotate(
-            count=models.Count("gse")
+        # platform facets are a little different; we need to return the ID
+        # for display, but we use the gpl field as the key for searches
+        platform_counts = (
+            GEOPlatform.objects
+            .filter(gpl__in=platform_counts_qs.values("gpl"))
+            .values("gpl", "technology")
+            .annotate(count=Count("gpl", distinct=True))
         )
 
-        # compute counts for each study size
-        study_size_counts = annotated_qs.values("study_size").annotate(
-            count=models.Count("gse")
-        )
-
+        # final facet results
         return {
             "Study Size": {
                 entry["study_size"]: entry["count"] for entry in study_size_counts
@@ -186,21 +218,23 @@ class GEOSeriesViewSet(viewsets.ReadOnlyModelViewSet):
             "Confidence": {
                 entry["confidence_level"]: entry["count"] for entry in confidence_counts
             },
-            "Platforms": dict(platforms_dict),
+            "Platforms": {
+                (row["gpl"] or "unknown"): row["count"] for row in platform_counts
+            }
         }
 
-    # search by ontology ID (e.g., MONDO:0000270), which consults SearchTerm for series matching the term
+    # search by ontology ID (e.g., MONDO:0000270), which consults SearchTerm for
+    # series matching the term
     @action(
         detail=False, methods=["get"], url_path="search", permission_classes=[AllowAny]
     )
     def search(self, request):
         query = request.query_params.get("query")
-        ordering = request.query_params.get("ordering")
+        ordering = request.query_params.get("ordering") or "relevance"
         offset = request.query_params.get("offset")
         limit = request.query_params.get("limit")
 
         if not query:
-            # return an empty response
             return Response(
                 {
                     "count": 0,
@@ -210,21 +244,21 @@ class GEOSeriesViewSet(viewsets.ReadOnlyModelViewSet):
                     "facets": {},
                 }
             )
-        
-        results = GEOSeries.objects.search(query, order_by=ordering)
+
+        max_results = int(limit) if limit else 50
+
+        # Base search queryset from manager. Your manager search() already
+        # annotates samples_ct, but we annotate again defensively here in case
+        # the manager changes or search() is called elsewhere.
+        results = GEOSeries.objects.search(query, max_results=max_results, order_by=ordering)
+        results = self._with_samples_count(results)
+        results = self._with_facet_buckets(results)
+
+        # Build facets BEFORE applying facet filters, so facets describe the full
+        # searched result set like your original implementation intended.
         facets = self._build_facets(results)
 
-        # paginate the response
-        # use limit, offset params if provided
-        self.pagination_class.limit = limit or self.pagination_class.default_limit
-        self.pagination_class.offset = offset or 0
-
-        facets = self._build_facets(results)
-
-        if self.paginator is not None:
-            self.paginator.facets = facets
-
-        # if confidence is provided, filter to confidence=high
+        # if confidence is provided, filter by confidence bucket
         confidence = request.query_params.get("Confidence")
         if confidence in ["high", "medium", "low", "unknown"]:
             if confidence == "high":
@@ -236,10 +270,9 @@ class GEOSeriesViewSet(viewsets.ReadOnlyModelViewSet):
             elif confidence == "unknown":
                 results = results.filter(prob__isnull=True)
 
-        # if study_size is provided, filter results by large, medium, small
+        # if study size is provided, filter by samples_ct bucket
         study_size = request.query_params.get("Study Size")
         if study_size in ["small", "medium", "large"]:
-            print("Filtering by study size:", study_size, flush=True)
             if study_size == "small":
                 results = results.filter(samples_ct__lt=10)
             elif study_size == "medium":
@@ -247,27 +280,56 @@ class GEOSeriesViewSet(viewsets.ReadOnlyModelViewSet):
             elif study_size == "large":
                 results = results.filter(samples_ct__gt=50)
 
-        # if platforms is provided, do the following:
-        # 1. query GEOSeriesToPlatforms to get the gpl values with 'technology' equal to the passed platforms
-        # 2. use GEOSeriesToPlatforms to get the gse values for gpl values that occur in the 'platforms' ArrayField
-        # 3. filter results to only those gse values
+        # if platforms is provided:
+        # 1. get GPLs whose technology is in requested platform technologies
+        # 2. find GSEs whose platforms array overlaps those GPLs
+        # 3. filter results to those GSEs
         platforms = request.query_params.getlist("Platforms")
         if platforms:
-            gpls = GEOPlatform.objects.filter(technology__in=platforms).values_list(
-                "gpl", flat=True
-            )
+            # gpls = list(
+            #     GEOPlatform.objects.filter(technology__in=platforms).values_list(
+            #         "gpl", flat=True
+            #     )
+            # )
+
+            gpls = list(platforms)
 
             gse_values = (
-                GEOSeriesToGEOPlatforms.objects.filter(platforms__overlap=list(gpls))
+                GEOSeriesToGEOPlatforms.objects.filter(platforms__overlap=gpls)
                 .values_list("gse", flat=True)
                 .distinct()
             )
 
-            results = results.filter(gse__in=list(gse_values))
+            results = results.filter(gse__in=Subquery(gse_values))
 
-        serializer = self.get_serializer(results, many=True)
+        # apply ordering again after facet filters if needed
+        if ordering == "relevance":
+            results = results.order_by("-prob", "gse")
+        elif ordering == "-relevance":
+            results = results.order_by("prob", "gse")
+        elif ordering == "date":
+            results = results.order_by("-submission_date", "gse")
+        elif ordering == "-date":
+            results = results.order_by("submission_date", "gse")
+        elif ordering == "samples":
+            results = results.order_by("-samples_ct", "gse")
+        elif ordering == "-samples":
+            results = results.order_by("samples_ct", "gse")
+
+        # paginate the response
+        # Note: mutating pagination_class attributes is brittle, but preserved
+        # here to match your existing API shape as closely as possible.
+        if limit is not None:
+            self.pagination_class.limit = limit
+        else:
+            self.pagination_class.limit = self.pagination_class.default_limit
+
+        self.pagination_class.offset = offset or 0
+
+        if self.paginator is not None:
+            self.paginator.facets = facets
+
         page = self.paginate_queryset(results)
-
         if page is not None:
             serializer = self.get_serializer(page, many=True)
             return self.get_paginated_response(serializer.data)
@@ -275,7 +337,7 @@ class GEOSeriesViewSet(viewsets.ReadOnlyModelViewSet):
         serializer = self.get_serializer(results, many=True)
         return Response(
             {
-                "count": len(serializer.data),
+                "count": results.count(),
                 "next": None,
                 "previous": None,
                 "results": serializer.data,
@@ -298,7 +360,7 @@ class GEOSeriesViewSet(viewsets.ReadOnlyModelViewSet):
             return self.get_paginated_response(serializer.data)
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
-    
+
     # nest /samples to find related samples for a series
     @action(
         detail=True, methods=["get"], url_path="samples", permission_classes=[AllowAny]
@@ -312,24 +374,22 @@ class GEOSeriesViewSet(viewsets.ReadOnlyModelViewSet):
             return self.get_paginated_response(serializer.data)
         serializer = GEOSampleSerializer(samples, many=True)
         return Response(serializer.data)
-    
+
     # allow users to post feedback to a study
     @method_decorator(csrf_exempt)
     @action(
         detail=False, methods=["post"], url_path="feedback", permission_classes=[AllowAny]
     )
     def feedback(self, request):
-        # construct a Feedback model instance
         candidate = Feedback(
             series_id=GEOSeries.objects.get(gse=request.data.get("id")),
-            user_id = request.headers.get("X-User-UUID", ""),
+            user_id=request.headers.get("X-User-UUID", ""),
             name=request.data.get("user", {}).get("name", ""),
             email=request.data.get("user", {}).get("email", ""),
             rating=request.data.get("rating"),
             qualities=request.data.get("qualities", []),
             keywords=request.data.get("keywords", {}),
             elaborate=request.data.get("elaborate", ""),
-
         )
         try:
             candidate.save()
