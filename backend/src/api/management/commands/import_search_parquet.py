@@ -35,10 +35,10 @@ DEFAULT_BATCH_SIZE = 5000
 
 
 # @transaction.atomic
-def import_search_terms(path: Path, batch_size: int = DEFAULT_BATCH_SIZE):
+def import_search_terms(path: Path, batch_size: int = DEFAULT_BATCH_SIZE, create_missing: bool = False):
     """
-    meta2onto_example_predictions.parquet
-      columns: term, ID, prob, log2(prob/prior), related_words
+    *_predictions.parquet files have the following columns:
+      term, ID (GSE), confidence, related_words
     """
 
     pf = pq.ParquetFile(path)
@@ -52,9 +52,10 @@ def import_search_terms(path: Path, batch_size: int = DEFAULT_BATCH_SIZE):
             rows = batch.to_pylist()
 
             # first, insert all samples that might be missing
-            for row in rows:
-                if row["ID"].startswith("GSE"):
-                    GEOSeries.objects.get_or_create(series_id=row["ID"])
+            if create_missing:
+                for row in rows:
+                    if row["ID"].startswith("GSE"):
+                        GEOSeries.objects.get_or_create(gse=row["ID"])
 
             # now, bulk create SearchTerm entries
             SearchTerm.objects.bulk_create(
@@ -62,8 +63,7 @@ def import_search_terms(path: Path, batch_size: int = DEFAULT_BATCH_SIZE):
                     SearchTerm(
                         term=row["term"],
                         series_id=row["ID"] if row["ID"].startswith("GSE") else None,
-                        prob=row["prob"],
-                        log2_prob_prior=row["log2(prob/prior)"],
+                        confidence=row["confidence"],
                         related_words=row["related_words"],
                     )
                     for row in rows
@@ -78,16 +78,19 @@ def import_search_terms(path: Path, batch_size: int = DEFAULT_BATCH_SIZE):
 
 
 class Command(BaseCommand):
-    help = "Import GEO Parquet dumps into normalized Django models."
+    help = "Import search term parquets into SearchTerm model."
 
     def add_arguments(self, parser):
         parser.add_argument(
             "--root",
             required=True,
-            help="Directory containing the meta2onto_example_predictions.parquet file",
+            help="Directory containing the search term parquet files",
         )
         parser.add_argument(
-            "--search-terms", default="meta2onto_example_predictions.parquet"
+            "--disease-terms", default="disease_predictions.parquet"
+        )
+        parser.add_argument(
+            "--tissue-terms", default="tissue_predictions.parquet"
         )
 
         # add an argument to delete all existing data before import?
@@ -102,7 +105,8 @@ class Command(BaseCommand):
         if not root.exists():
             raise CommandError(f"Root folder not found: {root}")
 
-        search_terms = root / opts["search_terms"]
+        disease_search_terms = root / opts["disease_terms"]
+        tissue_search_terms = root / opts["tissue_terms"]
 
         self.stdout.write(self.style.MIGRATE_HEADING("Starting search term import"))
 
@@ -119,9 +123,14 @@ class Command(BaseCommand):
                         )
                     )
 
-        # this one's simpler, just rows consisting of (sample, series, platform, organism, status)
-        self.stdout.write(self.style.HTTP_INFO(f"Importing: {search_terms}"))
-        import_search_terms(search_terms, batch_size=500)
-        self.stdout.write(self.style.SUCCESS("✓ search-terms imported"))
+        # import disease search terms
+        self.stdout.write(self.style.HTTP_INFO(f"Importing: {disease_search_terms}"))
+        import_search_terms(disease_search_terms, batch_size=500)
+        self.stdout.write(self.style.SUCCESS("✓ disease search terms imported"))
+
+        # import tissue search terms
+        self.stdout.write(self.style.HTTP_INFO(f"Importing: {tissue_search_terms}"))
+        import_search_terms(tissue_search_terms, batch_size=500)
+        self.stdout.write(self.style.SUCCESS("✓ tissue search terms imported"))
 
         self.stdout.write(self.style.MIGRATE_HEADING("Import complete"))
