@@ -109,11 +109,17 @@ class GEOSeriesManager(models.Manager):
         """
         Returns a queryset of GEOSeries joined to a CTE containing:
             (series_id, prob)
+
+        'query' should be an ontology ID from api_searchterm,
+        e.g. 'MONDO:0000270'.
         """
         hits = CTE(
             raw_cte_sql(
                 """
-                SELECT st.series_id AS series_id, st.confidence AS prob
+                SELECT
+                    st.series_id AS series_id,
+                    st.confidence AS prob,
+                    st.related_words AS keywords
                 FROM api_searchterm st
                 WHERE st.term = %s
                 LIMIT %s
@@ -132,6 +138,19 @@ class GEOSeriesManager(models.Manager):
             gse=hits.col.series_id,
             _join_type=INNER,
         ).annotate(prob=hits.col.prob)
+
+        # we need to join against api_searchterm and retrieve related_words for each GSE
+        # on the following fields:
+        # - series_id=the GSE ID
+        # - term=the original query term
+        qs = qs.annotate(
+            keywords=Subquery(
+                SearchTerm.objects.filter(
+                    series_id=OuterRef("gse"),
+                    term=query,
+                ).values("related_words")[:1]
+            )
+        )
 
         return with_cte(hits, select=qs)
 
@@ -193,6 +212,7 @@ class GEOSeries(models.Model):
 
     # runtime annotations
     prob: float | None = None
+    keywords: str | None = None
     samples_ct: int | None = None
     confidence_level: str | None = None
     study_size: str | None = None
