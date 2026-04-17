@@ -53,10 +53,10 @@ export default function Slider({
         className="
           flex cursor-pointer touch-none items-center p-2 text-theme
           transition-colors select-none
-          hover:text-slate-800
+          hover:text-stone-800
         "
       >
-        <_Slider.Track className="h-1 w-full rounded-full bg-slate-300">
+        <_Slider.Track className="h-1 w-full rounded-full bg-stone-300">
           <_Slider.Indicator className="rounded-full bg-current" />
           {range(values.length).map((index) => (
             <_Slider.Thumb

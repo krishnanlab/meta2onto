@@ -29,7 +29,7 @@ const Status = ({
 
   if ("isFetching" in query ? query.isFetching : query.status === "pending")
     return (
-      <span className={clsx(base, "bg-slate-100 text-slate-500", className)}>
+      <span className={clsx(base, "bg-stone-100 text-stone-500", className)}>
         <LoaderCircle className="animate-spin" />
         {loading}
       </span>
@@ -47,7 +47,7 @@ const Status = ({
     );
   else if (query.status === "success" && isEmpty(query.data))
     return (
-      <span className={clsx(base, "bg-slate-100 text-slate-500", className)}>
+      <span className={clsx(base, "bg-stone-100 text-stone-500", className)}>
         <InfoIcon />
         {empty}
       </span>

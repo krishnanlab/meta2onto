@@ -23,13 +23,13 @@ export default function Tooltip({ children, content }: Props) {
           >
             <_Tooltip.Popup
               className="
-                flex w-50 max-w-max flex-col gap-2 rounded-sm bg-slate-900 p-4
+                flex w-50 max-w-max flex-col gap-2 rounded-sm bg-stone-900 p-4
                 text-white
               "
             >
               <_Tooltip.Arrow
                 className="
-                  text-slate-900
+                  text-stone-900
                   data-[side=bottom]:bottom-full data-[side=bottom]:rotate-180
                   data-[side=top]:top-full
                 "

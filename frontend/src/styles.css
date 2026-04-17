@@ -43,7 +43,7 @@
 
   section {
     --width: 300;
-    @apply flex flex-col gap-8 bg-white px-[max(--spacing(12),(100%---spacing(1)*var(--width))/2)] py-12 last:grow even:bg-slate-50;
+    @apply flex flex-col gap-8 bg-white px-[max(--spacing(12),(100%---spacing(1)*var(--width))/2)] py-12 last:grow even:bg-stone-50;
   }
 
   h1,
@@ -119,11 +119,11 @@
   }
 
   dl {
-    @apply grid max-w-max grid-cols-[repeat(var(--cols),auto)] rounded-md bg-slate-100 [--cols:2];
+    @apply grid max-w-max grid-cols-[repeat(var(--cols),auto)] rounded-md bg-stone-100 [--cols:2];
   }
 
   dt {
-    @apply p-2 font-medium text-slate-500;
+    @apply p-2 font-medium text-stone-500;
   }
 
   dd {
@@ -131,15 +131,15 @@
   }
 
   dd:empty {
-    @apply before:text-slate-500 before:content-['-'];
+    @apply before:text-stone-500 before:content-['-'];
   }
 
   code:not(:has(pre)) {
-    @apply rounded-md bg-slate-200 px-1 font-mono;
+    @apply rounded-md bg-stone-200 px-1 font-mono;
   }
 
   code > pre {
-    @apply overflow-x-auto rounded-md bg-slate-700 p-4 font-mono text-slate-300;
+    @apply overflow-x-auto rounded-md bg-stone-700 p-4 font-mono text-stone-300;
   }
 
   [class^="hljs-"] {
@@ -148,7 +148,7 @@
 
   .hljs-meta,
   .hljs-comment {
-    @apply text-slate-500;
+    @apply text-stone-500;
   }
 
   .hljs-string {
@@ -168,11 +168,11 @@
   }
 
   :not(html) ::-webkit-scrollbar {
-    @apply size-2 rounded-full bg-slate-200;
+    @apply size-2 rounded-full bg-stone-200;
   }
 
   :not(html) ::-webkit-scrollbar-thumb {
-    @apply rounded-full bg-slate-400;
+    @apply rounded-full bg-stone-400;
   }
 }
 
@@ -182,7 +182,7 @@
   }
 
   &:focus {
-    @apply rounded-md outline outline-offset-2 outline-slate-300;
+    @apply rounded-md outline outline-offset-2 outline-stone-300;
   }
 }
 
