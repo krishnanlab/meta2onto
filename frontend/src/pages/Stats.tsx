@@ -31,19 +31,19 @@ export default function Stats() {
     {
       Icon: ThumbsUp,
       value: studyThumbsUp,
-      className: "bg-emerald-50 text-emerald-900",
+      className: "bg-emerald-50 text-stone-500",
       text: "positive feedback",
     },
     {
       Icon: ThumbsDown,
       value: studyThumbsDown,
-      className: "bg-red-50 text-red-900",
+      className: "bg-red-50 text-stone-500",
       text: "negative feedback",
     },
     {
       Icon: ScanSearch,
       value: uniqueSearches,
-      className: "bg-yellow-50 text-yellow-900",
+      className: "bg-orange-50 text-stone-500",
       text: "unique searches",
     },
   ];

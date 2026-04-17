@@ -1,9 +1,11 @@
+import type { ReactNode } from "react";
 import type { UseQueryResult } from "@tanstack/react-query";
 import type { ColumnSort } from "@tanstack/table-core";
 import type { Sample, Studies, Study } from "@/api/types";
 import type { Limit } from "@/components/Pagination";
 import type { Col } from "@/components/Table";
 import { Fragment, useEffect, useRef, useState } from "react";
+import Highlighter from "react-highlight-words";
 import { useParams } from "react-router";
 import { useDebounce, useLocalStorage } from "@reactuses/core";
 import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
@@ -229,7 +231,7 @@ const Filters = ({
 
     {/* facet filter */}
     {isEmpty(query.data?.facets) && (
-      <span className="text-slate-500">Filters</span>
+      <span className="text-stone-500">Filters</span>
     )}
     {Object.entries(query.data?.facets ?? {}).map(([facetKey, facetValues]) => (
       <div key={facetKey} className="flex flex-col gap-2">
@@ -398,13 +400,12 @@ const Result = ({
 
   /** feedback mutation */
   const mutation = useMutation({
-    mutationKey: ["study-samples"],
     mutationFn: async () =>
-      feedback &&
-      (await studyFeedback(id, feedback, {
-        name: userName ?? "",
-        email: userEmail ?? "",
-      })),
+      await studyFeedback(
+        id,
+        { name: userName ?? "", email: userEmail ?? "" },
+        feedback,
+      ),
   });
 
   /** feedback mutation status */
@@ -414,6 +415,24 @@ const Result = ({
     ) : mutation.status === "pending" ? (
       <LoaderCircle className="animate-spin" />
     ) : null;
+
+  /** custom highlight */
+  const Highlight = ({ children }: { children: ReactNode }) => {
+    /** get position of highlight in keywords list */
+    const index =
+      typeof children === "string" ? keywords.indexOf(children) : -1;
+    /** keywords listed first considered stronger matches */
+    const strength = 1 - index / keywords.length;
+    return (
+      <mark className="relative isolate bg-transparent">
+        <span
+          className="absolute inset-0 -z-10 bg-orange-200"
+          style={{ opacity: strength }}
+        />
+        {children}
+      </mark>
+    );
+  };
 
   return (
     <div className="flex flex-col gap-4 rounded-sm p-6 shadow-md">
@@ -427,7 +446,7 @@ const Result = ({
       <div className="flex flex-wrap gap-x-8 gap-y-4">
         {details.map(({ icon: Icon, text, tooltip }, index) => (
           <Tooltip key={index} content={tooltip}>
-            <div className="flex items-center gap-2 text-slate-500">
+            <div className="flex items-center gap-2 text-stone-500">
               <Icon />
               <span>{text}</span>
             </div>
@@ -436,11 +455,15 @@ const Result = ({
       </div>
 
       {/* description */}
-      <p
-        tabIndex={0}
-        className="truncate-lines"
-        dangerouslySetInnerHTML={{ __html: description }}
-      />
+      <p className="truncate-lines" tabIndex={0}>
+        <Highlighter
+          className="contents"
+          highlightTag={Highlight}
+          caseSensitive
+          searchWords={keywords}
+          textToHighlight={description}
+        />
+      </p>
 
       {/* bottom row */}
       <div className="flex flex-wrap items-end gap-4">
@@ -601,7 +624,7 @@ const ThumbsDownPopup = ({
                 "p-2",
                 feedback?.keywords?.[keyword] === "good"
                   ? "text-emerald-600!"
-                  : "text-slate-300!",
+                  : "text-stone-300!",
               )}
               onClick={() => {
                 thumbsDown();
@@ -620,7 +643,7 @@ const ThumbsDownPopup = ({
                 "p-2",
                 feedback?.keywords?.[keyword] === "bad"
                   ? "text-red-600!"
-                  : "text-slate-300!",
+                  : "text-stone-300!",
               )}
               onClick={() => {
                 thumbsDown();

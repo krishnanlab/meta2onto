@@ -50,7 +50,7 @@ export default function BigRadios<O extends Option>({
             className="
               relative flex min-w-50 flex-1 cursor-pointer flex-col items-start!
               gap-4 rounded-sm border border-current/25 p-4 transition-colors
-              hover:bg-slate-100
+              hover:bg-stone-100
             "
           >
             <Radio.Root
