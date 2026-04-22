@@ -36,17 +36,17 @@ export default function Button({
     color === "none" &&
       `
         bg-transparent text-theme
-        hover:bg-slate-200
+        hover:bg-stone-200
       `,
     color === "theme" &&
       `
         bg-theme text-white
-        hover:bg-slate-800
+        hover:bg-stone-800
       `,
     color === "accent" &&
       `
         bg-accent text-white
-        hover:bg-slate-800
+        hover:bg-stone-800
       `,
   );
 

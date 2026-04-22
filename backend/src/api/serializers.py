@@ -173,11 +173,8 @@ class GEOSeriesSerializer(serializers.ModelSerializer):
 
     def get_keywords(self, obj):
         """Extract keywords from the series summary."""
-        if obj.summary:
-            # This is a very naive keyword extraction based on splitting the summary into words.
-            # In a real application, you might want to use a more sophisticated method.
-            keywords = set(obj.summary.split())
-            return list(keywords)[:10]  # Return top 10 keywords
+        if obj.keywords:
+            return [kw.strip() for kw in obj.keywords.split(",")]
         return []
     
     classification = serializers.SerializerMethodField()

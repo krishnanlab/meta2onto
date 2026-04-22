@@ -206,7 +206,15 @@ class GEOSeriesViewSet(viewsets.ReadOnlyModelViewSet):
         platform_counts = (
             GEOPlatform.objects
             .filter(gpl__in=platform_counts_qs.values("gpl"))
-            .values("gpl", "technology")
+            .values("gpl")
+            .annotate(count=Count("gpl", distinct=True))
+        )
+
+        # also facet by technology
+        technology_counts = (
+            GEOPlatform.objects
+            .filter(gpl__in=platform_counts_qs.values("gpl"))
+            .values("technology")
             .annotate(count=Count("gpl", distinct=True))
         )
 
@@ -220,7 +228,10 @@ class GEOSeriesViewSet(viewsets.ReadOnlyModelViewSet):
             },
             "Platforms": {
                 (row["gpl"] or "unknown"): row["count"] for row in platform_counts
-            }
+            },
+            "Technologies": {
+                (row["technology"] or "unknown"): row["count"] for row in technology_counts
+            },
         }
 
     # search by ontology ID (e.g., MONDO:0000270), which consults SearchTerm for
@@ -301,6 +312,26 @@ class GEOSeriesViewSet(viewsets.ReadOnlyModelViewSet):
             )
 
             results = results.filter(gse__in=Subquery(gse_values))
+
+        # if Technologies is provided, do the following:
+        # 1. find GPLs whose technology is in requested technologies
+        # 2. find GSEs whose platforms array overlaps those GPLs
+        # 3. filter results to those GSEs
+        technologies = request.query_params.getlist("Technologies")
+        if technologies:
+            tech_gpls = list(
+                GEOPlatform.objects.filter(technology__in=technologies).values_list(
+                    "gpl", flat=True
+                )
+            )
+
+            tech_gse_values = (
+                GEOSeriesToGEOPlatforms.objects.filter(platforms__overlap=tech_gpls)
+                .values_list("gse", flat=True)
+                .distinct()
+            )
+
+            results = results.filter(gse__in=Subquery(tech_gse_values))
 
         # apply ordering again after facet filters if needed
         if ordering == "relevance":

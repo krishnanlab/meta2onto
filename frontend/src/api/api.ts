@@ -8,11 +8,10 @@ import { downloadBlob } from "@/util/download";
 
 /** type to color map */
 export const typeColor: Record<string, string> = {
-  tissue: "bg-rose-700/70",
-  disease: "bg-indigo-700/70",
-  anatomy: "bg-rose-700/70",
-  pathway: "bg-orange-700/70",
-  default: "bg-slate-700/70",
+  tissue: "bg-pink-700/70",
+  disease: "bg-emerald-700/70",
+  celltype: "bg-sky-700/70",
+  default: "bg-stone-700/70",
 };
 
 /** search for ontologies */
@@ -39,6 +38,7 @@ export const studySearch = async ({
   for (const [facet, values] of Object.entries(facets))
     for (const value of values) url.searchParams.append(facet, value);
   const data = await request(url, studies);
+  console.log(data);
   return data;
 };
 
@@ -82,8 +82,9 @@ export const studySamples = async ({
 /** submit study feedback */
 export const studyFeedback = async (
   id: string,
-  feedback: Feedback,
   user: { name: string; email: string },
+  /** allow undefined to clear/unset feedback */
+  feedback: Feedback | undefined,
 ) => {
   const url = new URL(`${api}/study/feedback/`);
   const options = {

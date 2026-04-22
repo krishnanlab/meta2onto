@@ -128,11 +128,11 @@ export const SearchBox = ({
           .list.slice(0, 10)
           .map(({ search }) => ({
             ...search,
-            icon: <History className="text-slate-400" />,
+            icon: <History className="text-stone-400" />,
           })),
         ...examples.map((example) => ({
           ...example,
-          icon: <Lightbulb className="text-slate-400" />,
+          icon: <Lightbulb className="text-stone-400" />,
         })),
       ];
 
@@ -164,7 +164,7 @@ export const SearchBox = ({
                   dangerouslySetInnerHTML={{ __html: name }}
                 />
               )}
-              {id && <span className="text-right text-slate-500">{id}</span>}
+              {id && <span className="text-right text-stone-500">{id}</span>}
             </>
           ),
         })) ?? []

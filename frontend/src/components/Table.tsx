@@ -139,7 +139,7 @@ export default function Table<Datum extends object>({
         >
           <thead>
             {table.getHeaderGroups().map((headerGroup) => (
-              <tr key={headerGroup.id} className="bg-slate-100">
+              <tr key={headerGroup.id} className="bg-stone-100">
                 {headerGroup.headers.map((header, index) => (
                   <th key={header.id} aria-colindex={index + 1}>
                     {header.isPlaceholder ? null : (
@@ -165,7 +165,7 @@ export default function Table<Datum extends object>({
                                 <MoveDown />
                               )
                             ) : (
-                              <ArrowUpDown className="text-slate-300" />
+                              <ArrowUpDown className="text-stone-300" />
                             )}
                           </Button>
                         )}
@@ -184,7 +184,7 @@ export default function Table<Datum extends object>({
                   key={row.id}
                   className="
                     odd:bg-white
-                    even:bg-slate-50
+                    even:bg-stone-50
                   "
                   aria-rowindex={
                     table.getState().pagination.pageIndex *
@@ -219,7 +219,7 @@ export default function Table<Datum extends object>({
               ))
             ) : (
               <tr>
-                <td className="p-2 text-slate-500" colSpan={cols.length}>
+                <td className="p-2 text-stone-500" colSpan={cols.length}>
                   No rows
                 </td>
               </tr>
