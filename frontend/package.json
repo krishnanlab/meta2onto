@@ -54,7 +54,6 @@
     "eslint-plugin-prettier": "^5.5.5",
     "eslint-plugin-react-hooks": "^7.0.1",
     "globals": "^17.0.0",
-    "msw": "^2.12.7",
     "prettier": "^3.8.0",
     "prettier-plugin-jsdoc": "^1.8.0",
     "prettier-plugin-tailwindcss": "^0.7.2",
@@ -63,10 +62,5 @@
     "typescript-eslint": "^8.53.1",
     "vite": "^7.3.1",
     "vite-plugin-svgr": "^4.5.0"
-  },
-  "msw": {
-    "workerDirectory": [
-      "public"
-    ]
   }
 }
