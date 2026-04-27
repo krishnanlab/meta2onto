@@ -6,6 +6,7 @@
     "preview": "vite preview",
     "lint": "eslint . --fix",
     "format": "prettier --write .",
+    "schema": "bunx orval --config ./src/api/orval.config.cjs",
     "test:types": "tsc -b",
     "test:lint": "eslint .",
     "test:format": "prettier --check .",
