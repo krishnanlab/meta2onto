@@ -120,7 +120,7 @@ export default function Search() {
   delete facets.limit;
 
   /** page title */
-  const title = `Search "${search}"`;
+  const title = `${search} "${raw}"`;
 
   /** search results */
   const studySearchQuery = useQuery({

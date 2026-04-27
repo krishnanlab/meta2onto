@@ -57,7 +57,12 @@ export const useDebouncedParams = (delay = 1000) => {
 
   /** debounced set url search params */
   const debouncedSet = useEffectEvent(
-    () => (timeout.current = window.setTimeout(() => setUrl(instant), delay)),
+    () =>
+      (timeout.current = window.setTimeout(() => {
+        /** don't add history entry if same url */
+        if (instant.toString() === url.toString()) return;
+        setUrl(instant);
+      }, delay)),
   );
 
   /** start setting url search params when instant params change */

@@ -175,7 +175,9 @@ export const SearchBox = ({
           (result) => result.id === id,
         );
         if (result) addSearch(result);
-        navigate(`/search/${result?.id ?? ""}?raw=${_search}`);
+        const params = new URLSearchParams();
+        params.set("raw", search);
+        navigate(`/search/${result?.id ?? ""}?${params.toString()}`);
       }}
       status={
         showStatus({ query: ontologySearchQuery }) && (
