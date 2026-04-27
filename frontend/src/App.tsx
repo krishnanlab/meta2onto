@@ -2,6 +2,7 @@ import "@/styles.css";
 import "@fontsource-variable/sometype-mono";
 import "@fontsource-variable/outfit";
 import { useEffect } from "react";
+import analytics from "react-ga4";
 import {
   createBrowserRouter,
   Outlet,
@@ -34,11 +35,20 @@ export default function App() {
 /** route layout */
 const Layout = () => {
   /** current route info */
-  const { hash } = useLocation();
+  const { pathname, search, hash } = useLocation();
 
   useEffect(() => {
     scrollTo(hash);
   }, [hash]);
+
+  /** track analytics page view */
+  useEffect(() => {
+    analytics.send({
+      hitType: "pageview",
+      page: pathname + search + hash,
+      title: document.title,
+    });
+  }, [pathname, search, hash]);
 
   return (
     <>
