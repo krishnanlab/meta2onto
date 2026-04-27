@@ -18,6 +18,10 @@ DJANGO_SUPERUSER_PASSWORD="${DJANGO_ADMIN_PASSWORD}" \
 echo "* Collecting static files"
 ./manage.py collectstatic --noinput
 
+# generate OpenAPI schema
+echo "* Generating OpenAPI schema"
+./manage.py spectacular --file /data/schema.yaml
+
 # launch the server
 if [ "$DJANGO_DEBUG" = "1" ] ; then
     echo "* Serving via django runserver (debug mode)"
