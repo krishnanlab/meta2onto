@@ -1,5 +1,6 @@
 import type { Cart, Feedback } from "@/api/types";
 import type { LocalCart, ShareCart } from "@/state/cart";
+import analytics from "react-ga4";
 import z from "zod";
 import { api, request } from "@/api";
 import { cart, ontologies, samples, studies } from "@/api/types";
@@ -19,6 +20,7 @@ export const ontologySearch = async (search: string) => {
   const url = new URL(`${api}/ontology/search/`);
   url.searchParams.set("query", search);
   const data = request(url, ontologies);
+  analytics.event("ontology_search", { search });
   return data;
 };
 
@@ -38,7 +40,7 @@ export const studySearch = async ({
   for (const [facet, values] of Object.entries(facets))
     for (const value of values) url.searchParams.append(facet, value);
   const data = await request(url, studies);
-  console.log(data);
+  analytics.event("study_search", { search, ordering, facets });
   return data;
 };
 
@@ -59,6 +61,7 @@ export const studyBatchLookup = async ({
     body: { ids },
   };
   const data = await request(url, studies, options);
+  analytics.event("study_batch_lookup", { ids });
   return data;
 };
 
@@ -76,6 +79,7 @@ export const studySamples = async ({
   url.searchParams.set("offset", String(offset));
   url.searchParams.set("limit", String(limit));
   const data = request(url, samples);
+  analytics.event("study_samples", { id });
   return data;
 };
 
@@ -92,13 +96,16 @@ export const studyFeedback = async (
     headers: { "Content-Type": "application/json" },
     body: { id, user, ...feedback },
   } as const;
-  await request(url, z.unknown(), options);
+  const data = await request(url, z.unknown(), options);
+  analytics.event("study_feedback", { id, ...feedback });
+  return data;
 };
 
 /** lookup a cart by id */
 export const cartLookup = async (id: string) => {
   const url = new URL(`${api}/cart/${id}/`);
   const data = request(url, cart);
+  analytics.event("cart_lookup", { id });
   return data;
 };
 
@@ -111,6 +118,7 @@ export const shareCart = async (shareCart: ShareCart) => {
     body: shareCart,
   };
   const data = request(url, cart, options);
+  analytics.event("share_cart", shareCart);
   return data;
 };
 
@@ -132,6 +140,7 @@ export const downloadCart = async (
   const data = await request(url, z.instanceof(Blob), options);
   if (type === "csv") downloadBlob(data, filename, "csv");
   if (type === "json") downloadBlob(data, filename, "json");
+  analytics.event("download_cart", { ids, filename, type });
 };
 
 /** get download bash script */

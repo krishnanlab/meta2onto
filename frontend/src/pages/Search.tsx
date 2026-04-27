@@ -5,6 +5,7 @@ import type { Sample, Studies, Study } from "@/api/types";
 import type { Limit } from "@/components/Pagination";
 import type { Col } from "@/components/Table";
 import { Fragment, useEffect, useRef, useState } from "react";
+import analytics from "react-ga4";
 import Highlighter from "react-highlight-words";
 import { useParams } from "react-router";
 import { useDebounce, useLocalStorage } from "@reactuses/core";
@@ -515,6 +516,7 @@ const Result = ({
             }
             subtitle={name}
             content={<SamplesPopup id={id} />}
+            onOpen={() => analytics.event("view_samples")}
           >
             <Button color="theme">
               <Logs />
@@ -530,9 +532,11 @@ const Result = ({
               const cartRef = getCartRef();
               if (inCart(cart, id)) {
                 removeFromCart(id);
+                analytics.event("remove_from_cart", { id });
                 if (cartRef) fly(cartRef, event.currentTarget);
               } else {
                 addToCart(id);
+                analytics.event("add_to_cart", { id });
                 if (cartRef) fly(event.currentTarget, cartRef);
               }
             }}
