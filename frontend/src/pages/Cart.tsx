@@ -29,15 +29,13 @@ import {
 import {
   cartLookup,
   downloadCart,
-  getCartScript,
   shareCart,
   studyBatchLookup,
 } from "@/api/api";
 import ActionButton, { copy } from "@/components/ActionButton";
 import Ago from "@/components/Ago";
-import BigRadios from "@/components/BigRadios";
 import Button from "@/components/Button";
-import DatabaseBadge, { databases } from "@/components/Database";
+import DatabaseBadge from "@/components/Database";
 import Dialog from "@/components/Dialog";
 import Heading from "@/components/Heading";
 import Link from "@/components/Link";
@@ -55,8 +53,6 @@ import {
   createdCartsAtom,
   removeFromCart,
 } from "@/state/cart";
-import { downloadSh } from "@/util/download";
-import { highlightBash } from "@/util/highlighting";
 import { formatNumber } from "@/util/string";
 
 export default function Cart() {
@@ -274,13 +270,8 @@ export default function Cart() {
                     </Popover>
 
                     <Dialog
-                      title="Download Script"
-                      content={
-                        <DownloadScript
-                          name={name}
-                          cart={localCart || sharedCart}
-                        />
-                      }
+                      title="Export supported studies to Refine.bio"
+                      content={<>hello world</>}
                     >
                       <Button aria-disabled={!size}>
                         <SquareArrowRightEnter />
@@ -450,60 +441,3 @@ const Clear = ({ size }: { size: number }) => (
     Clear
   </Button>
 );
-
-/** bash download script popup */
-const DownloadScript = ({
-  name,
-  cart,
-}: {
-  name: string;
-  cart: LocalCart | Cart;
-}) => {
-  const [database, setDatabase] = useState(databases[0].id as Database["id"]);
-
-  /** script text */
-  const script = getCartScript(cart, database);
-
-  return (
-    <>
-      <div className="flex flex-col gap-2 overflow-y-auto">
-        <BigRadios
-          className="w-200 max-w-full"
-          label={
-            <>
-              <strong>Database</strong> to download from
-            </>
-          }
-          options={databases.map(({ id }) => ({
-            value: id,
-            render: <DatabaseBadge database={id} full={true} />,
-          }))}
-          value={database}
-          onChange={setDatabase}
-        />
-
-        <br />
-
-        <div className="flex flex-col gap-4">
-          <div>
-            <strong>Bash script</strong> to download cart directly from database
-          </div>
-          <code>
-            <pre dangerouslySetInnerHTML={{ __html: highlightBash(script) }} />
-          </code>
-        </div>
-      </div>
-
-      <div className="flex flex-wrap gap-4">
-        <Button onClick={() => downloadSh(script, name || "cart")}>
-          <Download />
-          Download
-        </Button>
-        <ActionButton onClick={() => copy(script)}>
-          <Clipboard />
-          Copy
-        </ActionButton>
-      </div>
-    </>
-  );
-};

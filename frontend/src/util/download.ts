@@ -48,7 +48,3 @@ export const downloadBlob = (data: Blob, filename: string, ext: string) =>
 /** download string as text file */
 export const downloadTxt = (data: string, filename: string) =>
   download(getUrl(data, "text/plain;charset=utf-8"), filename, "txt");
-
-/** download string as bash file */
-export const downloadSh = (data: string, filename: string) =>
-  download(getUrl(data, "text/x-shellscript;charset=utf-8"), filename, "sh");
