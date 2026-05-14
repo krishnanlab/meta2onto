@@ -1,10 +1,11 @@
 import type { RefObject } from "react";
 import type { Ontologies } from "@/api/types";
 import { useState } from "react";
-import { useNavigate, useParams } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
 import { useDebounce } from "@reactuses/core";
 import { useQuery } from "@tanstack/react-query";
 import clsx from "clsx";
+import { omit } from "lodash";
 import { History, Lightbulb } from "lucide-react";
 import { ontologySearch, typeColor } from "@/api/api";
 import Autocomplete from "@/components/Autocomplete";
@@ -16,23 +17,23 @@ import { useChanged } from "@/util/hooks";
 /** example searches */
 const examples: Ontologies = [
   {
-    id: "Hepatocyte",
+    id: "CL:0000182",
     name: "Hepatocyte",
-    type: "",
+    type: "celltype",
     description: "",
     series: "",
   },
   {
-    id: "Breast cancer",
+    id: "MONDO:0007254",
     name: "Breast cancer",
-    type: "",
+    type: "disease",
     description: "",
     series: "",
   },
   {
-    id: "Alzheimer's disease",
+    id: "MONDO:0004975",
     name: "Alzheimer's disease",
-    type: "",
+    type: "disease",
     description: "",
     series: "",
   },
@@ -104,9 +105,10 @@ export const SearchBox = ({
   const search = useDebounce(_search, 300);
 
   /** update search from url */
-  const params = useParams();
-  const searchChanged = useChanged(params.search);
-  if (searchChanged && params.search) setSearch(params.search);
+  const [params] = useSearchParams();
+  const raw = params.get("raw") ?? "";
+  const searchChanged = useChanged(raw);
+  if (searchChanged && raw) setSearch(raw);
 
   /** ontology search results */
   const ontologySearchQuery = useQuery({
@@ -171,15 +173,15 @@ export const SearchBox = ({
       }
       onSelect={(id) => {
         if (!id?.trim()) return;
-        const result = ontologySearchQuery.data?.find(
-          (result) => result.id === id,
-        );
-        if (result) addSearch(result);
+        const result = results.find((result) => result.id === id);
+        if (!result) return;
+        addSearch(omit(result, "icon"));
         const params = new URLSearchParams();
-        params.set("raw", search);
-        navigate(`/search/${result?.id ?? ""}?${params.toString()}`);
+        params.set("raw", search || result.name);
+        navigate(`/search/${id}?${params.toString()}`);
       }}
       status={
+        search.trim() &&
         showStatus({ query: ontologySearchQuery }) && (
           <Status query={ontologySearchQuery} className="contents!" />
         )

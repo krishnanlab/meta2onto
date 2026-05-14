@@ -1,10 +1,9 @@
-import type { Cart, Feedback } from "@/api/types";
-import type { LocalCart, ShareCart } from "@/state/cart";
+import type { Feedback } from "@/api/types";
+import type { ShareCart } from "@/state/cart";
 import analytics from "react-ga4";
 import z from "zod";
 import { api, request } from "@/api";
 import { cart, ontologies, samples, studies } from "@/api/types";
-import { dbLink, getDb } from "@/components/Database";
 import { downloadBlob } from "@/util/download";
 
 /** type to color map */
@@ -142,25 +141,3 @@ export const downloadCart = async (
   if (type === "json") downloadBlob(data, filename, "json");
   analytics.event("download_cart", { ids, filename, type });
 };
-
-/** get download bash script */
-export const getCartScript = (cart: Cart | LocalCart, database: string) =>
-  [
-    `#!/bin/bash`,
-    `# Meta2Onto data cart download script`,
-    `# Generated: ${new Date().toISOString()}`,
-    "id" in cart ? `# ID: ${cart.id}` : "",
-    "name" in cart ? `# Name: ${cart.name}` : "",
-    `# Studies: ${cart.studies.length}`,
-    ...cart.studies.map(({ id }) => [
-      `# Download ${id} from ${database}`,
-      `wget "${dbLink(getDb(database).link, id)}" -O ${id}_${database}.zip`,
-    ]),
-    `# Extract`,
-    `for file in *.zip; do unzip "$file"; done`,
-    `echo "Download complete"`,
-  ]
-    .flat()
-    .map((line) => line.trimEnd())
-    .filter(Boolean)
-    .join("\n");

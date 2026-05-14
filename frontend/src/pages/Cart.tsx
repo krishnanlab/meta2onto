@@ -1,8 +1,6 @@
 import type { ColumnSort } from "@tanstack/react-table";
 import type { Cart } from "@/api/types";
-import type { Database } from "@/components/Database";
 import type { Limit } from "@/components/Pagination";
-import type { LocalCart } from "@/state/cart";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router";
 import {
@@ -22,22 +20,21 @@ import {
   Mail,
   Plus,
   Share2,
+  SquareArrowRightEnter,
   Table2,
-  Terminal,
   Trash,
 } from "lucide-react";
 import {
   cartLookup,
   downloadCart,
-  getCartScript,
   shareCart,
   studyBatchLookup,
 } from "@/api/api";
+import { makeDataset } from "@/api/refine.bio";
 import ActionButton, { copy } from "@/components/ActionButton";
 import Ago from "@/components/Ago";
-import BigRadios from "@/components/BigRadios";
 import Button from "@/components/Button";
-import DatabaseBadge, { databases } from "@/components/Database";
+import DatabaseBadge from "@/components/Database";
 import Dialog from "@/components/Dialog";
 import Heading from "@/components/Heading";
 import Link from "@/components/Link";
@@ -47,6 +44,7 @@ import Popover from "@/components/Popover";
 import Status, { showStatus } from "@/components/Status";
 import Table from "@/components/Table";
 import Textbox from "@/components/Textbox";
+import { useUser } from "@/pages/user";
 import {
   addCreatedCart,
   cartAtom,
@@ -55,8 +53,6 @@ import {
   createdCartsAtom,
   removeFromCart,
 } from "@/state/cart";
-import { downloadSh } from "@/util/download";
-import { highlightBash } from "@/util/highlighting";
 import { formatNumber } from "@/util/string";
 
 export default function Cart() {
@@ -79,10 +75,11 @@ export default function Cart() {
   /** remote, shared cart */
   const sharedCart = cartLookupQuery.data;
 
+  /** current cart */
+  const cart = localCart || sharedCart;
+
   /** cart study ids */
-  const studyIds = ((localCart || sharedCart).studies || []).map(
-    (study) => study.id,
-  );
+  const studyIds = (cart.studies || []).map((study) => study.id);
 
   /** cart size */
   const size = studyIds.length || 0;
@@ -129,8 +126,8 @@ export default function Cart() {
     onSuccess: addCreatedCart,
   });
 
-  /** share url */
-  const shareUrl =
+  /** share cart result link */
+  const shareLink =
     !shared && shareMutation.data
       ? new URL(`${window.location.origin}/cart/${shareMutation.data.id}`)
       : "";
@@ -144,6 +141,25 @@ export default function Cart() {
 
   /** created carts */
   const createdCarts = useAtomValue(createdCartsAtom);
+
+  /** filter study ids by ones that are in refine.bio */
+  const refineBioStudyIds = studyDetails
+    .filter((study) => study.database.includes("Refine.bio"))
+    .map((study) => study.id);
+
+  /** export to refine.bio */
+  const refineBioMutation = useMutation({
+    mutationKey: ["refine-bio", refineBioStudyIds],
+    mutationFn: () => makeDataset(refineBioStudyIds),
+  });
+
+  /** export refio.bio result link */
+  const refineBioLink = refineBioMutation.data
+    ? new URL(`https://www.refine.bio/dataset/${refineBioMutation.data.id}`)
+    : "";
+
+  /** user self-identification */
+  const { userEmail, setUserEmail } = useUser();
 
   return (
     <>
@@ -177,7 +193,42 @@ export default function Cart() {
                     title="Share Cart"
                     content={
                       <>
-                        {!shareUrl && !showStatus({ query: shareMutation }) && (
+                        {showStatus({ query: shareMutation }) ? (
+                          <Status query={shareMutation} />
+                        ) : shareLink ? (
+                          <>
+                            <div className="flex flex-col gap-4">
+                              <p>Cart saved to</p>
+                              <Textbox
+                                readOnly
+                                value={String(shareLink)}
+                                onFocus={(event) => event.target.select()}
+                              />
+                              <div className="flex flex-wrap items-center gap-4">
+                                <ActionButton
+                                  onClick={() => copy(String(shareLink))}
+                                >
+                                  <Clipboard />
+                                  Copy
+                                </ActionButton>
+                                <Button
+                                  to={`mailto:?body=${encodeURIComponent(String(shareLink))}`}
+                                >
+                                  <Mail />
+                                  Email
+                                </Button>
+                                <Button to={shareLink.pathname}>
+                                  <ArrowRight />
+                                  View
+                                </Button>
+                              </div>
+                            </div>
+                            <div className="flex flex-col gap-4">
+                              <p>Start fresh cart</p>
+                              <Clear size={size} />
+                            </div>
+                          </>
+                        ) : (
                           <>
                             <div>Save this cart to a public link</div>
                             <Textbox
@@ -189,44 +240,6 @@ export default function Cart() {
                               <LinkIcon />
                               Generate
                             </Button>
-                          </>
-                        )}
-
-                        <Status query={shareMutation} />
-
-                        {shareUrl && (
-                          <>
-                            <div className="flex flex-col gap-4">
-                              <p>Cart saved to:</p>
-                              <Textbox
-                                readOnly
-                                value={String(shareUrl)}
-                                onFocus={(event) => event.target.select()}
-                              />
-                              <div className="flex flex-wrap items-center gap-4">
-                                <ActionButton
-                                  onClick={() => copy(String(shareUrl))}
-                                >
-                                  <Clipboard />
-                                  Copy
-                                </ActionButton>
-
-                                <Button
-                                  to={`mailto:?body=${encodeURIComponent(String(shareUrl))}`}
-                                >
-                                  <Mail />
-                                  Email
-                                </Button>
-                                <Button to={shareUrl.pathname}>
-                                  <ArrowRight />
-                                  View
-                                </Button>
-                              </div>
-                            </div>
-                            <div className="flex flex-col gap-4">
-                              <p>Start fresh cart:</p>
-                              <Clear size={size} />
-                            </div>
                           </>
                         )}
                       </>
@@ -242,7 +255,7 @@ export default function Cart() {
                   </Dialog>
                 )}
 
-                {(localCart || sharedCart) && (
+                {cart && (
                   <>
                     <Popover
                       content={
@@ -274,17 +287,63 @@ export default function Cart() {
                     </Popover>
 
                     <Dialog
-                      title="Download Script"
+                      title="Export to Refine.bio"
                       content={
-                        <DownloadScript
-                          name={name}
-                          cart={localCart || sharedCart}
-                        />
+                        <>
+                          {showStatus({ query: refineBioMutation }) ? (
+                            <Status query={refineBioMutation} />
+                          ) : refineBioLink ? (
+                            <>
+                              <p>Cart exported to</p>
+                              <Textbox
+                                readOnly
+                                value={String(refineBioLink)}
+                                onFocus={(event) => event.target.select()}
+                              />
+                              <div className="flex flex-wrap items-center gap-4">
+                                <ActionButton
+                                  onClick={() => copy(String(refineBioLink))}
+                                >
+                                  <Clipboard />
+                                  Copy
+                                </ActionButton>
+                                <Button
+                                  to={`mailto:?body=${encodeURIComponent(String(refineBioLink))}`}
+                                >
+                                  <Mail />
+                                  Email
+                                </Button>
+                                <Button to={String(refineBioLink)}>
+                                  <ArrowRight />
+                                  View
+                                </Button>
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                              <div>
+                                Export supported studies in this cart to a
+                                Refine.bio dataset
+                              </div>
+                              <Textbox
+                                placeholder="Email (optional)"
+                                value={userEmail}
+                                onChange={setUserEmail}
+                              />
+                              <Button
+                                onClick={() => refineBioMutation.mutate()}
+                              >
+                                <LinkIcon />
+                                Export
+                              </Button>
+                            </>
+                          )}
+                        </>
                       }
                     >
                       <Button aria-disabled={!size}>
-                        <Terminal />
-                        Bash
+                        <SquareArrowRightEnter />
+                        Refine.bio
                       </Button>
                     </Dialog>
                   </>
@@ -382,7 +441,7 @@ export default function Cart() {
             <Heading level={2}>History</Heading>
 
             <p className="self-center text-center">
-              Carts you've created from this device
+              Carts you've created on this device
             </p>
 
             <div
@@ -450,60 +509,3 @@ const Clear = ({ size }: { size: number }) => (
     Clear
   </Button>
 );
-
-/** bash download script popup */
-const DownloadScript = ({
-  name,
-  cart,
-}: {
-  name: string;
-  cart: LocalCart | Cart;
-}) => {
-  const [database, setDatabase] = useState(databases[0].id as Database["id"]);
-
-  /** script text */
-  const script = getCartScript(cart, database);
-
-  return (
-    <>
-      <div className="flex flex-col gap-2 overflow-y-auto">
-        <BigRadios
-          className="w-200 max-w-full"
-          label={
-            <>
-              <strong>Database</strong> to download from
-            </>
-          }
-          options={databases.map(({ id }) => ({
-            value: id,
-            render: <DatabaseBadge database={id} full={true} />,
-          }))}
-          value={database}
-          onChange={setDatabase}
-        />
-
-        <br />
-
-        <div className="flex flex-col gap-4">
-          <div>
-            <strong>Bash script</strong> to download cart directly from database
-          </div>
-          <code>
-            <pre dangerouslySetInnerHTML={{ __html: highlightBash(script) }} />
-          </code>
-        </div>
-      </div>
-
-      <div className="flex flex-wrap gap-4">
-        <Button onClick={() => downloadSh(script, name || "cart")}>
-          <Download />
-          Download
-        </Button>
-        <ActionButton onClick={() => copy(script)}>
-          <Clipboard />
-          Copy
-        </ActionButton>
-      </div>
-    </>
-  );
-};
