@@ -8,7 +8,7 @@ import { Fragment, useEffect, useRef, useState } from "react";
 import analytics from "react-ga4";
 import Highlighter from "react-highlight-words";
 import { useParams } from "react-router";
-import { useDebounce, useLocalStorage } from "@reactuses/core";
+import { useDebounce } from "@reactuses/core";
 import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
 import clsx from "clsx";
 import { useAtomValue } from "jotai";
@@ -48,6 +48,7 @@ import Table from "@/components/Table";
 import Textbox from "@/components/Textbox";
 import Tooltip from "@/components/Tooltip";
 import { SearchBox } from "@/pages/Home";
+import { useUser } from "@/pages/user";
 import { addToCart, cartAtom, inCart, removeFromCart } from "@/state/cart";
 import { clearFeedback, feedbackAtom, setFeedback } from "@/state/feedback";
 import { fly } from "@/util/dom";
@@ -344,9 +345,6 @@ const Results = ({
   );
 };
 
-const userNameKey = "user-name";
-const userEmailKey = "user-email";
-
 /** search result */
 const Result = ({
   id,
@@ -367,8 +365,7 @@ const Result = ({
   const feedback = useAtomValue(feedbackAtom)[id];
 
   /** user self-identification */
-  const [userName] = useLocalStorage(userNameKey, "");
-  const [userEmail] = useLocalStorage(userEmailKey, "");
+  const { userName, userEmail } = useUser();
 
   /** study top-level details */
   const details = [
@@ -568,8 +565,7 @@ const ThumbsDownPopup = ({
   const feedback = useAtomValue(feedbackAtom)[id];
 
   /** user self-identification */
-  const [userName, setUserName] = useLocalStorage(userNameKey, "");
-  const [userEmail, setUserEmail] = useLocalStorage(userEmailKey, "");
+  const { userName, userEmail, setUserName, setUserEmail } = useUser();
 
   /** give negative rating, to be called on any change to popup */
   const thumbsDown = () => setFeedback(id, "rating", -1);
