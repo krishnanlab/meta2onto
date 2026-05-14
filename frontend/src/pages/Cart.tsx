@@ -22,8 +22,8 @@ import {
   Mail,
   Plus,
   Share2,
+  SquareArrowRightEnter,
   Table2,
-  Terminal,
   Trash,
 } from "lucide-react";
 import {
@@ -283,8 +283,8 @@ export default function Cart() {
                       }
                     >
                       <Button aria-disabled={!size}>
-                        <Terminal />
-                        Bash
+                        <SquareArrowRightEnter />
+                        Refine.bio
                       </Button>
                     </Dialog>
                   </>
@@ -382,7 +382,7 @@ export default function Cart() {
             <Heading level={2}>History</Heading>
 
             <p className="self-center text-center">
-              Carts you've created from this device
+              Carts you've created on this device
             </p>
 
             <div
