@@ -58,7 +58,7 @@ export default function Stats() {
           leading-none shadow-md transition
           *:flex *:items-center *:gap-2 *:p-4
         `,
-        show ? "" : "translate-y-[calc(100%---spacing(8))]",
+        show ? "" : "translate-y-[calc(100%-(--spacing(8)))]",
       )}
     >
       <Button
