@@ -222,3 +222,7 @@ __marimo__/
 # ignore dumpfiles that aren't explicitly checked in
 /db-exports/*.dump
 /archived-db-exports/
+
+# ignore duckdb's profuse temporary files
+services/postgres/scripts/.tmp/
+services/postgres/scripts/temp.db.tmp/
