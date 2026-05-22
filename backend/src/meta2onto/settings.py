@@ -43,8 +43,13 @@ ALLOWED_HOSTS = ["localhost", DOMAIN]
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3050",
     "http://localhost:5173",
+    "http://localhost:8051",
     f"http://{DOMAIN}",
     f"https://{DOMAIN}",
+]
+
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    "^https://deploy-preview-[0-9]+--m2on.netlify.app$",
 ]
 
 CSRF_TRUSTED_ORIGINS = CORS_ALLOWED_ORIGINS
