@@ -2,7 +2,8 @@ FROM postgres:17
 
 # install tools needed to load data (sqlite, duckdb)
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends sqlite3 curl && \
+    apt-get install -y --no-install-recommends sqlite3 ca-certificates curl gettext-base && \
+    update-ca-certificates && \
     rm -rf /var/lib/apt/lists/*
 
 # install duckdb, add to the path
