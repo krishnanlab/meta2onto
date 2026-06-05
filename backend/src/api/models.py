@@ -485,6 +485,8 @@ class SearchTerm(models.Model):
         indexes = [
             # index term for exact matches
             models.Index(fields=["term"]),
+            # composite index for the term-to-series lookup in search_gse_with_prob
+            models.Index(fields=["term", "series"], name="searchterm_term_series_idx"),
             GinIndex(
                 name="term_related_words_trgm_gin",
                 fields=["related_words"],
