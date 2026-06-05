@@ -204,3 +204,10 @@ REST_FRAMEWORK = {
         "rest_framework.filters.OrderingFilter",
     ],
 }
+
+# app-specific settings
+# cache timeout for search results, which are relatively static and can be cached longer-term
+# (default currently set to 30 days in seconds)
+LONGTERM_CACHE_TIMEOUT = int(os.environ.get("LONGTERM_CACHE_TIMEOUT", str(60 * 60 * 24 * 30)))
+# maximum number of search results to return, which can be overridden by environment variable
+SEARCH_MAX_RESULTS = int(os.environ.get("SEARCH_MAX_RESULTS", "10000"))
