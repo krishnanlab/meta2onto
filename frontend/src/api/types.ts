@@ -47,8 +47,8 @@ export const sample = z.object({
   id: z.string(),
   type: z.string(),
   description: z.string(),
-  created_at: z.iso.datetime(),
-  updated_at: z.iso.datetime(),
+  submission_date: z.iso.date(),
+  last_update_date: z.iso.date(),
 });
 
 export type Sample = z.infer<typeof sample>;
