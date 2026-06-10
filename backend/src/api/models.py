@@ -497,6 +497,16 @@ class SearchTerm(models.Model):
     def __str__(self):
         return self.term
 
+class OntologyTermRating(models.Model):
+    """
+    Qualifications of the performance of our model for each ontology term.
+
+    (Note that, while not required, as of 2026-06-05, SearchTerm has as many
+    unique values of 'term' as there rows in this table.)
+    """
+    term = models.CharField(max_length=256, db_index=True)
+    performance = models.CharField(max_length=64)
+    type = models.CharField(max_length=64)
 
 # ===========================================================================
 # === Ontology search terms from meta-hq
@@ -508,12 +518,13 @@ class OntologySearchResultsManager(models.Manager):
         """
         Perform a search for the given query string across ontology terms + synonyms.
 
-        Returns api_ontologyterms left-joined w/api_ontologysynonyms.
+        Returns api_ontologyterms left-joined w/api_ontologysynonyms, filtered to
+        only terms present in api_searchterm (handled inside the SQL function).
         """
         qs = self.get_queryset().raw(
             """
-            SELECT * FROM search_onto(%(query)s, %(max_results)s)
-            LIMIT %(max_results)s
+            SELECT so.*, otr.performance FROM search_onto(%(query)s, %(max_results)s) AS so
+            LEFT JOIN api_ontologytermrating AS otr ON otr.term = so.id
             """,
             {"query": query, "max_results": max_results},
         )
@@ -560,6 +571,9 @@ class OntologySearchResults(models.Model):
     scope_weight = models.FloatField()
     overall_rank = models.FloatField()
     is_exact = models.BooleanField()
+
+    # joined in from the api_ontologytermrating table
+    performance = models.CharField(max_length=64, null=True, blank=True)
 
     def __str__(self):
         return f"{self.id} ({self.ontology}): {self.name} [{self.synonym}], rank: {self.overall_rank}"

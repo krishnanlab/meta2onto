@@ -70,6 +70,9 @@ class OntologySearchResultsSerializer(serializers.ModelSerializer):
             "scope_weight",
             "overall_rank",
             "is_exact",
+
+            # joined in from the api_ontologytermrating table
+            "performance",
         ]
 
 
