@@ -514,7 +514,7 @@ class OntologyTermRating(models.Model):
 
 
 class OntologySearchResultsManager(models.Manager):
-    def search(self, query: str, max_results: int = 50):
+    def search(self, query: str, max_results: int = 5000):
         """
         Perform a search for the given query string across ontology terms + synonyms.
 
@@ -530,7 +530,7 @@ class OntologySearchResultsManager(models.Manager):
         )
         return qs
 
-    def search_series(self, query: str, max_results: int = 50):
+    def search_series(self, query: str, max_results: int = 5000):
         """
         Perform a search for the given query string across ontology terms;
         joins the ontology terms against api_searchterm to get associated GEOSeries.
@@ -666,7 +666,6 @@ class OntologyTerms(models.Model):
 
     def __str__(self):
         return f"{self.id}: {self.name}"
-
 
 # ===========================================================================
 # === Cart server-side state
