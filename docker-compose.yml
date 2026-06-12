@@ -43,4 +43,6 @@ services:
       interval: 5s
       timeout: 120s
       retries: 30
-      start_period: 2m
+      # currently the database can take a really long time to load the ~10GB
+      # dump; we want to give it plenty of time without aborting launching the stack
+      start_period: 24h
