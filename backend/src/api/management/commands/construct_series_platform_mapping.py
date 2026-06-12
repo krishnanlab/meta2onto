@@ -6,7 +6,7 @@ from django.core.management.base import BaseCommand
 
 from django.db import connection, transaction
 
-from api.models import GEOPlatform, GEOSeries, GEOSeriesToGEOPlatforms
+from api.models import GEOSeriesToGEOPlatforms
 
 
 class Command(BaseCommand):
@@ -22,16 +22,16 @@ class Command(BaseCommand):
 
         # run the following SQL:
         # insert into api_geoseriestoplatforms
-        # select series.gse, array_agg(distinct platforms.gpl) from api_geoseriesmetadata AS series
-        # inner join api_geosamplemetadata samples on samples.series_id = series.gse
-        # inner join api_geoplatformmetadata as platforms on samples.gpl = platforms.gpl
+        # select series.gse, array_agg(distinct platforms.gpl) from api_geoseries AS series
+        # inner join api_geosample samples on samples.series_id = series.gse
+        # inner join api_geoplatform as platforms on samples.gpl = platforms.gpl
         # group by series.gse;
 
         copy_sql = """
-        INSERT INTO api_geoseriestoplatforms (gse, platforms)
-        SELECT series.gse, array_agg(distinct platforms.gpl) from api_geoseriesmetadata AS series
-        INNER JOIN api_geosamplemetadata AS samples on samples.series_id = series.gse
-        INNER JOIN api_geoplatformmetadata AS platforms on samples.gpl = platforms.gpl
+        INSERT INTO api_geoseriestogeoplatforms (gse, platforms)
+        SELECT series.gse, array_agg(distinct platforms.gpl) from api_geoseries AS series
+        INNER JOIN api_geosample AS samples on samples.series_id = series.gse
+        INNER JOIN api_geoplatform AS platforms on samples.gpl = platforms.gpl
         GROUP by series.gse;
         """
 
