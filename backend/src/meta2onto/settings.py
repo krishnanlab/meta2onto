@@ -210,4 +210,4 @@ REST_FRAMEWORK = {
 # (default currently set to 30 days in seconds)
 LONGTERM_CACHE_TIMEOUT = int(os.environ.get("LONGTERM_CACHE_TIMEOUT", str(60 * 60 * 24 * 30)))
 # maximum number of search results to return, which can be overridden by environment variable
-SEARCH_MAX_RESULTS = int(os.environ.get("SEARCH_MAX_RESULTS", "10000"))
+SEARCH_MAX_RESULTS = int(os.environ.get("SEARCH_MAX_RESULTS", "1000"))
