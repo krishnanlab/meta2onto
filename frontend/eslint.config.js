@@ -8,7 +8,7 @@ import globals from "globals";
 import typescriptEslint from "typescript-eslint";
 
 export default defineConfig([
-  globalIgnores(["dist", "public"]),
+  globalIgnores(["dist", "public", "src/api/types.ts"]),
   eslintJs.configs.recommended,
   typescriptEslint.configs.recommended,
   eslintPluginPrettierRecommended,
