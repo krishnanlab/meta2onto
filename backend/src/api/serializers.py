@@ -39,7 +39,9 @@ class SearchTermSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = SearchTerm
-        fields = ["id", "term", "series_id", "prob", "log2_prob_prior", "related_words"]
+        fields = [
+            "id", "term", "series_id", "prob", "log2_prob_prior", "related_words"
+        ]
 
 
 # ===========================================================================
@@ -136,13 +138,13 @@ class GEOSeriesSerializer(serializers.ModelSerializer):
 
     sample_count = serializers.SerializerMethodField(read_only=True)
 
-    def get_sample_count(self, obj):
+    def get_sample_count(self, obj) -> int:
         """Get the number of samples associated with this series."""
         return obj.samples_ct if obj.samples_ct is not None else 0
 
     confidence = serializers.SerializerMethodField()
 
-    def get_confidence(self, obj):
+    def get_confidence(self, obj) -> dict:
         """Compute confidence level based on prob."""
         if obj.prob is None:
             label = "unknown"
@@ -167,14 +169,14 @@ class GEOSeriesSerializer(serializers.ModelSerializer):
 
     platform = serializers.SerializerMethodField()
 
-    def get_platform(self, obj):
+    def get_platform(self, obj) -> str:
         """Get the platform name associated with this series."""
         gse_obj = GEOSeriesToGEOPlatforms.objects.filter(gse=obj.gse).first()
         return str(gse_obj.platforms) if gse_obj else ""
 
     keywords = serializers.SerializerMethodField()
 
-    def get_keywords(self, obj):
+    def get_keywords(self, obj) -> list[str]:
         """Extract keywords from the series summary."""
         if obj.keywords:
             return [kw.strip() for kw in obj.keywords.split(",")]
@@ -182,7 +184,7 @@ class GEOSeriesSerializer(serializers.ModelSerializer):
     
     classification = serializers.SerializerMethodField()
 
-    def get_classification(self, obj):
+    def get_classification(self, obj) -> str:
         """Returns values Positive or Negative; supposed to represent 'Classification of study in model training'?"""
         # FIXME: figure out how to actually determine this
         return "Positive"

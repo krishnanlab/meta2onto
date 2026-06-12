@@ -480,6 +480,8 @@ class SearchTerm(models.Model):
     )
     confidence = models.FloatField()
     related_words = models.TextField(null=True, blank=True)
+    log2_prob_prior = models.FloatField(null=True, blank=True)
+    prob = models.FloatField(null=True, blank=True)
 
     class Meta:
         indexes = [
