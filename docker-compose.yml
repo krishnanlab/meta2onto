@@ -17,6 +17,8 @@ services:
 
   frontend:
     build: ./frontend
+    volumes:
+      - ./data/:/data/
     depends_on:
       - backend
 

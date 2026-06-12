@@ -6,7 +6,7 @@ module.exports = {
       target: "./types.ts",
     },
     input: {
-      target: "../../../data/schema.yaml",
+      target: "/data/schema.yaml",
     },
   },
 };
