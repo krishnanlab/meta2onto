@@ -1,6 +1,7 @@
 import csv
 from collections import Counter
 
+from django.conf import settings
 from django.db import models, transaction
 from django.db.models import (
     Case,
@@ -37,6 +38,7 @@ from .models import (
     Organism,
     GEOPlatform,
     SearchTerm,
+    OntologyTermRating,
     GEOSeries,
     Feedback,
 )
@@ -76,6 +78,7 @@ class GEOSeriesSearchPagination(LimitOffsetPagination):
                 "previous": self.get_previous_link(),
                 "results": data,
                 "facets": getattr(self, "facets", {}),
+                "meta": getattr(self, "meta", {}),
             }
         )
 
@@ -236,6 +239,7 @@ class GEOSeriesViewSet(viewsets.ReadOnlyModelViewSet):
 
     # search by ontology ID (e.g., MONDO:0000270), which consults SearchTerm for
     # series matching the term
+    @method_decorator(cache_page(settings.LONGTERM_CACHE_TIMEOUT))
     @action(
         detail=False, methods=["get"], url_path="search", permission_classes=[AllowAny]
     )
@@ -253,21 +257,30 @@ class GEOSeriesViewSet(viewsets.ReadOnlyModelViewSet):
                     "previous": None,
                     "results": [],
                     "facets": {},
+                    "meta": {
+                        "term": query,
+                        "performance": "unknown",
+                    },
                 }
             )
 
-        max_results = int(limit) if limit else 50
+        max_results = settings.SEARCH_MAX_RESULTS
 
-        # Base search queryset from manager. Your manager search() already
-        # annotates samples_ct, but we annotate again defensively here in case
-        # the manager changes or search() is called elsewhere.
+        # produce initial queryset based on search, which may include relevance annotations but is not yet filtered by facets
         results = GEOSeries.objects.search(query, max_results=max_results, order_by=ordering)
+
+        # adds annotations used for building facets
         results = self._with_samples_count(results)
         results = self._with_facet_buckets(results)
 
         # Build facets BEFORE applying facet filters, so facets describe the full
-        # searched result set like your original implementation intended.
+        # searched result set
         facets = self._build_facets(results)
+
+
+        # ---------------------------------------------------------------
+        # --- apply faceting options from request
+        # ---------------------------------------------------------------
 
         # if confidence is provided, filter by confidence bucket
         confidence = request.query_params.get("Confidence")
@@ -333,6 +346,11 @@ class GEOSeriesViewSet(viewsets.ReadOnlyModelViewSet):
 
             results = results.filter(gse__in=Subquery(tech_gse_values))
 
+
+        # ---------------------------------------------------------------
+        # --- apply ordering, limit options from request
+        # ---------------------------------------------------------------
+
         # apply ordering again after facet filters if needed
         if ordering == "relevance":
             results = results.order_by("-prob", "gse")
@@ -348,8 +366,6 @@ class GEOSeriesViewSet(viewsets.ReadOnlyModelViewSet):
             results = results.order_by("samples_ct", "gse")
 
         # paginate the response
-        # Note: mutating pagination_class attributes is brittle, but preserved
-        # here to match your existing API shape as closely as possible.
         if limit is not None:
             self.pagination_class.limit = limit
         else:
@@ -357,8 +373,22 @@ class GEOSeriesViewSet(viewsets.ReadOnlyModelViewSet):
 
         self.pagination_class.offset = offset or 0
 
+        # ---------------------------------------------------------------
+        # --- build final result set, either paginated or not
+        # ---------------------------------------------------------------
+
+        meta = {
+            "term": query,
+            "performance": (
+                OntologyTermRating.objects
+                    .filter(term=query).values("performance").first()
+                    .get("performance", "unknown")
+            )
+        }
+
         if self.paginator is not None:
             self.paginator.facets = facets
+            self.paginator.meta = meta
 
         page = self.paginate_queryset(results)
         if page is not None:
@@ -373,6 +403,7 @@ class GEOSeriesViewSet(viewsets.ReadOnlyModelViewSet):
                 "previous": None,
                 "results": serializer.data,
                 "facets": facets,
+                "meta": meta,
             }
         )
 

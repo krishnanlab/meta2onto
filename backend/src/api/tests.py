@@ -1,8 +1,5 @@
 from django.test import TestCase
 
-# Create your tests here.
-
-
 class GEOSeriesViewSetTests(TestCase):
     def test_search_action(self):
         # Simulate a GET request to the search action
@@ -17,6 +14,7 @@ class GEOSeriesViewSetTests(TestCase):
         self.assertIn("count", response.data)
         self.assertIn("results", response.data)
         self.assertIn("facets", response.data)
+        self.assertIn("meta", response.data)
 
         # Optionally, check that the count is as expected (assuming you know the expected count)
         # self.assertEqual(response.data['count'], expected_count)

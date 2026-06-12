@@ -12,7 +12,7 @@ from django.db import transaction, connection
 
 import pyarrow.parquet as pq
 
-from api.models import SearchTerm, GEOSeries
+from api.models import SearchTerm, GEOSeries, OntologyTermRating
 
 # ============================================================================
 # === Utilities
@@ -42,6 +42,7 @@ def import_search_terms(path: Path, batch_size: int = DEFAULT_BATCH_SIZE, create
     """
 
     pf = pq.ParquetFile(path)
+    inserted = 0
 
     for batch in tqdm(
         pf.iter_batches(batch_size=batch_size),
@@ -58,7 +59,7 @@ def import_search_terms(path: Path, batch_size: int = DEFAULT_BATCH_SIZE, create
                         GEOSeries.objects.get_or_create(gse=row["ID"])
 
             # now, bulk create SearchTerm entries
-            SearchTerm.objects.bulk_create(
+            inserted += len(SearchTerm.objects.bulk_create(
                 [
                     SearchTerm(
                         term=row["term"],
@@ -69,8 +70,41 @@ def import_search_terms(path: Path, batch_size: int = DEFAULT_BATCH_SIZE, create
                     for row in rows
                 ],
                 ignore_conflicts=True,
-            )
+            ))
+    
+    return inserted
 
+def import_eval_terms(path: Path, batch_size: int = DEFAULT_BATCH_SIZE):
+    """
+    eval.parquet file has the following columns:
+      term, performance, type
+    """
+
+    pf = pq.ParquetFile(path)
+    inserted = 0
+
+    for batch in tqdm(
+        pf.iter_batches(batch_size=batch_size),
+        total=_total_batches(pf, batch_size),
+        desc="Importing OntologyTermRating",
+    ):
+        with transaction.atomic():
+            rows = batch.to_pylist()
+
+            # bulk create OntologyTermRating entries
+            inserted += len(OntologyTermRating.objects.bulk_create(
+                [
+                    OntologyTermRating(
+                        term=row["term"],
+                        performance=row["performance"],
+                        type=row["type"],
+                    )
+                    for row in rows
+                ],
+                ignore_conflicts=True,
+            ))
+
+    return inserted
 
 # ============================================================================
 # === entrypoint
@@ -91,6 +125,26 @@ class Command(BaseCommand):
         )
         parser.add_argument(
             "--tissue-terms", default="tissue_predictions.parquet"
+        )
+        parser.add_argument(
+            '--eval-terms', default='eval.parquet',
+            help="Parquet file containing evaluations of model performance on ontology terms, which will be imported into OntologyTermRating model (optional)",
+        )
+
+        parser.add_argument(
+            "--skip-disease-terms",
+            action="store_true",
+            help="Skip importing disease search terms.",
+        )
+        parser.add_argument(
+            "--skip-tissue-terms",
+            action="store_true",
+            help="Skip importing tissue search terms.",
+        )
+        parser.add_argument(
+            "--skip-eval-terms",
+            action="store_true",
+            help="Skip importing eval terms.",
         )
 
         # add an argument to delete all existing data before import?
@@ -114,7 +168,10 @@ class Command(BaseCommand):
             with transaction.atomic():
                 self.stdout.write(self.style.WARNING("Clearing existing GEO data..."))
 
-                models_to_clear = (SearchTerm,)
+                models_to_clear = (
+                    SearchTerm,
+                    OntologyTermRating,
+                )
 
                 with connection.cursor() as cursor:
                     cursor.execute(
@@ -124,13 +181,31 @@ class Command(BaseCommand):
                     )
 
         # import disease search terms
-        self.stdout.write(self.style.HTTP_INFO(f"Importing: {disease_search_terms}"))
-        import_search_terms(disease_search_terms, batch_size=500)
-        self.stdout.write(self.style.SUCCESS("✓ disease search terms imported"))
-
+        if not opts["skip_disease_terms"]:
+            self.stdout.write(self.style.HTTP_INFO(f"Importing: {disease_search_terms}"))
+            disease_search_terms_inserted = import_search_terms(disease_search_terms, batch_size=500)
+            self.stdout.write(self.style.SUCCESS(f"✓ {disease_search_terms_inserted} disease search term(s) imported"))
+        else:
+            self.stdout.write(self.style.WARNING("Skipping disease search terms import"))
+    
         # import tissue search terms
-        self.stdout.write(self.style.HTTP_INFO(f"Importing: {tissue_search_terms}"))
-        import_search_terms(tissue_search_terms, batch_size=500)
-        self.stdout.write(self.style.SUCCESS("✓ tissue search terms imported"))
+        if not opts["skip_tissue_terms"]:
+            self.stdout.write(self.style.HTTP_INFO(f"Importing: {tissue_search_terms}"))
+            tissue_search_terms_inserted = import_search_terms(tissue_search_terms, batch_size=500)
+            self.stdout.write(self.style.SUCCESS(f"✓ {tissue_search_terms_inserted} tissue search term(s) imported"))
+        else:
+            self.stdout.write(self.style.WARNING("Skipping tissue search terms import"))
+
+        # import eval terms if provided
+        if not opts["skip_eval_terms"]:
+            eval_terms_path = root / opts["eval_terms"]
+            if eval_terms_path.exists():
+                self.stdout.write(self.style.HTTP_INFO(f"Importing: {eval_terms_path}"))
+                evals_inserted = import_eval_terms(eval_terms_path, batch_size=500)
+                self.stdout.write(self.style.SUCCESS(f"✓ {evals_inserted} eval term(s) imported"))
+            else:
+                self.stdout.write(self.style.WARNING(f"Eval terms file not found, skipping: {eval_terms_path}"))
+        else:
+            self.stdout.write(self.style.WARNING("Skipping eval terms import"))
 
         self.stdout.write(self.style.MIGRATE_HEADING("Import complete"))

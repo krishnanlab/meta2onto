@@ -31,6 +31,7 @@ export const studySearch = async ({
   offset = 0,
   limit = 100,
   facets = {} as Record<string, string[]>,
+  meta = {} as Record<string, string[]>,
 }) => {
   const url = new URL(`${api}/study/search/`);
   url.searchParams.set("query", search);
