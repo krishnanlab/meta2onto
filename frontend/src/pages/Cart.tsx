@@ -39,7 +39,7 @@ import BigRadios from "@/components/BigRadios";
 import Button from "@/components/Button";
 import DatabaseBadge, { databases } from "@/components/Database";
 import Dialog from "@/components/Dialog";
-import Heading from "@/components/Heading";
+import { H1, H2 } from "@/components/Heading";
 import Link from "@/components/Link";
 import Meta from "@/components/Meta";
 import Pagination from "@/components/Pagination";
@@ -150,7 +150,7 @@ export default function Cart() {
       <Meta title={title} />
 
       <section className="bg-theme-light">
-        <Heading level={1}>{title}</Heading>
+        <H1>{title}</H1>
       </section>
 
       {shared && showStatus({ query: cartLookupQuery }) ? (
@@ -379,7 +379,7 @@ export default function Cart() {
 
           {/* cart creation history */}
           <section>
-            <Heading level={2}>History</Heading>
+            <H2>History</H2>
 
             <p className="self-center text-center">
               Carts you've created from this device

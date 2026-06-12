@@ -27,6 +27,7 @@
 @layer base {
   html {
     @apply font-sans leading-normal font-normal;
+    font-size: 105%;
   }
 
   body {
@@ -82,7 +83,7 @@
     @apply leading-loose;
   }
 
-  p a {
+  a {
     @apply text-accent underline hover:text-current;
   }
 
@@ -118,6 +119,27 @@
     @apply cursor-pointer;
   }
 
+  ul,
+  ol {
+    @apply flex list-[revert] flex-col pl-6 leading-loose;
+  }
+
+  ol {
+    @apply list-decimal;
+
+    ol {
+      @apply list-[lower-alpha];
+
+      ol {
+        @apply list-[lower-roman];
+      }
+    }
+  }
+
+  li {
+    @apply pl-2;
+  }
+
   dl {
     @apply grid max-w-max grid-cols-[repeat(var(--cols),auto)] rounded-md bg-stone-100 [--cols:2];
   }
@@ -138,8 +160,8 @@
     @apply rounded-md bg-stone-200 px-1 font-mono;
   }
 
-  code > pre {
-    @apply overflow-x-auto rounded-md bg-stone-700 p-4 font-mono text-stone-300;
+  pre {
+    @apply overflow-x-auto rounded-md bg-stone-800 p-4 font-mono text-stone-300;
   }
 
   [class^="hljs-"] {
@@ -186,14 +208,14 @@
   }
 }
 
-@utility narrow {
-  &:is(section) {
-    --width: 150;
-  }
+@utility width-sm {
+  --width: 150;
 }
 
-@utility full {
-  &:is(section) {
-    --width: 1000;
-  }
+@utility width-md {
+  --width: 200;
+}
+
+@utility width-full {
+  --width: 9999;
 }

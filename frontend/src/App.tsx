@@ -19,6 +19,7 @@ import Home from "@/pages/Home";
 import NotFound from "@/pages/NotFound";
 import Search from "@/pages/Search";
 import Stats from "@/pages/Stats";
+import Terms from "@/pages/Terms";
 import Testbed from "@/pages/Testbed";
 import { scrollTo } from "@/util/dom";
 import { redirectPath, redirectState } from "@/util/url";
@@ -97,6 +98,10 @@ const routes = [
       {
         path: "testbed",
         element: <Testbed />,
+      },
+      {
+        path: "terms",
+        element: <Terms />,
       },
 
       {

@@ -35,7 +35,7 @@ import Checkbox from "@/components/Checkbox";
 import DatabaseBadge from "@/components/Database";
 import Dialog from "@/components/Dialog";
 import { getCartRef } from "@/components/Header";
-import Heading from "@/components/Heading";
+import { H1 } from "@/components/Heading";
 import Link from "@/components/Link";
 import Meta from "@/components/Meta";
 import Meter from "@/components/Meter";
@@ -134,9 +134,7 @@ export default function Search() {
     <>
       <Meta title={title} />
 
-      <Heading level={1} className="sr-only">
-        Search results for "{search}"
-      </Heading>
+      <H1 className="sr-only">Search results for "{search}"</H1>
 
       <section>
         <div

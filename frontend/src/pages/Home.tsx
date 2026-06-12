@@ -43,45 +43,35 @@ export default function Home() {
     <>
       <section
         className="
-          relative z-0 overflow-hidden bg-theme-light py-20! text-center narrow
+          relative z-0 overflow-hidden bg-theme-light py-20! text-center
+          width-sm
         "
       >
         <Rings />
 
-        <hgroup className="flex flex-col items-center gap-y-1 narrow">
+        <hgroup className="flex flex-col items-center gap-y-1 width-sm">
           <h1 className="sr-only">Home</h1>
 
           <p className="text-xl font-normal tracking-wide text-balance">
-            Discover Human Transcriptomics Data
+            Discover, retrieve, reuse
           </p>
 
           <p className="text-balance">
-            Search millions of annotated samples across major databases
+            Interpretable & standardized tissue and disease annotations for
+            hundreds of thousands of studies
           </p>
         </hgroup>
 
         <SearchBox />
       </section>
 
-      <section>
+      <section className="width-md">
         <p>
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
-          eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad
-          minim veniam, quis nostrud exercitation ullamco laboris nisi ut
-          aliquip ex ea commodo consequat. Duis aute irure dolor in
-          reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla
-          pariatur. Excepteur sint occaecat cupidatat non proident, sunt in
-          culpa qui officia deserunt mollit anim id est laborum.
-        </p>
-
-        <p>
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
-          eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad
-          minim veniam, quis nostrud exercitation ullamco laboris nisi ut
-          aliquip ex ea commodo consequat. Duis aute irure dolor in
-          reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla
-          pariatur. Excepteur sint occaecat cupidatat non proident, sunt in
-          culpa qui officia deserunt mollit anim id est laborum.
+          <b>Meta2Onto</b> contains predicted standardized tissue and disease
+          annotations for studies in the Gene Expression Omnibus. Our database
+          of predictions is updated semi-annually to include the latest studies
+          in GEO. We value interpretability and transparency of predictions in
+          Meta2Onto.
         </p>
       </section>
     </>

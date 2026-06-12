@@ -32,7 +32,10 @@ export default function Button({
   /** combine styles */
   const _class = clsx(
     className,
-    `flex items-center justify-center gap-2 rounded-sm p-2 leading-none`,
+    `
+      flex items-center justify-center gap-2 rounded-sm p-2 leading-none
+      no-underline
+    `,
     color === "none" &&
       `
         bg-transparent text-theme

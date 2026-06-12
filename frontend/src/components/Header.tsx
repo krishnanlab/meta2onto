@@ -38,8 +38,8 @@ export default function Header() {
       ref={ref}
       className="
         sticky top-0 z-10 flex flex-row flex-wrap items-center justify-between
-        gap-4 bg-theme-dark p-4 text-white
-        [&_a,&_button]:text-white
+        gap-4 bg-theme-dark p-4
+        [&_a,&_button]:text-white! [&_a,&_button]:no-underline
         [&_a,&_button]:hover:bg-stone-800
       "
     >
