@@ -26,6 +26,10 @@ from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
+from drf_spectacular.utils import extend_schema, OpenApiParameter
+from drf_spectacular.types import OpenApiTypes
+
+
 from .models import (
     Cart,
     CartItem,
@@ -468,7 +472,26 @@ class SearchTermViewSet(viewsets.ReadOnlyModelViewSet):
 # === Ontology search terms from meta-hq
 # ===========================================================================
 
-
+@extend_schema(
+    parameters=[
+        OpenApiParameter(
+            name="query",
+            type=OpenApiTypes.STR,
+            location=OpenApiParameter.QUERY,
+            required=True,
+            description="Search query string",
+        ),
+        OpenApiParameter(
+            name="max_results",
+            type=OpenApiTypes.INT,
+            location=OpenApiParameter.QUERY,
+            required=False,
+            description="Maximum number of results to return",
+            default=50,
+        ),
+    ],
+    responses={200: OntologySearchResultsSerializer(many=True)},
+)
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def ontology_search(request):
