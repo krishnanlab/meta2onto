@@ -26,7 +26,7 @@ docker volume rm meta2onto_postgres_data
 # start the database container with a load-optimized configuration
 # (this will block until the load is complete)
 time (
-	if [ ${$HOSTNAME} = "meta2onto-api" ]; then
+	if [[ "${HOSTNAME}" = "meta2onto-api" ]]; then
 		# use a config optimized for an e2-medium
 		export PGCONFIG_PATH="./services/postgres/configs/postgresql_load_e2-med.conf"
 	else
@@ -35,7 +35,7 @@ time (
 	fi
 
 	docker compose run --rm -it \
-		-v ${PGCONFIG_PATH}:/etc/postgresql/postgresql.conf \
+		-v ${PGCONFIG_PATH}:/var/lib/postgresql/data/postgresql.conf \
 		db
 )
 
