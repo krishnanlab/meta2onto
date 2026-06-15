@@ -47,26 +47,12 @@ echo "* Dropping and recreating database ${POSTGRES_DB}..."
 dropdb  -U "${POSTGRES_USER}" "${POSTGRES_DB}" || true
 createdb -U "${POSTGRES_USER}" -T template0 "${POSTGRES_DB}"
 
-echo "* Tuning Postgres for restore..."
-psql -U "${POSTGRES_USER}" -d "${POSTGRES_DB}" -v ON_ERROR_STOP=1 <<'SQL'
-ALTER SYSTEM SET max_wal_size = '16GB';
-ALTER SYSTEM SET checkpoint_timeout = '30min';
-ALTER SYSTEM SET checkpoint_completion_target = '0.9';
-ALTER SYSTEM SET wal_compression = 'on';
-ALTER SYSTEM SET synchronous_commit = 'off';
-ALTER SYSTEM SET autovacuum = 'off';
-SELECT pg_reload_conf();
-SQL
-
 echo "* Restoring database from dump ${TARGET_DUMPFILE}..."
 time pg_restore -U "${POSTGRES_USER}" -d "${POSTGRES_DB}" -j "$(nproc)" "${TARGET_DUMPFILE}"
 
-echo "* Re-enabling normal settings..."
+echo "* Post-load operations..."
 psql -U "${POSTGRES_USER}" -d "${POSTGRES_DB}" -v ON_ERROR_STOP=1 <<'SQL'
-ALTER SYSTEM RESET autovacuum;
-ALTER SYSTEM RESET synchronous_commit;
--- keep wal/checkpoint settings if you like for dev; otherwise RESET them too.
-SELECT pg_reload_conf();
+VACUUM (ANALYZE);
 SQL
 
 touch /tmp/initialized
