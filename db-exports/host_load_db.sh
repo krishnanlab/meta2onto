@@ -8,6 +8,8 @@
 # 3. loads meta2onto_latest.dump from the /db-exports/ directory
 # 4. brings down the database container
 
+set -euo pipefail
+
 # check if we're in a container and abort if so
 if [ -f "/.dockerenv" ]; then
 	echo "Error: This script should be run from the host, not inside a container."
@@ -22,7 +24,7 @@ cd "${SCRIPT_DIR}/.."
 docker compose down
 
 # purge the database volume
-docker volume rm meta2onto_postgres_data
+docker volume rm meta2onto_postgres_data 2>/dev/null || true
 # start the database container with a load-optimized configuration
 # (this will block until the load is complete)
 time (
@@ -35,8 +37,9 @@ time (
 	fi
 
 	docker compose run --rm -it \
-		-v ${PGCONFIG_PATH}:/var/lib/postgresql/data/postgresql.conf \
-		db
+		-v ${PGCONFIG_PATH}:/opt/postgresql.conf \
+		db \
+		postgres -c config_file=/opt/postgresql.conf
 )
 
 # when it's done, bring down the stack again
