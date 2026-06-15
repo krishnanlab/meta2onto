@@ -10,9 +10,10 @@ RUN apt-get update && \
 RUN curl https://install.duckdb.org | sh
 ENV PATH="/root/.duckdb/cli/latest:${PATH}"
 
-# copy "loader" config enabled via environment variable PGCONFIG_LOADING=1
-COPY ./configs/postgresql_load.conf /opt/alt-configs/postgresql_load.conf
-RUN chmod o+r /opt/alt-configs/postgresql_load.conf
+# copy "loader" config(s) enabled via environment variable PGCONFIG_LOADING=1
+# ('prod' config loaded via PGCONFIG_PROD_CONFIG)
+COPY ./configs/ /opt/alt-configs/
+RUN chmod o+r /opt/alt-configs/*
 
 # copy initialization, post-init scripts
 COPY docker-entrypoint-initdb.d/ /docker-entrypoint-initdb.d/
