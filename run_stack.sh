@@ -102,7 +102,7 @@ COMPOSE_ARGS="--build -d --remove-orphans"
 COMPOSE_POST_CMD="docker compose logs -f --since=1s"
 
 # if the first arg is in "dev", "prod", use that as the environment
-if [ "$#" -gt 0 ] && [[ "$1" == "dev" || "$1" == "prod" ]]; then
+if [ "$#" -gt 0 ] && [[ "$1" == "dev" || "$1" == "prod" || "$1" == "proxied" ]]; then
     ENV="$1"
     shift  # remove the first arg so that any remaining args can be passed to docker compose
 fi
@@ -120,8 +120,11 @@ case "$ENV" in
     prod)
         COMPOSE_FILES="-f docker-compose.yml -f compose-envs/docker-compose.prod.yml"
         ;;
+    proxied)
+        COMPOSE_FILES="-f docker-compose.yml -f compose-envs/docker-compose.proxied.yml"
+        ;;
     *)
-        echo "Error: unknown environment '$ENV'. Supported environments are 'dev' and 'prod'."
+        echo "Error: unknown environment '$ENV'. Supported environments are 'dev', 'prod', 'proxied'."
         exit 1
         ;;
 esac

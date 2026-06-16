@@ -1,0 +1,24 @@
+# essentially the same as Caddyfile, but sits behind a proxy to handle TLS termination
+# and routing based on hostname
+
+:80 {
+	# /api -> backend:8000, but don't strip the /api prefix
+	handle /api/* {
+		reverse_proxy backend:8000
+	}
+
+	# serve /static from /opt/static
+	handle_path /static/* {
+		root * /opt/static
+		file_server
+	}
+
+	handle {
+		# serve requests from /opt/frontend/dist/
+		root * /opt/frontend/dist
+
+		# try files first, then fallback to index.html for SPA routing
+		try_files {path} /index.html
+		file_server
+	}
+}
