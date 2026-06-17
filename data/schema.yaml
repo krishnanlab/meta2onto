@@ -1025,7 +1025,9 @@ components:
             type: string
           readOnly: true
         platform:
-          type: string
+          type: array
+          items:
+            type: string
           description: Get the platform name associated with this series.
           readOnly: true
         keywords:

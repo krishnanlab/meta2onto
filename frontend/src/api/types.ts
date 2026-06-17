@@ -527,7 +527,7 @@ export const StudyListResponse = zod.object({
   "confidence": zod.record(zod.string(), zod.unknown()).describe('Compute confidence level based on prob.'),
   "sample_count": zod.number().describe('Get the number of samples associated with this series.'),
   "database": zod.array(zod.string()),
-  "platform": zod.string().describe('Get the platform name associated with this series.'),
+  "platform": zod.array(zod.string()).describe('Get the platform name associated with this series.'),
   "keywords": zod.array(zod.string()).describe('Extract keywords from the series summary.'),
   "classification": zod.string().describe('Returns values Positive or Negative; supposed to represent \'Classification of study in model training\'?')
 }).describe('Serializer for GEOSeries model.'))
@@ -569,7 +569,7 @@ export const StudyRetrieveResponse = zod.object({
   "confidence": zod.record(zod.string(), zod.unknown()).describe('Compute confidence level based on prob.'),
   "sample_count": zod.number().describe('Get the number of samples associated with this series.'),
   "database": zod.array(zod.string()),
-  "platform": zod.string().describe('Get the platform name associated with this series.'),
+  "platform": zod.array(zod.string()).describe('Get the platform name associated with this series.'),
   "keywords": zod.array(zod.string()).describe('Extract keywords from the series summary.'),
   "classification": zod.string().describe('Returns values Positive or Negative; supposed to represent \'Classification of study in model training\'?')
 }).describe('Serializer for GEOSeries model.')
@@ -610,7 +610,7 @@ export const StudySamplesRetrieveResponse = zod.object({
   "confidence": zod.record(zod.string(), zod.unknown()).describe('Compute confidence level based on prob.'),
   "sample_count": zod.number().describe('Get the number of samples associated with this series.'),
   "database": zod.array(zod.string()),
-  "platform": zod.string().describe('Get the platform name associated with this series.'),
+  "platform": zod.array(zod.string()).describe('Get the platform name associated with this series.'),
   "keywords": zod.array(zod.string()).describe('Extract keywords from the series summary.'),
   "classification": zod.string().describe('Returns values Positive or Negative; supposed to represent \'Classification of study in model training\'?')
 }).describe('Serializer for GEOSeries model.')
@@ -669,7 +669,7 @@ export const StudyFeedbackCreateResponse = zod.object({
   "confidence": zod.record(zod.string(), zod.unknown()).describe('Compute confidence level based on prob.'),
   "sample_count": zod.number().describe('Get the number of samples associated with this series.'),
   "database": zod.array(zod.string()),
-  "platform": zod.string().describe('Get the platform name associated with this series.'),
+  "platform": zod.array(zod.string()).describe('Get the platform name associated with this series.'),
   "keywords": zod.array(zod.string()).describe('Extract keywords from the series summary.'),
   "classification": zod.string().describe('Returns values Positive or Negative; supposed to represent \'Classification of study in model training\'?')
 }).describe('Serializer for GEOSeries model.')
@@ -728,7 +728,7 @@ export const StudyLookupCreateResponse = zod.object({
   "confidence": zod.record(zod.string(), zod.unknown()).describe('Compute confidence level based on prob.'),
   "sample_count": zod.number().describe('Get the number of samples associated with this series.'),
   "database": zod.array(zod.string()),
-  "platform": zod.string().describe('Get the platform name associated with this series.'),
+  "platform": zod.array(zod.string()).describe('Get the platform name associated with this series.'),
   "keywords": zod.array(zod.string()).describe('Extract keywords from the series summary.'),
   "classification": zod.string().describe('Returns values Positive or Negative; supposed to represent \'Classification of study in model training\'?')
 }).describe('Serializer for GEOSeries model.')
@@ -765,7 +765,7 @@ export const StudySearchRetrieveResponse = zod.object({
   "confidence": zod.record(zod.string(), zod.unknown()).describe('Compute confidence level based on prob.'),
   "sample_count": zod.number().describe('Get the number of samples associated with this series.'),
   "database": zod.array(zod.string()),
-  "platform": zod.string().describe('Get the platform name associated with this series.'),
+  "platform": zod.array(zod.string()).describe('Get the platform name associated with this series.'),
   "keywords": zod.array(zod.string()).describe('Extract keywords from the series summary.'),
   "classification": zod.string().describe('Returns values Positive or Negative; supposed to represent \'Classification of study in model training\'?')
 }).describe('Serializer for GEOSeries model.')

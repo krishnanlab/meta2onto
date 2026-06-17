@@ -166,10 +166,10 @@ class GEOSeriesSerializer(serializers.ModelSerializer):
 
     platform = serializers.SerializerMethodField()
 
-    def get_platform(self, obj) -> str:
-        """Get the platform name associated with this series."""
+    def get_platform(self, obj) -> list[str]:
+        """Get the platform names associated with this series."""
         gse_obj = GEOSeriesToGEOPlatforms.objects.filter(gse=obj.gse).first()
-        return str(gse_obj.platforms) if gse_obj else ""
+        return gse_obj.platforms if gse_obj else []
 
     keywords = serializers.SerializerMethodField()
 
