@@ -18,7 +18,7 @@ services:
   frontend:
     build: ./frontend
     environment:
-      - VITE_SCHEMA_LOCATION="/data/schema.yaml"
+      - VITE_SCHEMA_LOCATION=/data/schema.yaml
     volumes:
       - ./data/:/data/
     depends_on:
