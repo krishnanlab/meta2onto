@@ -1,8 +1,9 @@
 # configuration for when the stack is served behind a server ingress,
 # e.g. how it runs on a VM hosting both this app and other ones.
 
-# meta2onto_net will be joined by an "ingress" caddy instance that
-# mediates proxying to this app vs. the others by hostname
+# caddy joins both the project's network and the external "ingress" network so
+# that the server ingress can direct traffic to meta2onto-caddy, which then
+# serves the project-local frontend + proxies to the backend.
 
 volumes:
   frontend_built:
@@ -23,7 +24,7 @@ services:
       - DJANGO_DEBUG=0
 
   frontend:
-    command: sh -c "bun install && bun run build --outDir /tmp/dist && rm -rf /opt/dist/* && mv /tmp/dist /opt/dist"
+    command: sh -c "bun install && bun run build --emptyOutDir --outDir /tmp/dist && rm -rf /opt/dist/* && mv /tmp/dist /opt/dist"
     volumes:
       - frontend_built:/opt/dist
 
@@ -41,6 +42,7 @@ services:
     depends_on:
       - backend
     networks:
+      default:
       ingress:
         aliases:
           - meta2onto-caddy
