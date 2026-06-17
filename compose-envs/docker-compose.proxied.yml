@@ -11,8 +11,9 @@ volumes:
   backend_static:
 
 networks:
-  meta2onto_net:
-    name: meta2onto_net
+  ingress:
+    name: ingress
+    external: true
 
 services:
   backend:
@@ -40,6 +41,6 @@ services:
     depends_on:
       - backend
     networks:
-      meta2onto_net:
+      ingress:
         aliases:
           - meta2onto-caddy
