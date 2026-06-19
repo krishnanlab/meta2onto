@@ -202,9 +202,7 @@ class GEOSeriesSerializer(serializers.ModelSerializer):
         feedback = (
             Feedback.objects.filter(series_id=obj)
                 .aggregate(
-                    avg_rating=Avg('rating'), vote_count=Count('id'), sum_rating=Sum('rating'),
-                    likes=Count('id', filter=Q(rating=1)),
-                    dislikes=Count('id', filter=Q(rating=-1))
+                    vote_count=Count('id')
                 )
         )
         
