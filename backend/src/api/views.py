@@ -1,5 +1,5 @@
 import csv
-from collections import Counter
+import re
 
 from django.conf import settings
 from django.db import models, transaction
