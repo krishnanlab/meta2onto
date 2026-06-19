@@ -1,5 +1,8 @@
 from rest_framework import serializers
+from django.db.models import Avg, Count, Sum, Q
+
 from .models import (
+    Feedback,
     GEOSample,
     GEOSeries,
     GEOSeriesToGEOPlatforms,
@@ -186,6 +189,25 @@ class GEOSeriesSerializer(serializers.ModelSerializer):
         """Returns values Positive or Negative; supposed to represent 'Classification of study in model training'?"""
         # FIXME: figure out how to actually determine this
         return "Positive"
+    
+    feedback = serializers.SerializerMethodField()
+
+    def get_feedback(self, obj) -> dict[str, int | float]:
+        """Returns aggregate rating and number of votes for this series.
+        
+        In the Feedback model, "likes" have a rating of 1 and "dislikes" have a rating of -1.
+
+        """
+        feedback = (
+            Feedback.objects.filter(series_id=obj)
+                .aggregate(
+                    avg_rating=Avg('rating'), vote_count=Count('id'), sum_rating=Sum('rating'),
+                    likes=Count('id', filter=Q(rating=1)),
+                    dislikes=Count('id', filter=Q(rating=-1))
+                )
+        )
+        
+        return feedback if feedback else {"avg_rating": 0, "vote_count": 0, "sum_rating": 0, "likes": 0, "dislikes": 0}
 
     class Meta:
         model = GEOSeries
@@ -221,6 +243,7 @@ class GEOSeriesSerializer(serializers.ModelSerializer):
 
             "keywords",
             "classification",
+            "feedback"
         ]
 
 class GEOSampleSerializer(serializers.ModelSerializer):
