@@ -58,7 +58,7 @@ export default function Home() {
 
           <p className="text-balance">
             Interpretable & standardized tissue and disease annotations for
-            hundreds of thousands of studies
+            hundreds of thousands of GEO studies
           </p>
         </hgroup>
 
@@ -68,10 +68,12 @@ export default function Home() {
       <section className="width-md">
         <p>
           <b>Meta2Onto</b> contains predicted standardized tissue and disease
-          annotations for studies in the Gene Expression Omnibus. Our database
-          of predictions is updated semi-annually to include the latest studies
-          in GEO. We value interpretability and transparency of predictions in
-          Meta2Onto.
+          annotations for studies in the Gene Expression Omnibus. Our database 
+          is updated semi-annually to include the latest studies in GEO.
+        </p>
+        <p>
+          Predictions are highly interpretable as words that directly contributed
+          to each prediction are highlighted.
         </p>
       </section>
     </>
