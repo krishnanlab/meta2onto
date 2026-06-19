@@ -228,6 +228,15 @@ class GEOSeries(models.Model):
             )
         )
 
+    @property
+    def external_dbs(self):
+        # inlined_db = getattr(self, "_external_db", None)
+        # if inlined_db is not None:
+        #     return inlined_db
+        return {k: v for (k, v) in ExternalDbRefs.objects.filter(series_id=self.gse).values_list(
+            "database", "external_id"
+        )}
+    
     class Meta:
         indexes = [
             models.Index(fields=["gse"]),
@@ -407,9 +416,6 @@ class GEOSeriesDatabase(models.Model):
     """
     Database source for a GEOSeries, e.g., GEO, ArrayExpress, SRA.
 
-    We'll eventually use ExternalRelation for this, but for now it's faster to
-    have a dedicated table that just lists databases.
-
     This model is populated by the management command import_series_databases
     which takes ids__level-series.parquet as an input, specifically its
     "relations" column.
@@ -434,6 +440,40 @@ class GEOSeriesDatabase(models.Model):
 
     def __str__(self):
         return f"{self.series.series_id} in {self.database_name}"
+    
+
+class ExternalDbRefs(models.Model):
+    """
+    External database references for a GEOSeries, e.g., ARCHS4, Recount3, refine.bio.
+
+    This model is populated by the management command import_external_db_refs
+    which takes the following files as input:
+        - data/expression_db_references/archs4_studies_*.txt
+        - data/expression_db_references/recount3_studies_*.parquet
+        - data/expression_db_references/refinebio_studies_*.parquet
+    """
+
+    series = models.ForeignKey(
+        GEOSeries,
+        related_name="external_db_refs",
+        null=True,
+        blank=True,
+        on_delete=models.DO_NOTHING,
+        db_constraint=False,
+    )
+    database = models.CharField()
+    external_id = models.CharField(null=True, blank=True, help_text="ID of the series in the external database, if available")
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["series"]),
+            models.Index(fields=["database"]),
+        ]
+        # make (series, database) unique together to avoid duplicates
+        unique_together = ("series", "database")
+
+    def __str__(self):
+        return f"{self.series.series_id} in {self.database} {' (ID: ' + self.external_id + ')' if self.external_id else ''}"
 
 
 # ===========================================================================
