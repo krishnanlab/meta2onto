@@ -447,6 +447,17 @@ class GEOSeriesViewSet(viewsets.ReadOnlyModelViewSet):
     def samples(self, request, pk=None):
         series = self.get_object()
         samples = GEOSample.objects.filter(series_id=series.gse).all()
+
+        # if query was provided, search within the samples for that series
+        query = request.query_params.get("query")
+        if query:
+            samples = samples.filter(
+                models.Q(gsm__icontains=query)
+                | models.Q(title__icontains=query)
+                | models.Q(data_processing__icontains=query)
+                | models.Q(description__icontains=query)
+            ).distinct()
+
         page = self.paginate_queryset(samples)
         if page is not None:
             serializer = GEOSampleSerializer(page, many=True)
