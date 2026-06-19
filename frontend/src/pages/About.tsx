@@ -277,65 +277,46 @@ for (study in studies) {
 
       <section className="width-md">
         <H2>How To Use</H2>
-
+        
         <p>
           Meta2Onto provides a very simple interface where users can execute
-          three fundamental steps:
+          three fundamental steps: search, select, and checkout.
         </p>
-
-        <ol>
+      
+        <h3>Search</h3>
+        <p>
+          In the search bar, simply type the name of a tissue or disease of
+          interest and select the most similar ontology term from the dropdown.
+        </p>
+      
+        <h3>Select</h3>
+        <p>
+          Once a search is executed, you will be presented with a list of GEO
+          studies ranked by the confidence score of our text-based predictive
+          models. The confidence score is simply a calibrated logistic regression
+          probability. You may filter this list for various study attributes such
+          as organism, technology, sample size, etc. Finally, select studies
+          matching your criteria of interest and click the Cart button.
+        </p>
+      
+        <h3>Checkout</h3>
+        <p>
+          Once you've selected your studies of interest, you may perform any of
+          the following from the Data Cart:
+        </p>
+        <ul>
+          <li>Download the annotations.</li>
+          <li>Generate a sharable link to your cart.</li>
           <li>
-            Search
-            <ol>
-              <li>
-                In the search bar, simply type the name of a tissue of disease
-                of interest and select the most similar ontology term from the
-                dropdown
-              </li>
-            </ol>
+            Create and populate a refine.bio dataset with studies that are shared
+            between those you selected and those that are in{" "}
+            <Link to="#refine-bio">refine.bio</Link>.
           </li>
           <li>
-            Select
-            <ol>
-              <li>
-                Once a search is executed, you will be presented with a list of
-                GEO studies ranked by the confidence score of our text-based
-                predictive models. The confidence score is simply a calibrated
-                logistic regression probability.
-              </li>
-              <li>
-                You may filter this list for various study attributes such as
-                organism, technology, sample size, etc.
-              </li>
-              <li>
-                Finally, select studies matching your criteria of interest and
-                click the Cart button.
-              </li>
-            </ol>
+            Learn how to acquire the molecular data through{" "}
+            <Link to="#download">other means</Link>.
           </li>
-          <li>
-            Checkout
-            <ol>
-              <li>
-                Once you’ve selected your studies of interest, you may perform
-                any of the following from the Data Cart:
-                <ol>
-                  <li>Download the annotations.</li>
-                  <li>Generate a sharable link to your cart.</li>
-                  <li>
-                    Create and populate a refine.bio dataset with studies that
-                    are shared between those you selected and those that are in{" "}
-                    <Link to="#refine-bio">refine.bio</Link>.
-                  </li>
-                  <li>
-                    Learn how to acquire the molecular data through{" "}
-                    <Link to="#download">other means</Link>.
-                  </li>
-                </ol>
-              </li>
-            </ol>
-          </li>
-        </ol>
+        </ul>
       </section>
     </>
   );
