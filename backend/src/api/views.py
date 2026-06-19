@@ -227,7 +227,10 @@ class GEOSeriesViewSet(viewsets.ReadOnlyModelViewSet):
                 entry["study_size"]: entry["count"] for entry in study_size_counts
             },
             "Confidence": {
-                entry["confidence_level"]: entry["count"] for entry in confidence_counts
+                # entry["confidence_level"]: entry["count"] for entry in confidence_counts
+                "label": "Confidence",
+                "min": 0,
+                "max": 100,
             },
             "Platforms": {
                 (row["gpl"] or "unknown"): row["count"] for row in platform_counts
@@ -293,6 +296,16 @@ class GEOSeriesViewSet(viewsets.ReadOnlyModelViewSet):
                 results = results.filter(prob__lt=0.5)
             elif confidence == "unknown":
                 results = results.filter(prob__isnull=True)
+        elif re.match(r"^[0-9]+-[0-9]+$", confidence or ""):
+            # check if confidence can be interpreted as a range like "70-90" and filter accordingly
+            try:
+                low, high = tuple(int(x) for x in confidence.split("-"))
+                if 0 <= low <= 100:
+                    results = results.filter(prob__gte=low / 100)
+                if 0 <= high <= 100:
+                    results = results.filter(prob__lte=high / 100)
+            except ValueError:
+                pass  # ignore invalid confidence values
 
         # if study size is provided, filter by samples_ct bucket
         study_size = request.query_params.get("Study Size")
