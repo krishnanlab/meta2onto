@@ -158,6 +158,7 @@ class GEOSeriesSerializer(serializers.ModelSerializer):
         return {"name": label, "value": obj.prob}
 
     database = serializers.ListField(child=serializers.CharField(), read_only=True)
+    external_dbs = serializers.DictField(child=serializers.CharField(), read_only=True)
 
     # FIXME: renames to support frontend changes; i'm probably going to
     # keep the db layer the same to ease imports and just rename fields at the
@@ -239,6 +240,7 @@ class GEOSeriesSerializer(serializers.ModelSerializer):
             "sample_count", # FIXME: review if samples_ct can be remapped to this
             # from joining with api_seriesdatabase
             "database", # FIXME: review if still used
+            "external_dbs",
             "platform",
 
             "keywords",
