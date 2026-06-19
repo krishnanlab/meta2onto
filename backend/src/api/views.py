@@ -242,7 +242,7 @@ class GEOSeriesViewSet(viewsets.ReadOnlyModelViewSet):
 
     # search by ontology ID (e.g., MONDO:0000270), which consults SearchTerm for
     # series matching the term
-    @method_decorator(cache_page(settings.LONGTERM_CACHE_TIMEOUT))
+    # @method_decorator(cache_page(settings.LONGTERM_CACHE_TIMEOUT))
     @action(
         detail=False, methods=["get"], url_path="search", permission_classes=[AllowAny]
     )
