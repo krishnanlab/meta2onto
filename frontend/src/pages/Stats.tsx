@@ -11,6 +11,7 @@ import {
 import Button from "@/components/Button";
 import { feedbackAtom } from "@/state/feedback";
 import { getHistory, searchHistoryAtom } from "@/state/search";
+import { formatNumber } from "@/util/string";
 
 /** user's app stats */
 export default function Stats() {
@@ -25,30 +26,30 @@ export default function Stats() {
   const studyThumbsDown = Object.values(feedback).filter(
     ({ rating }) => rating === -1,
   ).length;
-  const uniqueSearches = Object.keys(history.grouped).length.toLocaleString();
+  const uniqueSearches = Object.keys(history.grouped).length;
 
   const stats = [
     {
       Icon: ThumbsUp,
-      value: studyThumbsUp,
+      value: formatNumber(studyThumbsUp),
       className: "bg-emerald-50 text-stone-500",
       text: "positive feedback",
     },
     {
       Icon: ThumbsDown,
-      value: studyThumbsDown,
+      value: formatNumber(studyThumbsDown),
       className: "bg-red-50 text-stone-500",
       text: "negative feedback",
     },
     {
       Icon: ScanSearch,
-      value: uniqueSearches,
+      value: formatNumber(uniqueSearches),
       className: "bg-orange-50 text-stone-500",
       text: "unique searches",
     },
   ];
 
-  if (stats.every(({ value }) => value === 0)) return null;
+  if (stats.every(({ value }) => value === "0")) return null;
 
   return (
     <aside
@@ -58,7 +59,7 @@ export default function Stats() {
           leading-none shadow-md transition
           *:flex *:items-center *:gap-2 *:p-4
         `,
-        show ? "" : "translate-y-[calc(100%---spacing(8))]",
+        show ? "" : "translate-y-[calc(100%-(--spacing(8)))]",
       )}
     >
       <Button

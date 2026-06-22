@@ -1,11 +1,23 @@
 import z from "zod";
 
+export const stats = z.object({
+  ontologies: z.number(),
+  studies: z.number(),
+  samples: z.number(),
+  species: z.number(),
+  technologies: z.number(),
+  feedback: z.number(),
+});
+
+export type Stats = z.infer<typeof stats>;
+
 export const ontology = z.object({
   id: z.string(),
   type: z.string(),
   name: z.string(),
   description: z.string(),
   series: z.string(),
+  performance: z.string(),
 });
 
 export type Ontology = z.infer<typeof ontology>;
@@ -39,6 +51,9 @@ export const studies = z.object({
     z.string(),
     z.record(z.string(), z.union([z.number(), z.string()])),
   ),
+  meta: z.object({
+    performance: z.string(),
+  }),
 });
 
 export type Studies = z.infer<typeof studies>;

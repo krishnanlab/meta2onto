@@ -38,15 +38,16 @@ export default function Header() {
       ref={ref}
       className="
         sticky top-0 z-10 flex flex-row flex-wrap items-center justify-between
-        gap-4 bg-theme-dark p-4 text-white
-        [&_a,&_button]:text-white
-        [&_a,&_button]:hover:bg-stone-800
+        gap-4 bg-theme-dark p-4
       "
     >
       {/* title */}
       <a
         href="/"
-        className="flex items-center gap-2 rounded-md text-2xl tracking-wider"
+        className="
+          flex items-center gap-2 rounded-md text-2xl tracking-wider text-white
+          no-underline
+        "
       >
         <Logo color="currentColor" className="h-8" />
         {title}
@@ -74,6 +75,7 @@ export default function Header() {
         className={clsx(
           `
             flex flex-wrap items-center justify-center gap-4 text-xl
+            *:text-white
             max-xs:flex-col
           `,
           !open && "max-sm:hidden",
@@ -83,7 +85,7 @@ export default function Header() {
         <Button to="/about" color="none">
           About
         </Button>
-        <Button to="/search" color="none">
+        <Button to="/" color="none">
           Search
         </Button>
         <Button

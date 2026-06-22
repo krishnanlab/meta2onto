@@ -36,7 +36,7 @@ export default function Dialog({
           <div
             className="
               pointer-events-auto flex max-h-full min-h-0 max-w-full min-w-0
-              flex-col gap-4 rounded-sm bg-white p-4
+              flex-col gap-4 rounded-md bg-white p-4
             "
           >
             <div className="flex items-start gap-4">

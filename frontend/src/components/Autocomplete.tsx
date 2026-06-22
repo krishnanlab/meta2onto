@@ -56,7 +56,7 @@ export default function Autocomplete({
               ref={inputRef}
               placeholder={placeholder}
               className="
-                w-full rounded-sm border border-current/25 bg-white p-2 pr-8
+                w-full rounded-md border border-current/25 bg-white p-2 pr-8
               "
             />
           }
@@ -69,7 +69,7 @@ export default function Autocomplete({
           <_Autocomplete.Popup
             className="
               flex max-h-(--available-height) w-(--anchor-width) grow flex-col
-              overflow-y-auto rounded-sm bg-white shadow-thick
+              overflow-y-auto rounded-md bg-white shadow-thick
             "
           >
             {status && (

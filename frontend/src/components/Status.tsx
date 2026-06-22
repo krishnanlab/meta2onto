@@ -18,14 +18,14 @@ type Props = {
 };
 
 /** status block for query */
-const Status = ({
+function Status({
   loading = "Loading",
   error = "Error",
   empty = "No results",
   query,
   className,
-}: Props) => {
-  const base = "flex items-center justify-center gap-2 rounded-sm  p-4";
+}: Props) {
+  const base = "flex items-center justify-center gap-2 rounded-md  p-4";
 
   if ("isFetching" in query ? query.isFetching : query.status === "pending")
     return (
@@ -52,7 +52,7 @@ const Status = ({
         {empty}
       </span>
     );
-};
+}
 
 export default Status;
 

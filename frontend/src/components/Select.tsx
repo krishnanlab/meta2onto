@@ -2,13 +2,9 @@ import type { ComponentProps, ReactNode } from "react";
 import { startCase } from "lodash";
 
 type Props<O extends Option> = {
-  /** label */
   label: ReactNode;
-  /** pass with "as const" */
   options: readonly O[];
-  /** selected option state */
   value?: O["value"];
-  /** on selected option state change */
   onChange?: (value: O["value"]) => void;
 } & Omit<ComponentProps<"select">, "value" | "onChange">;
 
@@ -28,7 +24,7 @@ export default function Select<O extends Option>({
     <label>
       {label}
       <select
-        className="grow rounded-sm border border-current/25 bg-white px-2 py-1"
+        className="grow rounded-md border border-current/25 bg-white px-2 py-1"
         value={value}
         onChange={(event) => onChange?.(event.currentTarget.value)}
         {...props}

@@ -1,22 +1,22 @@
-import eslintJs from "@eslint/js";
-import eslintPluginBetterTailwindcss from "eslint-plugin-better-tailwindcss";
-import eslintPluginJsxA11y from "eslint-plugin-jsx-a11y";
-import eslintPluginPrettierRecommended from "eslint-plugin-prettier/recommended";
-import eslintPluginReactHooks from "eslint-plugin-react-hooks";
+import js from "@eslint/js";
+import tailwind from "eslint-plugin-better-tailwindcss";
+import a11y from "eslint-plugin-jsx-a11y";
+import prettier from "eslint-plugin-prettier/recommended";
+import reactHooks from "eslint-plugin-react-hooks";
 import { defineConfig, globalIgnores } from "eslint/config";
 import globals from "globals";
-import typescriptEslint from "typescript-eslint";
+import tslint from "typescript-eslint";
 
 export default defineConfig([
   globalIgnores(["dist", "public"]),
-  eslintJs.configs.recommended,
-  typescriptEslint.configs.recommended,
-  eslintPluginPrettierRecommended,
-  eslintPluginReactHooks.configs.flat.recommended,
-  eslintPluginJsxA11y.flatConfigs.recommended,
+  js.configs.recommended,
+  tslint.configs.recommended,
+  prettier,
+  reactHooks.configs.flat.recommended,
+  a11y.flatConfigs.recommended,
   {
     plugins: {
-      "better-tailwindcss": eslintPluginBetterTailwindcss,
+      "better-tailwindcss": tailwind,
     },
     languageOptions: {
       ecmaVersion: 2020,
@@ -45,7 +45,7 @@ export default defineConfig([
 
       /** FORMATTING */
       "prettier/prettier": "warn",
-      ...eslintPluginBetterTailwindcss.configs["recommended-warn"].rules,
+      ...tailwind.configs["recommended-warn"].rules,
       /** https://github.com/schoero/eslint-plugin-better-tailwindcss/issues/302 */
       "better-tailwindcss/enforce-consistent-line-wrapping": [
         "warn",

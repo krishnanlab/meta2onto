@@ -17,8 +17,9 @@ import About from "@/pages/About";
 import Cart from "@/pages/Cart";
 import Home from "@/pages/Home";
 import NotFound from "@/pages/NotFound";
-import Search from "@/pages/Search";
 import Stats from "@/pages/Stats";
+import Studies from "@/pages/Studies";
+import Terms from "@/pages/Terms";
 import Testbed from "@/pages/Testbed";
 import { scrollTo } from "@/util/dom";
 import { redirectPath, redirectState } from "@/util/url";
@@ -33,7 +34,7 @@ export default function App() {
 }
 
 /** route layout */
-const Layout = () => {
+function Layout() {
   /** current route info */
   const { pathname, search, hash } = useLocation();
 
@@ -60,7 +61,7 @@ const Layout = () => {
       <Footer />
     </>
   );
-};
+}
 
 /** route definitions */
 const routes = [
@@ -83,8 +84,8 @@ const routes = [
         },
       },
       {
-        path: "search/:search?",
-        element: <Search />,
+        path: "studies/:search?",
+        element: <Studies />,
       },
       {
         path: "about",
@@ -94,6 +95,11 @@ const routes = [
         path: "cart/:id?",
         element: <Cart />,
       },
+      {
+        path: "terms",
+        element: <Terms />,
+      },
+
       {
         path: "testbed",
         element: <Testbed />,

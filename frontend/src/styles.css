@@ -9,15 +9,14 @@
   --font-sans: "Outfit Variable", sans-serif;
   --font-mono: "Sometype Mono Variable", monospace;
 
-  --font-weight-normal: 300;
-  --font-weight-medium: 500;
+  --font-weight-regular: 300;
+  --font-weight-medium: 400;
   --font-weight-bold: 600;
 
   --color-theme-light: oklch(95% 0.05 260);
   --color-theme: oklch(50% 0.1 260);
   --color-theme-dark: oklch(40% 0.1 260);
   --color-accent: oklch(65% 0.2 20);
-  --color-highlight: oklch(85% 0.15 180);
 
   --shadow-md: 0 0 2px #00000020, 0 2px 10px #00000020;
   --shadow-thick: 0 0 5px #00000020, 0 2px 10px #00000020;
@@ -26,7 +25,8 @@
 
 @layer base {
   html {
-    @apply font-sans leading-normal font-normal;
+    @apply font-regular font-sans leading-normal;
+    font-size: 105%;
   }
 
   body {
@@ -42,15 +42,15 @@
   }
 
   section {
-    --width: 300;
-    @apply flex flex-col gap-8 bg-white px-[max(--spacing(12),(100%---spacing(1)*var(--width))/2)] py-12 last:grow even:bg-stone-50;
+    --width: 250;
+    @apply flex flex-col gap-8 bg-white px-[max(--spacing(12),(100%-(--spacing(1))*var(--width))/2)] py-12 last:grow even:bg-stone-50;
   }
 
   h1,
   h2,
   h3,
   h4 {
-    @apply text-theme flex w-full scroll-mt-8 items-center gap-[0.75em] leading-normal font-normal;
+    @apply text-theme font-regular flex w-full scroll-mt-8 items-center gap-[0.75em] leading-normal not-first:mt-8;
   }
 
   h1 {
@@ -82,7 +82,7 @@
     @apply leading-loose;
   }
 
-  p a {
+  a {
     @apply text-accent underline hover:text-current;
   }
 
@@ -118,16 +118,37 @@
     @apply cursor-pointer;
   }
 
+  ul,
+  ol {
+    @apply flex list-[revert] flex-col pl-6 leading-loose;
+  }
+
+  ol {
+    @apply list-decimal;
+
+    ol {
+      @apply list-[lower-alpha];
+
+      ol {
+        @apply list-[lower-roman];
+      }
+    }
+  }
+
+  li {
+    @apply pl-2;
+  }
+
   dl {
-    @apply grid max-w-max grid-cols-[repeat(var(--cols),auto)] rounded-md bg-stone-100 [--cols:2];
+    @apply grid grid-cols-[repeat(var(--cols),auto)] gap-x-8 gap-y-4 [--cols:2];
   }
 
   dt {
-    @apply p-2 font-medium text-stone-500;
+    @apply font-medium;
   }
 
   dd {
-    @apply p-2;
+    @apply wrap-anywhere;
   }
 
   dd:empty {
@@ -138,25 +159,12 @@
     @apply rounded-md bg-stone-200 px-1 font-mono;
   }
 
-  code > pre {
-    @apply overflow-x-auto rounded-md bg-stone-700 p-4 font-mono text-stone-300;
+  pre {
+    @apply overflow-x-auto rounded-md bg-stone-800 p-4 font-mono text-stone-300;
   }
 
-  [class^="hljs-"] {
-    @apply font-mono;
-  }
-
-  .hljs-meta,
-  .hljs-comment {
-    @apply text-stone-500;
-  }
-
-  .hljs-string {
-    @apply text-green-300;
-  }
-
-  .hljs-keyword {
-    @apply text-orange-300;
+  blockquote {
+    @apply rounded-r-md border-l-4 border-stone-300 bg-stone-100 p-4;
   }
 
   .lucide {
@@ -186,14 +194,14 @@
   }
 }
 
-@utility narrow {
-  &:is(section) {
-    --width: 150;
-  }
+@utility width-sm {
+  --width: 150;
 }
 
-@utility full {
-  &:is(section) {
-    --width: 1000;
-  }
+@utility width-lg {
+  --width: 350;
+}
+
+@utility width-full {
+  --width: 9999;
 }

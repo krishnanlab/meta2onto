@@ -8,7 +8,7 @@ import { Fragment, useEffect, useRef, useState } from "react";
 import analytics from "react-ga4";
 import Highlighter from "react-highlight-words";
 import { useParams } from "react-router";
-import { useDebounce, useLocalStorage } from "@reactuses/core";
+import { useDebounce } from "@reactuses/core";
 import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
 import clsx from "clsx";
 import { useAtomValue } from "jotai";
@@ -29,17 +29,24 @@ import {
   Trash2,
   TriangleAlert,
 } from "lucide-react";
-import { studyFeedback, studySamples, studySearch } from "@/api/api";
+import {
+  performanceColor,
+  studyFeedback,
+  studySamples,
+  studySearch,
+} from "@/api/api";
 import Button from "@/components/Button";
 import Checkbox from "@/components/Checkbox";
-import DatabaseBadge from "@/components/Database";
+import Combobox from "@/components/Combobox";
+import Database from "@/components/Database";
 import Dialog from "@/components/Dialog";
 import { getCartRef } from "@/components/Header";
-import Heading from "@/components/Heading";
+import { H1 } from "@/components/Heading";
 import Link from "@/components/Link";
 import Meta from "@/components/Meta";
 import Meter from "@/components/Meter";
 import Pagination from "@/components/Pagination";
+import Pill from "@/components/Pill";
 import Popover from "@/components/Popover";
 import Select from "@/components/Select";
 import Slider from "@/components/Slider";
@@ -48,6 +55,7 @@ import Table from "@/components/Table";
 import Textbox from "@/components/Textbox";
 import Tooltip from "@/components/Tooltip";
 import { SearchBox } from "@/pages/Home";
+import { useUser } from "@/pages/user";
 import { addToCart, cartAtom, inCart, removeFromCart } from "@/state/cart";
 import { clearFeedback, feedbackAtom, setFeedback } from "@/state/feedback";
 import { fly } from "@/util/dom";
@@ -57,13 +65,19 @@ import { formatDate, formatNumber } from "@/util/string";
 /** don't show feedback if confidence below this */
 const feedbackThreshold = 0.75;
 
+/**
+ * if facet has more than this many unique values, use combobox instead of
+ * checkboxes
+ */
+const facetThreshold = 10;
+
 /** per page select options */
 const limitOptions = [
   { value: "5" },
   { value: "10" },
   { value: "20" },
   { value: "50" },
-  { value: "50" },
+  { value: "100" },
 ] as const;
 
 type LimitOption = (typeof limitOptions)[number]["value"];
@@ -77,7 +91,7 @@ const orderingOptions = [
 
 type OrderingOption = (typeof orderingOptions)[number]["value"];
 
-export default function Search() {
+export default function Studies() {
   const { search = "" } = useParams<{ search: string }>();
 
   /** url search params state */
@@ -134,11 +148,9 @@ export default function Search() {
     <>
       <Meta title={title} />
 
-      <Heading level={1} className="sr-only">
-        Search results for "{search}"
-      </Heading>
+      <H1 className="sr-only">Search results for "{search}"</H1>
 
-      <section>
+      <section className="width-lg">
         <div
           className="
             grid grid-cols-[auto_1fr] gap-12
@@ -179,7 +191,7 @@ export default function Search() {
 }
 
 /** filters panel */
-const Filters = ({
+function Filters({
   raw,
   search,
   params,
@@ -197,107 +209,139 @@ const Filters = ({
   setNewSearch: (value: boolean) => void;
   ordering: OrderingOption;
   query: UseQueryResult<Studies>;
-}) => (
-  <div
-    className="
-      flex w-50 flex-col gap-8
-      max-md:w-full max-md:flex-row max-md:flex-wrap
-    "
-  >
-    {/* overview */}
-    <div className="flex flex-col gap-2">
-      <div>
-        Searched "<strong>{raw}</strong>"
-      </div>
-      <div>
-        Selected "<strong>{search}</strong>"
-      </div>
-      <div>
-        <strong>
-          {query.data?.count ? formatNumber(query.data.count) : "-"}
-        </strong>{" "}
-        results
-      </div>
-    </div>
-
-    {/* sort */}
-    <Select
-      label={<strong>Sort</strong>}
-      options={orderingOptions}
-      value={ordering}
-      onChange={(checked) =>
-        setParams((params) => params.set("ordering", checked))
-      }
-    />
-
-    {/* facet filter */}
-    {isEmpty(query.data?.facets) && (
-      <span className="text-stone-500">Filters</span>
-    )}
-    {Object.entries(query.data?.facets ?? {}).map(([facetKey, facetValues]) => (
-      <div key={facetKey} className="flex flex-col gap-2">
-        <strong>{facetKey}</strong>
-
-        {typeof facetValues.label === "string" &&
-        typeof facetValues.min === "number" &&
-        typeof facetValues.max === "number" ? (
-          /** range facet */
-          <Slider
-            label={(values) => (
-              <>
-                {values.join(" – ")} {facetValues.label}
-              </>
-            )}
-            thumbLabel={[`${facetKey} minimum`, `${facetKey} maximum`]}
-            value={(() => {
-              const [min = facetValues.min, max = facetValues.max] =
-                params.get(facetKey)?.split("-").map(Number) ?? [];
-              return [min, max];
-            })()}
-            onChange={(values) =>
-              setParams((params) => {
-                const [min = facetValues.min, max = facetValues.max] = values;
-                params.set(facetKey, `${min}-${max}`);
-              })
-            }
-            min={facetValues.min}
-            max={facetValues.max}
-            step={facetValues.max - facetValues.min > 1 ? 1 : 0.01}
+}) {
+  return (
+    <div
+      className="
+        flex w-60 flex-col gap-8
+        max-md:w-full max-md:flex-row max-md:flex-wrap
+      "
+    >
+      {/* overview */}
+      <dl>
+        <dt>Searched</dt>
+        <dd>"{raw}"</dd>
+        <dt>Selected</dt>
+        <dd>"{search}"</dd>
+        <dt>Performance</dt>
+        <dd>
+          <Pill
+            value={query.data?.meta.performance ?? ""}
+            map={performanceColor}
+            className="w-full"
           />
-        ) : (
-          /** boolean facet */
-          Object.entries(facetValues).map(([facetValue, facetCount]) => (
-            <Checkbox
-              key={facetValue}
-              /** sync facet with url */
-              value={params.getAll(facetKey).includes(facetValue)}
-              onChange={(checked) => {
-                setParams((params) => {
-                  if (checked) {
-                    if (!params.has(facetKey, facetValue))
-                      params.append(facetKey, facetValue);
-                  } else params.delete(facetKey, facetValue);
-                });
-              }}
-            >
-              {facetValue} ({facetCount})
-            </Checkbox>
-          ))
-        )}
-      </div>
-    ))}
+        </dd>
+        <dt>Results</dt>
+        <dd>{query.data?.count ? formatNumber(query.data.count) : "-"}</dd>
+      </dl>
 
-    {!newSearch && (
-      <Button onClick={() => setNewSearch(true)}>
-        <RefreshCcw />
-        New Search
-      </Button>
-    )}
-  </div>
-);
+      {!newSearch && (
+        <Button onClick={() => setNewSearch(true)}>
+          <RefreshCcw />
+          New Search
+        </Button>
+      )}
+
+      {/* sort */}
+      <Select
+        label={<strong>Sort</strong>}
+        options={orderingOptions}
+        value={ordering}
+        onChange={(checked) =>
+          setParams((params) => params.set("ordering", checked))
+        }
+      />
+
+      {/* facet filter */}
+      {isEmpty(query.data?.facets) && (
+        <span className="text-stone-500">Filters</span>
+      )}
+      {Object.entries(query.data?.facets ?? {}).map(
+        ([facetKey, facetValues]) => {
+          /** control to use for facet */
+          let control: ReactNode;
+
+          const { label, min, max } = facetValues;
+
+          /** slider */
+          if (
+            typeof label === "string" &&
+            typeof min === "number" &&
+            typeof max === "number"
+          )
+            control = (
+              <Slider
+                label={(values) => (
+                  <>
+                    {values.join(" – ")} {facetValues.label}
+                  </>
+                )}
+                thumbLabel={[`${facetKey} minimum`, `${facetKey} maximum`]}
+                value={(() => {
+                  const [minValue, maxValue] =
+                    params.get(facetKey)?.split("-").map(Number) ?? [];
+                  return [minValue ?? min, maxValue ?? max];
+                })()}
+                onChange={(values) =>
+                  setParams((params) => {
+                    const [min = facetValues.min, max = facetValues.max] =
+                      values;
+                    params.set(facetKey, `${min}-${max}`);
+                  })
+                }
+                min={min}
+                max={max}
+                step={max - min > 1 ? 1 : 0.01}
+              />
+            );
+          /** combobox */ else if (size(facetValues) > facetThreshold)
+            control = (
+              <Combobox
+                options={Object.keys(facetValues)}
+                value={params.getAll(facetKey)}
+                onChange={(value) =>
+                  setParams((params) => {
+                    params.delete(facetKey);
+                    value.forEach((v) => params.append(facetKey, v));
+                  })
+                }
+              />
+            );
+          /** checkbox */ else
+            control = Object.entries(facetValues).map(
+              ([facetValue, facetCount]) => (
+                <Checkbox
+                  key={facetValue}
+                  /** sync facet with url */
+                  value={params.getAll(facetKey).includes(facetValue)}
+                  onChange={(checked) => {
+                    setParams((params) => {
+                      if (checked) {
+                        if (!params.has(facetKey, facetValue))
+                          params.append(facetKey, facetValue);
+                      } else params.delete(facetKey, facetValue);
+                    });
+                  }}
+                >
+                  {facetValue} ({facetCount})
+                </Checkbox>
+              ),
+            );
+
+          return (
+            <div key={facetKey} className="flex flex-col gap-2">
+              <strong>{facetKey}</strong>
+              {control}
+            </div>
+          );
+        },
+      )}
+    </div>
+  );
+}
 
 /** results panel */
-const Results = ({
+function Results({
   setParams,
   offset,
   limit,
@@ -307,7 +351,7 @@ const Results = ({
   offset: number;
   limit: LimitOption;
   query: UseQueryResult<Studies>;
-}) => {
+}) {
   const anyFeedback = !!Object.values(useAtomValue(feedbackAtom)).length;
 
   return (
@@ -342,13 +386,10 @@ const Results = ({
       />
     </div>
   );
-};
-
-const userNameKey = "user-name";
-const userEmailKey = "user-email";
+}
 
 /** search result */
-const Result = ({
+function Result({
   id,
   name,
   description,
@@ -359,7 +400,7 @@ const Result = ({
   platform,
   classification,
   keywords,
-}: Study) => {
+}: Study) {
   /** current cart state */
   const cart = useAtomValue(cartAtom);
 
@@ -367,8 +408,7 @@ const Result = ({
   const feedback = useAtomValue(feedbackAtom)[id];
 
   /** user self-identification */
-  const [userName] = useLocalStorage(userNameKey, "");
-  const [userEmail] = useLocalStorage(userEmailKey, "");
+  const { userName, userEmail } = useUser();
 
   /** study top-level details */
   const details = [
@@ -417,26 +457,8 @@ const Result = ({
       <LoaderCircle className="animate-spin" />
     ) : null;
 
-  /** custom highlight */
-  const Highlight = ({ children }: { children: ReactNode }) => {
-    /** get position of highlight in keywords list */
-    const index =
-      typeof children === "string" ? keywords.indexOf(children) : -1;
-    /** keywords listed first considered stronger matches */
-    const strength = 1 - index / keywords.length;
-    return (
-      <mark className="relative isolate bg-transparent">
-        <span
-          className="absolute inset-0 -z-10 bg-orange-200"
-          style={{ opacity: strength }}
-        />
-        {children}
-      </mark>
-    );
-  };
-
   return (
-    <div className="flex flex-col gap-4 rounded-sm p-6 shadow-md">
+    <div className="flex flex-col gap-4 rounded-md p-6 shadow-md">
       {/* top row */}
       <div className="flex items-start justify-between gap-8">
         <strong>{name}</strong>
@@ -459,7 +481,9 @@ const Result = ({
       <p className="truncate-lines" tabIndex={0}>
         <Highlighter
           className="contents"
-          highlightTag={Highlight}
+          highlightTag={({ children }) => (
+            <Highlight keywords={keywords}>{children}</Highlight>
+          )}
           caseSensitive
           searchWords={keywords}
           textToHighlight={description}
@@ -471,7 +495,7 @@ const Result = ({
         {/* databases */}
         <div className="flex flex-wrap gap-4">
           {database.map((database, index) => (
-            <DatabaseBadge key={index} study={id} database={database} />
+            <Database key={index} study={id} database={database} />
           ))}
         </div>
 
@@ -548,28 +572,42 @@ const Result = ({
       </div>
     </div>
   );
+}
+
+type HighlightProps = {
+  keywords: string[];
+  children: ReactNode;
 };
 
+/** custom highlight */
+export function Highlight({ keywords, children }: HighlightProps) {
+  /** get position of highlight in keywords list */
+  const index = typeof children === "string" ? keywords.indexOf(children) : -1;
+  /** keywords listed first considered stronger matches */
+  const strength = 1 - index / keywords.length;
+  return (
+    <mark className="relative isolate bg-transparent">
+      <span
+        className="absolute inset-0 -z-10 bg-orange-200"
+        style={{ opacity: strength }}
+      />
+      {children}
+    </mark>
+  );
+}
+
 const qualities = [
-  "Lorem ipsum dolor sit amet",
-  "Consectetur adipiscing elit",
-  "Sed do eiusmod tempor incididunt",
+  "The prediction is incorrect",
+  "Irrelevant/incorrect informative words",
 ];
 
 /** study negative feedback popup */
-const ThumbsDownPopup = ({
-  id,
-  keywords,
-}: {
-  id: string;
-  keywords: string[];
-}) => {
+function ThumbsDownPopup({ id, keywords }: { id: string; keywords: string[] }) {
   /** feedback for this study */
   const feedback = useAtomValue(feedbackAtom)[id];
 
   /** user self-identification */
-  const [userName, setUserName] = useLocalStorage(userNameKey, "");
-  const [userEmail, setUserEmail] = useLocalStorage(userEmailKey, "");
+  const { userName, userEmail, setUserName, setUserEmail } = useUser();
 
   /** give negative rating, to be called on any change to popup */
   const thumbsDown = () => setFeedback(id, "rating", -1);
@@ -696,10 +734,10 @@ const ThumbsDownPopup = ({
       </div>
     </div>
   );
-};
+}
 
 /** samples popup */
-const SamplesPopup = ({ id }: { id: string }) => {
+function SamplesPopup({ id }: { id: string }) {
   /** pagination */
   const [_search, setSearch] = useState("");
   const search = useDebounce(_search, 500);
@@ -750,14 +788,14 @@ const SamplesPopup = ({ id }: { id: string }) => {
 
   const extraCols: Col<Sample>[] = [
     {
-      key: "created_at",
+      key: "submission_date",
       name: "Created At",
-      render: (cell) => formatDate(cell),
+      render: (cell) => (cell ? formatDate(cell) : "-"),
     },
     {
-      key: "updated_at",
+      key: "last_update_date",
       name: "Updated At",
-      render: (cell) => formatDate(cell),
+      render: (cell) => (cell ? formatDate(cell) : "-"),
     },
   ];
 
@@ -813,4 +851,4 @@ const SamplesPopup = ({ id }: { id: string }) => {
       </Pagination>
     </>
   );
-};
+}

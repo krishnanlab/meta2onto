@@ -11,6 +11,7 @@ export const offset = 5;
 export const padding = 20;
 
 export default function Tooltip({ children, content }: Props) {
+  if (!content) return children;
   return (
     <_Tooltip.Provider delay={100}>
       <_Tooltip.Root>
@@ -23,7 +24,7 @@ export default function Tooltip({ children, content }: Props) {
           >
             <_Tooltip.Popup
               className="
-                flex w-50 max-w-max flex-col gap-2 rounded-sm bg-stone-900 p-4
+                flex w-50 max-w-max flex-col gap-2 rounded-md bg-stone-900 p-4
                 text-white
               "
             >
@@ -47,11 +48,13 @@ export default function Tooltip({ children, content }: Props) {
 
 const size = 2 * offset;
 
-export const Arrow = () => (
-  <svg viewBox={[-size, -size, 2 * size, 2 * size].join(" ")} width={size}>
-    <path
-      d={`M 0 0 L -${size} -${size} L ${size} -${size}`}
-      className="fill-current"
-    />
-  </svg>
-);
+export function Arrow() {
+  return (
+    <svg viewBox={[-size, -size, 2 * size, 2 * size].join(" ")} width={size}>
+      <path
+        d={`M 0 0 L -${size} -${size} L ${size} -${size}`}
+        className="fill-current"
+      />
+    </svg>
+  );
+}
