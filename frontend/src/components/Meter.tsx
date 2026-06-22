@@ -12,7 +12,7 @@ export default function Meter({ children, value, min = 0, max = 1 }: Props) {
     <label className="contents">
       <Pill
         style={{
-          backgroundColor: `color-mix(in hsl, transparent, var(--color-indigo-500) ${50 * value ** 2}%)`,
+          backgroundColor: `color-mix(in hsl, transparent, var(--color-indigo-500) ${35 * value ** 2}%)`,
         }}
       >
         {children}

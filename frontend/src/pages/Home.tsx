@@ -151,8 +151,7 @@ export default function Home() {
             description={
               <>
                 We <Highlight keywords={["highlight"]}>highlight</Highlight>{" "}
-                <Highlight keywords={["highlight", "words"]}>words</Highlight>{" "}
-                that contributed to each prediction, making it easy to
+                words that contribute to each prediction, making it easy to
                 understand why they were made
               </>
             }

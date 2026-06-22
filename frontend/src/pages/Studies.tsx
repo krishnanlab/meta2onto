@@ -502,7 +502,6 @@ function Result({
         {/* actions */}
         <div className="ml-auto flex flex-wrap items-center justify-center gap-4">
           {/* feedback */}
-
           {confidence.value > feedbackThreshold && (
             <>
               <Button
@@ -821,6 +820,7 @@ function SamplesPopup({ id }: { id: string }) {
             className="absolute inset-0 opacity-90"
           />
           <Table
+            className="w-full"
             cols={cols}
             rows={studySamplesQuery.data?.results ?? []}
             sort={ordering}

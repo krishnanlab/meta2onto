@@ -30,7 +30,7 @@ export default function Dialog({
         <_Dialog.Backdrop className="fixed inset-0 z-10 bg-black/50" />
         <_Dialog.Popup
           className="
-            pointer-events-none fixed inset-0 z-20 grid place-items-center p-4
+            pointer-events-none fixed inset-0 z-20 grid place-items-center p-12
           "
         >
           <div
