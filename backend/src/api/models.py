@@ -219,11 +219,11 @@ class GEOSeries(models.Model):
 
     @property
     def database(self):
-        series_dbs = {k: {"url": v} for (k,v) in GEOSeriesDatabase.objects.filter(series_id=self.gse).values_list(
+        series_dbs = {k: {"url": v.strip() if v else v} for (k,v) in GEOSeriesDatabase.objects.filter(series_id=self.gse).values_list(
             "database", "url"
         )}
 
-        external_refs = {k: {"external_id": v} for (k,v) in ExternalDbRefs.objects.filter(series_id=self.gse).values_list(
+        external_refs = {k: {"external_id": v.strip() if v else v} for (k,v) in ExternalDbRefs.objects.filter(series_id=self.gse).values_list(
             "database", "external_id"
         )}
 
