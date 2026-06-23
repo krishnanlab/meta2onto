@@ -41,7 +41,7 @@ export const study = z.object({
     z.object({
       url: z.string().trim().url().nullable().optional(),
       external_id: z.string().nullable().optional(),
-    })
+    }),
   ),
   classification: z.string(),
   sample_count: z.number(),

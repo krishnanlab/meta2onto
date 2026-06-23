@@ -252,10 +252,6 @@ function Filters({
         }
       />
 
-      {/* facet filter */}
-      {isEmpty(query.data?.facets) && (
-        <span className="text-stone-500">Filters</span>
-      )}
       {Object.entries(query.data?.facets ?? {}).map(
         ([facetKey, facetValues]) => {
           /** control to use for facet */

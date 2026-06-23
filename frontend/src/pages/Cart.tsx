@@ -34,7 +34,7 @@ import { makeDataset } from "@/api/refine.bio";
 import ActionButton, { copy } from "@/components/ActionButton";
 import Ago from "@/components/Ago";
 import Button from "@/components/Button";
-import DatabaseBadge from "@/components/Database";
+import Database from "@/components/Database";
 import Dialog from "@/components/Dialog";
 import { H1, H2 } from "@/components/Heading";
 import Link from "@/components/Link";
@@ -144,7 +144,7 @@ export default function Cart() {
 
   /** filter study ids by ones that are in refine.bio */
   const refineBioStudyIds = studyDetails
-    .filter((study) => study.database.includes("Refine.bio"))
+    .filter((study) => "Refine.bio" in study.database)
     .map((study) => study.id);
 
   /** export to refine.bio */
@@ -394,8 +394,8 @@ export default function Cart() {
                       key: "database",
                       name: "Databases",
                       render: (database) =>
-                        Object.entries(database).map(([database, data], index) => (
-                          <DatabaseBadge key={index} database={database} />
+                        Object.keys(database).map((database, index) => (
+                          <Database key={index} database={database} />
                         )),
                     },
                     {
