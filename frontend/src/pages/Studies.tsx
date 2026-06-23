@@ -494,8 +494,8 @@ function Result({
       <div className="flex flex-wrap items-end gap-4">
         {/* databases */}
         <div className="flex flex-wrap gap-4">
-          {Object.entries(database).map(([database, data], index) => (
-            <DatabaseBadge key={index} study={id} database={database} />
+          {Object.entries(database).map(([database], index) => (
+            <Database key={index} study={id} database={database} />
           ))}
         </div>
 

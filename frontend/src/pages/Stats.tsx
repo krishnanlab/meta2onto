@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useLocalStorage } from "@reactuses/core";
 import clsx from "clsx";
 import { useAtomValue } from "jotai";
 import {
@@ -15,7 +15,7 @@ import { formatNumber } from "@/util/string";
 
 /** user's app stats */
 export default function Stats() {
-  const [show, setShow] = useState(true);
+  const [show, setShow] = useLocalStorage("show-stats", true);
 
   const feedback = useAtomValue(feedbackAtom);
   const history = getHistory(useAtomValue(searchHistoryAtom));

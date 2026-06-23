@@ -42,52 +42,31 @@ export default function About() {
 
         <ol>
           <li>
-            <strong>Search</strong> for a tissue or disease you're interested
-            in. Select the most similar ontology term from the dropdown.
+            <strong>Search</strong> for a tissue or disease you're interested in
+            and <strong>select</strong> the most similar ontology term.
           </li>
           <li>
-            You'll see a page of study <strong>results</strong> ranked by the
-            confidence score of our text-based predictive models.
+            View study <strong>results</strong> ranked by the confidence score
+            of our text-based predictive models.
           </li>
           <li>
             <strong>Filter</strong> studies by various attributes such as
             organism, technology, sample size, etc.
           </li>
           <li>
-            <strong>Select</strong> studies of interest to you by adding them to
-            your cart.
+            <strong>Collect</strong> studies you're interested in by adding them
+            to your cart.
           </li>
           <li>
             <strong>Download</strong> the annotations in your cart.
           </li>
           <li>
-            Generate a <strong>sharable link</strong> to your cart.
+            <strong>Share</strong> a generated link to your cart.
           </li>
           <li>
-            <strong>Export</strong> your cart to refine.bio
+            <strong>Export</strong> your cart to refine.bio.
           </li>
         </ol>
-
-        <h3>Checkout</h3>
-
-        <p>
-          Once you've selected your studies of interest, you may perform any of
-          the following from the Data Cart:
-        </p>
-
-        <ul>
-          <li>Download the annotations.</li>
-          <li>Generate a sharable link to your cart.</li>
-          <li>
-            Create and populate a refine.bio dataset with studies that are
-            shared between those you selected and those that are in{" "}
-            <Link to="#refine-bio">refine.bio</Link>.
-          </li>
-          <li>
-            Learn how to acquire the molecular data through{" "}
-            <Link to="#download">other means</Link>.
-          </li>
-        </ul>
       </section>
 
       <section>
@@ -139,7 +118,7 @@ export default function About() {
           </dt>
           <dd>Known positive studies were not reliably ranked highly.</dd>
           <dt>
-            <Pill value="na" map={performanceColor} />
+            <Pill value="..." map={performanceColor} />
           </dt>
           <dd>
             Not enough ground-truth positive studies were available to
@@ -199,7 +178,7 @@ export default function About() {
       </section>
 
       <section>
-        <H2>Citation</H2>
+        <H2>Cite</H2>
 
         <blockquote>
           title

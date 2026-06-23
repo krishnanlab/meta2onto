@@ -150,7 +150,7 @@ export default function Home() {
             title="Interpretable"
             description={
               <>
-                We <Highlight keywords={["highlight"]}>highlight</Highlight>{" "}
+                We <Highlight keywords={["", "highlight"]}>highlight</Highlight>{" "}
                 words that contribute to each prediction, making it easy to
                 understand why they were made
               </>

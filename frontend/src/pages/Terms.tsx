@@ -101,11 +101,11 @@ export default function Terms() {
             <ol>
               <li>
                 This web application stores a small amount of data in your
-                browser to remember feedback, searches, and other metrics you've
-                done from your specific device. These data are used exclusively
-                to enhance your experience within the web application and are
-                never shared. You may clear this local data at any time using
-                the button below.
+                browser specific to the device you use it from, such as your
+                recent searches, feedback totals, etc. These data are used
+                exclusively to enhance your experience within the web
+                application and are never shared. You may clear this local data
+                at any time using the button below.
               </li>
             </ol>
           </li>
