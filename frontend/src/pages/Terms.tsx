@@ -115,7 +115,7 @@ export default function Terms() {
               <li>
                 If you have questions or concerns about this privacy policy or
                 how your data is handled, please{" "}
-                <Link to="about#contact">contact us</Link>.
+                <Link to="/about#contact">contact us</Link>.
               </li>
             </ol>
           </li>

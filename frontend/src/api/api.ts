@@ -1,3 +1,4 @@
+import type { ValueOf } from "type-fest";
 import type { Feedback } from "@/api/types";
 import type { ShareCart } from "@/state/cart";
 import analytics from "react-ga4";
@@ -22,49 +23,53 @@ export const performanceColor: Record<string, string> = {
   default: "bg-stone-500/25",
 };
 
-export const databases = [
-  {
-    id: "Refine.bio",
+/** performance to tooltip map */
+export const performanceTooltip: Record<string, string> = {
+  high: "Known positive studies were consistently ranked near the top.",
+  medium:
+    "Known positive studies were generally ranked highly, with some exceptions.",
+  low: "Known positive studies were not reliably ranked highly.",
+  default:
+    "Not enough ground-truth positive studies were available to rigorously evaluate this term.",
+};
+
+export const databases = {
+  "Refine.bio": {
     description:
       "A multi-species compendium of genome-wide RNA-Seq and microarray gene expression data",
     link: "https://www.refine.bio/v1/download/$ID.zip",
   },
-  {
-    id: "ARCHS4",
+  ARCHS4: {
     description:
       "A compendium of uniformly processed RNA-seq and Chip-Seq data from human and mouse",
     link: "https://maayanlab.cloud/archs4/download.html",
   },
-  {
-    id: "Recount3",
+  Recount3: {
     description:
       "A uniformly processed compendium of RNA-seq gene, exon, and exon-exon junction counts from human and mouse",
     link: "https://jhubiostatistics.shinyapps.io/recount3/",
   },
-  {
-    id: "SRA",
+  SRA: {
     description: "An NCBI collection of public high-throughput sequencing data",
     link: "https://www.ncbi.nlm.nih.gov/sra/$ID",
   },
-  {
-    id: "BioProject",
+  BioProject: {
     description:
       "An NCBI collection of datasets related to a single initiative or large consortium",
     link: "https://www.ncbi.nlm.nih.gov/bioproject/$ID",
   },
-  {
-    id: "BioSample",
+  BioSample: {
     description:
       "An NCBI collection of metadata of biological materials used in experimental assays",
     link: "https://www.ncbi.nlm.nih.gov/biosample/$ID",
   },
-] as const;
+} as const;
 
-export type Database = (typeof databases)[number];
+export type Database = ValueOf<typeof databases>;
 
 /** lookup database from id */
 export const getDb = (database: string): Partial<Database> =>
-  databases.find((db) => db.id === database) ?? {};
+  databases[database as keyof typeof databases] ?? {};
 
 /** get download link for study from db */
 export const dbLink = (link?: string, study?: string) =>

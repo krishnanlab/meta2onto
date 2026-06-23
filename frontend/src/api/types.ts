@@ -1,7 +1,8 @@
 import z from "zod";
 
 export const stats = z.object({
-  terms: z.number(),
+  tissues: z.number(),
+  diseases: z.number(),
   studies: z.number(),
   samples: z.number(),
   species: z.number(),

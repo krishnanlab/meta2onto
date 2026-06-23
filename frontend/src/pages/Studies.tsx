@@ -31,6 +31,7 @@ import {
 } from "lucide-react";
 import {
   performanceColor,
+  performanceTooltip,
   studyFeedback,
   studySamples,
   studySearch,
@@ -206,14 +207,15 @@ function Filters({
       {/* overview */}
       <dl>
         <dt>Searched</dt>
-        <dd>"{raw}"</dd>
+        <dd>{raw}</dd>
         <dt>Selected</dt>
-        <dd>"{search}"</dd>
+        <dd>{search}</dd>
         <dt>Performance</dt>
         <dd>
           <Pill
             value={query.data?.meta.performance ?? ""}
-            map={performanceColor}
+            color={performanceColor}
+            tooltip={performanceTooltip}
             className="w-full"
           />
         </dd>

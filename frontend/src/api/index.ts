@@ -59,7 +59,7 @@ export async function request<Response>(
   try {
     schema.parse(parsed);
   } catch (e) {
-    error = `Validation error: ${(e as z.ZodError).message}`;
+    console.error(`Validation error: ${(e as z.ZodError).message}`);
   }
   console.debug(`📣 Response ${url}`, { parsed, response });
   /** throw error after details have been logged */

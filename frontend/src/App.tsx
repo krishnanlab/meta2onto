@@ -15,6 +15,7 @@ import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import About from "@/pages/About";
 import Cart from "@/pages/Cart";
+import Help from "@/pages/Help";
 import Home from "@/pages/Home";
 import NotFound from "@/pages/NotFound";
 import Stats from "@/pages/Stats";
@@ -100,6 +101,10 @@ const routes = [
       {
         path: "about",
         element: <About />,
+      },
+      {
+        path: "help",
+        element: <Help />,
       },
       {
         path: "cart/:id?",

@@ -7,13 +7,14 @@ import { useQuery } from "@tanstack/react-query";
 import { omit } from "lodash";
 import {
   ArrowLeftRight,
-  Bird,
+  Brain,
   Glasses,
+  HeartPulse,
   History,
   Lightbulb,
   Microscope,
-  PersonStanding,
   Pipette,
+  Rat,
   Recycle,
   RotateCcw,
   SearchCheck,
@@ -155,11 +156,16 @@ export default function Home() {
       <section>
         <H2 className="sr-only">Stats</H2>
 
-        <div className="grid grid-cols-6 gap-8 max-lg:grid-cols-3 max-md:grid-cols-2 max-sm:grid-cols-1">
+        <div className="grid grid-cols-7 gap-8 max-lg:grid-cols-4 max-md:grid-cols-3 max-sm:grid-cols-2">
           <Tile
-            Icon={PersonStanding}
-            title={formatNumber(stats?.terms)}
-            description="tissues & diseases"
+            Icon={Brain}
+            title={formatNumber(stats?.tissues)}
+            description="tissues"
+          />
+          <Tile
+            Icon={HeartPulse}
+            title={formatNumber(stats?.diseases)}
+            description="diseases"
           />
           <Tile
             Icon={Microscope}
@@ -172,7 +178,7 @@ export default function Home() {
             description="samples"
           />
           <Tile
-            Icon={Bird}
+            Icon={Rat}
             title={formatNumber(stats?.species)}
             description="species"
           />
@@ -253,7 +259,7 @@ export function SearchBox({
           content: (
             <>
               {icon}
-              {type && <Pill value={type} map={typeColor} className="w-20" />}
+              {type && <Pill value={type} color={typeColor} className="w-20" />}
               {name && (
                 <span
                   className="grow truncate font-regular"
@@ -264,7 +270,7 @@ export function SearchBox({
               {performance && (
                 <Pill
                   value={performance}
-                  map={performanceColor}
+                  color={performanceColor}
                   className="w-20"
                 />
               )}

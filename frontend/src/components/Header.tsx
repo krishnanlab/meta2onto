@@ -75,6 +75,9 @@ export default function Header() {
         <Button to="/about" color="none">
           About
         </Button>
+        <Button to="/help" color="none">
+          Help
+        </Button>
         <Button to="/" color="none">
           Search
         </Button>

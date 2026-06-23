@@ -11,11 +11,11 @@ type Props = {
 
 /** pill for database info */
 export default function Database({ study = "", database }: Props) {
-  const { id = database, description = "", link = "" } = getDb(database);
+  const { description = "", link = "" } = getDb(database);
 
   const tooltip = (
     <div className="flex flex-col items-start gap-2">
-      <strong>{id}</strong>
+      <strong>{database}</strong>
       <div className="text-balance">{description}</div>
     </div>
   );
