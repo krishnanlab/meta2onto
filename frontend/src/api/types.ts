@@ -46,9 +46,11 @@ export const study = z.object({
   classification: z.string(),
   sample_count: z.number(),
   keywords: z.array(z.string()),
-  // feedback: z.object({
-  //   vote_count: z.number(),
-  // }),
+  feedback: z.object({
+    vote_count: z.number(),
+    likes: z.number(),
+    dislikes: z.number(),
+  }),
 });
 
 export type Study = z.infer<typeof study>;

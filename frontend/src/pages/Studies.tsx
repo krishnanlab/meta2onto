@@ -382,6 +382,7 @@ function Result({
   platform,
   classification,
   keywords,
+  feedback: allFeedback,
 }: Study) {
   /** current cart state */
   const cart = useAtomValue(cartAtom);
@@ -486,6 +487,11 @@ function Result({
           {/* feedback */}
           {confidence.value > feedbackThreshold && (
             <>
+              {!!allFeedback.vote_count && (
+                <span className="text-sm text-stone-500">
+                  {formatNumber(allFeedback.vote_count)} others gave feedback
+                </span>
+              )}
               <Button
                 color={feedback?.rating === 1 ? "theme" : "none"}
                 onClick={() => {

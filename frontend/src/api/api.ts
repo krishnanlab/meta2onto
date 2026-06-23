@@ -103,6 +103,7 @@ export const studySearch = async ({
     for (const value of values) url.searchParams.append(facet, value);
   analytics.event("study_search", { search, ordering, facets });
   const data = await request(url, studies);
+  console.log(data);
   return data;
 };
 
