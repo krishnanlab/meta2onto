@@ -817,5 +817,8 @@ class Feedback(TimeStampedModel):
     keywords = models.JSONField(null=True, blank=True)
     elaborate = models.TextField(null=True, blank=True)
 
+    class Meta:
+        unique_together = ("series_id", "user_id")
+
     def __str__(self):
         return f"Feedback from {self.name or 'anonymous'} ({self.email or 'no email'}) at {self.created_at}"

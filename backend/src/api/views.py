@@ -539,18 +539,20 @@ class GEOSeriesViewSet(viewsets.ReadOnlyModelViewSet):
         detail=False, methods=["post"], url_path="feedback", permission_classes=[AllowAny]
     )
     def feedback(self, request):
-        candidate = Feedback(
-            series_id=GEOSeries.objects.get(gse=request.data.get("id")),
-            user_id=request.headers.get("X-User-UUID", ""),
-            name=request.data.get("user", {}).get("name", ""),
-            email=request.data.get("user", {}).get("email", ""),
-            rating=request.data.get("rating"),
-            qualities=request.data.get("qualities", []),
-            keywords=request.data.get("keywords", {}),
-            elaborate=request.data.get("elaborate", ""),
-        )
         try:
-            candidate.save()
+            Feedback.objects.update_or_create(
+                series_id=GEOSeries.objects.get(gse=request.data.get("id")),
+                user_id=request.headers.get("X-User-UUID", ""),
+                defaults={
+                    "name": request.data.get("user", {}).get("name", ""),
+                    "email": request.data.get("user", {}).get("email", ""),
+                    "rating": request.data.get("rating"),
+                    "qualities": request.data.get("qualities", []),
+                    "keywords": request.data.get("keywords", {}),
+                    "elaborate": request.data.get("elaborate", ""),
+                }
+            )
+
             return Response({"status": "success"}, status=status.HTTP_201_CREATED)
         except Exception as e:
             return Response(
