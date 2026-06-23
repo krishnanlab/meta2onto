@@ -219,23 +219,15 @@ class GEOSeries(models.Model):
 
     @property
     def database(self):
-        inlined_db = getattr(self, "_database", None)
-        if inlined_db is not None:
-            return inlined_db
-        return list(
-            GEOSeriesDatabase.objects.filter(series_id=self.gse).values_list(
-                "database_name", flat=True
-            )
-        )
+        series_dbs = {k: {"url": v} for (k,v) in GEOSeriesDatabase.objects.filter(series_id=self.gse).values_list(
+            "database", "url"
+        )}
 
-    @property
-    def external_dbs(self):
-        # inlined_db = getattr(self, "_external_db", None)
-        # if inlined_db is not None:
-        #     return inlined_db
-        return {k: v for (k, v) in ExternalDbRefs.objects.filter(series_id=self.gse).values_list(
+        external_refs = {k: {"external_id": v} for (k,v) in ExternalDbRefs.objects.filter(series_id=self.gse).values_list(
             "database", "external_id"
         )}
+
+        return {**series_dbs, **external_refs}
     
     class Meta:
         indexes = [
@@ -429,17 +421,18 @@ class GEOSeriesDatabase(models.Model):
         on_delete=models.DO_NOTHING,
         db_constraint=False,
     )
-    database_name = models.CharField()
+    database = models.CharField()
     url = models.CharField(null=True, blank=True)
 
     class Meta:
         indexes = [
             models.Index(fields=["series"]),
-            models.Index(fields=["database_name"]),
+            models.Index(fields=["database"]),
+            models.Index(fields=["database", "series_id"]),
         ]
 
     def __str__(self):
-        return f"{self.series.series_id} in {self.database_name}"
+        return f"{self.series.series_id} in {self.database}"
     
 
 class ExternalDbRefs(models.Model):
@@ -468,6 +461,7 @@ class ExternalDbRefs(models.Model):
         indexes = [
             models.Index(fields=["series"]),
             models.Index(fields=["database"]),
+            models.Index(fields=["database", "series_id"]),
         ]
         # make (series, database) unique together to avoid duplicates
         unique_together = ("series", "database")
@@ -543,10 +537,64 @@ class OntologyTermRating(models.Model):
 
     (Note that, while not required, as of 2026-06-05, SearchTerm has as many
     unique values of 'term' as there rows in this table.)
+
+    Loaded from the following files:
+    - data/search_tables/disease_predictions.parquet
+    - data/search_tables/eval.parquet
+    - data/search_tables/tissue_predictions.parquet
     """
     term = models.CharField(max_length=256, db_index=True)
     performance = models.CharField(max_length=64)
     type = models.CharField(max_length=64)
+
+class FacetEntry(models.Model):
+    """
+    Individual facet value for a categorical facet.
+
+    This is used to store the individual values and counts for a categorical facet,
+    e.g. "Platform" or "Technology".
+    """
+
+    facet = models.ForeignKey(
+        "Facet",
+        related_name="entries",
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE
+    )
+    name = models.CharField(max_length=256)
+    count = models.IntegerField()
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["name"]),
+        ]
+
+    def __str__(self):
+        return f"{self.name}: {self.count}"
+
+class Facet(models.Model):
+    """
+    Global facet values for the entire dataset, used to populate the sidebar filters.
+
+    If the facet has min and max defined, that's passed verbatim to the frontend.
+    Otherwise, we return the values of FacetEntry associated with this facet.
+
+    (On why global facets were introduced: normally, facets are computed on the
+    current query results and updated as the user selects additional filtering
+    options. Unfotunately, running these queries on the fly for the current
+    search is too slow, and caching, the natural choice for speeding up slow
+    queries, is complicated by the introduction of user-supplied feedback to the
+    series response.)
+    """
+
+    name = models.CharField(max_length=256, unique=True)
+    min = models.IntegerField(null=True, blank=True)
+    max = models.IntegerField(null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.name}: {self.value}"
+
 
 # ===========================================================================
 # === Ontology search terms from meta-hq

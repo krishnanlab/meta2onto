@@ -1,43 +1,23 @@
 """
-Import GEOSeriesDatabase Parquet dumps into normalized Django models.
+Import GEOSeriesDatabase Parquet dump into normalized Django models.
 
-Expected input files (Parquet format):
-  - ids__level-sample.parquet
+Expected input file (Parquet format):
   - ids__level-series.parquet
-  - corpus__level-sample.parquet
-  - corpus__level-series.parquet
 
 These should all be under the 'root' data folder specified as the one required
 CLI argument.
-
-There are three main entities represented:
-- GEOSample (GSM)
-- GEOSeries (GSE)
-- GEOPlatform (GPL)
-
-The "ids__level-*.parquet" files contain structured metadata and relationships
-between these entities, while the "corpus__level-*.parquet" files contain
-textual documents associated with each GEOSample or GEOSeries for indexing/search.
-
-GEOPlatforms and Organisms are created as needed. GEOSeries-GEOPlatform relationships,
-GEOSample-GEOSeries memberships, GEOSeries-GEOSeries relations, and external links are also
-created based on the data in the Parquet files.
 """
 
-import json
 import math
-import re
 from pathlib import Path
-from typing import Iterable, Tuple, Optional
+from typing import Iterable, Optional
 
 from tqdm import tqdm
 
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction, connection
 
-import pyarrow as pa
 import pyarrow.parquet as pq
-from django.utils.dateparse import parse_datetime
 
 from api.models import GEOSeriesDatabase
 
@@ -77,114 +57,6 @@ def _total_batches(pf: pq.ParquetFile, batch_size: int) -> int:
 
 # size of batches to process at a time
 DEFAULT_BATCH_SIZE = 5000
-
-
-@transaction.atomic
-def import_corpus_level_sample(path: Path, batch_size: int = DEFAULT_BATCH_SIZE):
-    """
-    corpus__level-sample.parquet
-      columns: index (sample_id), docs
-    """
-
-    pf = pq.ParquetFile(path)
-
-    for batch in tqdm(
-        pf.iter_batches(batch_size=batch_size),
-        total=_total_batches(pf, batch_size),
-        desc="Importing GEOSample",
-    ):
-        rows = batch.to_pylist()
-        GEOSample.objects.bulk_create(
-            [GEOSample(sample_id=row["index"], doc=row["doc"]) for row in rows],
-            ignore_conflicts=True,
-        )
-
-
-@transaction.atomic
-def import_corpus_level_series(path: Path, batch_size: int = DEFAULT_BATCH_SIZE):
-    """
-    corpus__level-series.parquet
-      columns: index (series_id), docs
-    """
-
-    pf = pq.ParquetFile(path)
-
-    for batch in tqdm(
-        pf.iter_batches(batch_size=batch_size),
-        total=_total_batches(pf, batch_size),
-        desc="Importing GEOSeries",
-    ):
-        rows = batch.to_pylist()
-        GEOSeries.objects.bulk_create(
-            [GEOSeries(series_id=row["index"], doc=row["doc"]) for row in rows],
-            ignore_conflicts=True,
-        )
-
-
-def import_ids_level_sample(path: Path, batch_size: int = DEFAULT_BATCH_SIZE):
-    """
-    ids__level-sample.parquet
-      columns: sample, series, platform, organism, status
-
-    Column details:
-    - "sample": GSM ID
-    - "series": GSE ID
-    - "platform": GPL ID
-    - "organism": organism name
-    - "status": e.g., 'Public on YYYY-MM-DD'
-    """
-
-    pf = pq.ParquetFile(path)
-
-    # store refs to already-created organisms to avoid redundant queries
-    organism_cache = {}
-    # store IDs of already-created platforms to avoid redundant queries
-    platform_set = set()
-    sample_set = set()
-    series_set = set()
-
-    for batch in tqdm(
-        pf.iter_batches(batch_size=batch_size),
-        total=_total_batches(pf, batch_size),
-        desc="Importing OrganismForPairing",
-    ):
-        with transaction.atomic():
-            rows = batch.to_pylist()
-
-            for row in rows:
-                # check if the organism exists; create if not and cache the model instance
-                if row["organism"] not in organism_cache:
-                    organism, _ = Organism.objects.get_or_create(name=row["organism"])
-                    organism_cache[row["organism"]] = organism
-
-                # check if the platform exists; create if not
-                if row["platform"] not in platform_set:
-                    platform_set.add(row["platform"])
-                    # use get_or_create rather than create just in case it's already there
-                    GEOPlatform.objects.get_or_create(platform_id=row["platform"])
-
-                # check if the sample exists; create if not
-                if row["sample"] not in sample_set:
-                    sample_set.add(row["sample"])
-                    GEOSample.objects.get_or_create(sample_id=row["sample"])
-
-                # check if the GEOSeries exists; create if not
-                if row["series"] not in series_set:
-                    series_set.add(row["series"])
-                    GEOSeries.objects.get_or_create(series_id=row["series"])
-
-            OrganismForPairing.objects.bulk_create(
-                [
-                    OrganismForPairing(
-                        sample_id=row["sample"],
-                        series_id=row["series"],
-                        platform_id=row["platform"],
-                        organism=organism_cache[row["organism"]],
-                    )
-                    for row in rows
-                ],
-                ignore_conflicts=True,
-            )
 
 
 def import_series_databases(path: Path, batch_size: int = DEFAULT_BATCH_SIZE):
@@ -239,7 +111,7 @@ def import_series_databases(path: Path, batch_size: int = DEFAULT_BATCH_SIZE):
                     if rel_type in db_relations:
                         # create GEOSeriesRelations entry
                         GEOSeriesDatabase.objects.get_or_create(
-                            series_id=series_id, database_name=rel_type, url=rel_value
+                            series_id=series_id, database=rel_type, url=rel_value
                         )
 
 
