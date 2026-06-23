@@ -25,7 +25,7 @@ export default function Database({ study = "", database }: Props) {
       key={database}
       to={dbLink(link, study)}
       tabIndex={0}
-      className="contents"
+      className="contents no-underline"
       arrow={false}
     >
       <Pill value={database} tooltip={{ [database]: tooltip }} />
