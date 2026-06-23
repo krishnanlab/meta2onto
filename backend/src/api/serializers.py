@@ -157,8 +157,7 @@ class GEOSeriesSerializer(serializers.ModelSerializer):
             label = "low"
         return {"name": label, "value": obj.prob}
 
-    database = serializers.ListField(child=serializers.CharField(), read_only=True)
-    external_dbs = serializers.DictField(child=serializers.CharField(), read_only=True)
+    database = serializers.DictField(child=serializers.DictField(), read_only=True)
 
     # FIXME: renames to support frontend changes; i'm probably going to
     # keep the db layer the same to ease imports and just rename fields at the
@@ -202,7 +201,9 @@ class GEOSeriesSerializer(serializers.ModelSerializer):
         feedback = (
             Feedback.objects.filter(series_id=obj)
                 .aggregate(
-                    vote_count=Count('id')
+                    vote_count=Count('id'),
+                    likes=Count('id', filter=Q(rating=1)),
+                    dislikes=Count('id', filter=Q(rating=-1)),
                 )
         )
         
@@ -237,8 +238,7 @@ class GEOSeriesSerializer(serializers.ModelSerializer):
             # from joining with api_sample count
             "sample_count", # FIXME: review if samples_ct can be remapped to this
             # from joining with api_seriesdatabase
-            "database", # FIXME: review if still used
-            "external_dbs",
+            "database",
             "platform",
 
             "keywords",

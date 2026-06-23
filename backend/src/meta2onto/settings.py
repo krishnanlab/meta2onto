@@ -210,4 +210,9 @@ REST_FRAMEWORK = {
 # (default currently set to 30 days in seconds)
 LONGTERM_CACHE_TIMEOUT = int(os.environ.get("LONGTERM_CACHE_TIMEOUT", str(60 * 60 * 24 * 30)))
 # maximum number of search results to return, which can be overridden by environment variable
-SEARCH_MAX_RESULTS = int(os.environ.get("SEARCH_MAX_RESULTS", "1000"))
+SEARCH_MAX_RESULTS = int(os.environ.get("SEARCH_MAX_RESULTS", "1000000000"))
+
+# if true, computes facets per request
+# if false, consults the global Facet and FacetEntry tables for precomputed facet values
+# over the entire dataset
+COMPUTE_FACETS_DYNAMICALLY = is_truthy(os.environ.get("COMPUTE_FACETS_DYNAMICALLY", "0"))

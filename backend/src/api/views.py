@@ -13,8 +13,11 @@ from django.db.models import (
     IntegerField,
     CharField,
     F,
+    Q,
     Func,
+    Exists,
 )
+from django.db.models.expressions import RawSQL
 from django.db.models.functions import Coalesce
 from django.http import HttpResponse
 from django.utils.decorators import method_decorator
@@ -34,6 +37,8 @@ from .models import (
     GEOSample,
     GEOSeries,
     GEOSeriesToGEOPlatforms,
+    GEOSeriesDatabase,
+    ExternalDbRefs,
     OntologySearchResults,
     Organism,
     GEOPlatform,
@@ -41,6 +46,7 @@ from .models import (
     OntologyTermRating,
     GEOSeries,
     Feedback,
+    Facet,
 )
 from .serializers import (
     CartSerializer,
@@ -166,79 +172,106 @@ class GEOSeriesViewSet(viewsets.ReadOnlyModelViewSet):
                 default=Value("unknown"),
                 output_field=CharField(),
             ),
-            study_size=Case(
-                When(samples_ct__lt=10, then=Value("small")),
-                When(samples_ct__gte=10, samples_ct__lte=50, then=Value("medium")),
-                When(samples_ct__gt=50, then=Value("large")),
-                default=Value("unknown"),
-                output_field=CharField(),
-            ),
+            # study_size=Case(
+            #     When(samples_ct__lt=10, then=Value("small")),
+            #     When(samples_ct__gte=10, samples_ct__lte=50, then=Value("medium")),
+            #     When(samples_ct__gt=50, then=Value("large")),
+            #     default=Value("unknown"),
+            #     output_field=CharField(),
+            # ),
         )
 
     def _build_facets(self, queryset):
         """Compute facets for the search result set."""
 
-        annotated_qs = self._with_samples_count(queryset)
-        annotated_qs = self._with_facet_buckets(annotated_qs).order_by()
+        if settings.COMPUTE_FACETS_DYNAMICALLY:
+            annotated_qs = self._with_samples_count(queryset)
+            annotated_qs = self._with_facet_buckets(annotated_qs).order_by()
 
-        # confidence facet
-        confidence_counts = annotated_qs.values("confidence_level").annotate(
-            count=Count("gse")
-        )
+            # # confidence facet
+            # removed b/c we now hardcode the response
+            # confidence_counts = annotated_qs.values("confidence_level").annotate(
+            #     count=Count("gse")
+            # )
 
-        # study size facet
-        study_size_counts = annotated_qs.values("study_size").annotate(
-            count=Count("gse")
-        )
-
-        # platform facet
-        gse_list = list(queryset.values_list("gse", flat=True))
-
-        platform_counts_qs = (
-            GEOSeriesToGEOPlatforms.objects
-            .filter(gse__in=gse_list)
-            .annotate(
-                gpl=Func(F("platforms"), function="unnest", output_field=CharField())
+            # study size facet
+            study_size_counts = annotated_qs.values("study_size").annotate(
+                count=Count("gse")
             )
-            .values("gse", "gpl")
-            .distinct()
-        )
 
-        # platform facets are a little different; we need to return the ID
-        # for display, but we use the gpl field as the key for searches
-        platform_counts = (
-            GEOPlatform.objects
-            .filter(gpl__in=platform_counts_qs.values("gpl"))
-            .values("gpl")
-            .annotate(count=Count("gpl", distinct=True))
-        )
+            # platform facet
+            gse_list = list(queryset.values_list("gse", flat=True))
 
-        # also facet by technology
-        technology_counts = (
-            GEOPlatform.objects
-            .filter(gpl__in=platform_counts_qs.values("gpl"))
-            .values("technology")
-            .annotate(count=Count("gpl", distinct=True))
-        )
+            platform_counts_qs = (
+                GEOSeriesToGEOPlatforms.objects
+                .filter(gse__in=gse_list)
+                .annotate(
+                    gpl=Func(F("platforms"), function="unnest", output_field=CharField())
+                )
+                .values("gse", "gpl")
+                .distinct()
+            )
 
-        # final facet results
-        return {
-            "Study Size": {
-                entry["study_size"]: entry["count"] for entry in study_size_counts
-            },
-            "Confidence": {
-                # entry["confidence_level"]: entry["count"] for entry in confidence_counts
-                "label": "Confidence",
-                "min": 0,
-                "max": 100,
-            },
-            "Platforms": {
-                (row["gpl"] or "unknown"): row["count"] for row in platform_counts
-            },
-            "Technologies": {
-                (row["technology"] or "unknown"): row["count"] for row in technology_counts
-            },
-        }
+            # platform facets are a little different; we need to return the ID
+            # for display, but we use the gpl field as the key for searches
+            platform_counts = (
+                GEOPlatform.objects
+                .filter(gpl__in=platform_counts_qs.values("gpl"))
+                .values("gpl")
+                .annotate(count=Count("gpl", distinct=True))
+            )
+
+            # also facet by technology
+            technology_counts = (
+                GEOPlatform.objects
+                .filter(gpl__in=platform_counts_qs.values("gpl"))
+                .values("technology")
+                .annotate(count=Count("gpl", distinct=True))
+            )
+
+            # final facet results
+            return {
+                "Study Size": {
+                    entry["study_size"]: entry["count"] for entry in study_size_counts
+                },
+                "Confidence": {
+                    # entry["confidence_level"]: entry["count"] for entry in confidence_counts
+                    "label": "Confidence",
+                    "min": 0,
+                    "max": 100,
+                },
+                "Platforms": {
+                    (row["gpl"] or "unknown"): row["count"] for row in platform_counts
+                },
+                "Technologies": {
+                    (row["technology"] or "unknown"): row["count"] for row in technology_counts
+                },
+            }
+        else:
+            # query Facet and FacetEntry tables for precomputed facet values
+            facets = {}
+
+            for facet in Facet.objects.prefetch_related("entries").all():
+                if facet.min is not None and facet.max is not None:
+                    # min/max facet
+                    facets[facet.name] = {
+                        "label": facet.name,
+                        "min": facet.min,
+                        "max": facet.max,
+                    }
+                else:
+                    # categorical facet
+                    facets[facet.name] = {
+                        entry.name: entry.count
+                        for entry in (
+                            facet.entries
+                                .filter(count__gte=1)
+                                .order_by("-count")
+                        )[:20]
+                    }
+            
+            return facets
+
 
     # search by ontology ID (e.g., MONDO:0000270), which consults SearchTerm for
     # series matching the term
@@ -280,9 +313,8 @@ class GEOSeriesViewSet(viewsets.ReadOnlyModelViewSet):
         # searched result set
         facets = self._build_facets(results)
 
-
         # ---------------------------------------------------------------
-        # --- apply faceting options from request
+        # --- apply faceting filter options from request
         # ---------------------------------------------------------------
 
         # if confidence is provided, filter by confidence bucket
@@ -316,6 +348,16 @@ class GEOSeriesViewSet(viewsets.ReadOnlyModelViewSet):
                 results = results.filter(samples_ct__gte=10, samples_ct__lte=50)
             elif study_size == "large":
                 results = results.filter(samples_ct__gt=50)
+        elif re.match(r"^[0-9]+-[0-9]+$", study_size or ""):
+            # check if study size can be interpreted as a range like "10-50" and filter accordingly
+            try:
+                low, high = tuple(int(x) for x in study_size.split("-"))
+                if low >= 0:
+                    results = results.filter(samples_ct__gte=low)
+                if high >= 0:
+                    results = results.filter(samples_ct__lte=high)
+            except ValueError:
+                pass  # ignore invalid study size values
 
         # if platforms is provided:
         # 1. get GPLs whose technology is in requested platform technologies
@@ -359,6 +401,32 @@ class GEOSeriesViewSet(viewsets.ReadOnlyModelViewSet):
 
             results = results.filter(gse__in=Subquery(tech_gse_values))
 
+        # if Databases is provided, filter results to those GSEs whose database
+        # field matches the requested databases in either of our two tables for
+        # databases, GEOSeriesDatabase or ExternalDbRefs
+        # (which, on writing this out, i realized we should probably merge)
+        databases = request.query_params.getlist("Databases")
+        if databases:
+            for db in databases:
+                if db in GEOSeriesDatabase.objects.values_list("database", flat=True):
+                    in_geo_series_database = GEOSeriesDatabase.objects.filter(
+                        series_id=OuterRef("gse"),
+                        database=db,
+                    )
+                else:
+                    in_geo_series_database = GEOSeriesDatabase.objects.none()
+
+                if db in ExternalDbRefs.objects.values_list("database", flat=True):
+                    in_external_refs = ExternalDbRefs.objects.filter(
+                        series_id=OuterRef("gse"),
+                        database=db,
+                    )
+                else:
+                    in_external_refs = ExternalDbRefs.objects.none()
+
+                results = results.filter(
+                    Exists(in_geo_series_database) | Exists(in_external_refs)
+                )
 
         # ---------------------------------------------------------------
         # --- apply ordering, limit options from request
