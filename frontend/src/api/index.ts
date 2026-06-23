@@ -39,7 +39,7 @@ export async function request<Response>(
   rawOptions.headers.set("x-user-uuid", uuid);
   /** construct request */
   const request = new Request(url, rawOptions);
-  console.debug(`📞 Request ${url}`, { options, request });
+  console.debug(`📞 Request ${url}`, { rawOptions, request });
   /** make request */
   const response = await fetch(request);
   /** capture error for throwing later */
