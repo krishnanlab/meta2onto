@@ -510,7 +510,7 @@ function Result({
                   setFeedback(id, "rating", (old) => (old === 1 ? 0 : 1));
                   mutation.mutate();
                 }}
-                aria-label="Thumbs up this study"
+                title="Everything looks good (study prediction is accurate and keywords are relevant)"
                 aria-disabled={!!status}
               >
                 {status || <ThumbsUp />}
@@ -521,7 +521,7 @@ function Result({
               >
                 <Button
                   color={feedback?.rating === -1 ? "theme" : "none"}
-                  aria-label="Thumbs down this study"
+                  title="Something looks wrong (study prediction is incorrect and/or keywords are irrelevant)"
                   aria-disabled={!!status}
                 >
                   {status || <ThumbsDown />}
@@ -595,10 +595,7 @@ export function Highlight({ keywords, children }: HighlightProps) {
   );
 }
 
-const qualities = [
-  "The prediction is incorrect",
-  "Irrelevant/incorrect informative words",
-];
+const qualities = ["Incorrect prediction", "Irrelevant/incorrect keywords"];
 
 /** study negative feedback popup */
 function ThumbsDownPopup({ id, keywords }: { id: string; keywords: string[] }) {
@@ -645,7 +642,7 @@ function ThumbsDownPopup({ id, keywords }: { id: string; keywords: string[] }) {
                 );
             }}
           >
-            {quality}{" "}
+            {quality}
           </Checkbox>
         ))}
       </div>
