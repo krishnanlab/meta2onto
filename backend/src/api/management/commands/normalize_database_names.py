@@ -26,4 +26,23 @@ class Command(BaseCommand):
                     END
                 """)
 
+        # update facet databases entries as well
+        with transaction.atomic(), connection.cursor() as cursor:
+            self.stdout.write("Normalizing database facet names in table: api_facetentry")
+            cursor.execute("""
+                UPDATE api_facetentry
+                SET name = CASE
+                    WHEN name ILIKE 'refine.bio' THEN 'Refine.bio'
+                    WHEN name ILIKE 'archs4' THEN 'ARCHS4'
+                    WHEN name ILIKE 'recount3' THEN 'Recount3'
+                    WHEN name ILIKE 'geo' THEN 'GEO'
+                    WHEN name ILIKE 'sra' THEN 'SRA'
+                    WHEN name ILIKE 'biostudies' THEN 'BioStudies'
+                    WHEN name ILIKE 'bioproject' THEN 'BioProject'
+                    WHEN name ILIKE 'arrayexpress' THEN 'ArrayExpress'
+                    WHEN name ILIKE 'peptidome' THEN 'Peptidome'
+                    ELSE name
+                END
+            """)
+
         self.stdout.write(self.style.SUCCESS("Database names normalized successfully."))
