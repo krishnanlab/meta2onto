@@ -310,6 +310,7 @@ class GEOSample(models.Model):
             models.Index(fields=["gsm"]),
             models.Index(fields=["series"]),
             models.Index(fields=["gpl_raw"]),
+            models.Index(fields=["organism_ch1"]),
         ]
 
     def __str__(self):
