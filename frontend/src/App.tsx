@@ -22,7 +22,6 @@ import Studies from "@/pages/Studies";
 import Terms from "@/pages/Terms";
 import Testbed from "@/pages/Testbed";
 import { scrollTo } from "@/util/dom";
-import { redirectPath, redirectState } from "@/util/url";
 
 /** app entrypoint */
 export default function App() {
@@ -73,7 +72,18 @@ const routes = [
         index: true,
         element: <Home />,
         loader: async () => {
-          /** handle 404 redirect */
+          /** handle 404 redirect (see 404.html) */
+
+          /** load redirect storage items */
+          const redirectPath = window.sessionStorage.redirectPath || "";
+          const redirectState = JSON.parse(
+            window.sessionStorage.redirectState || "null",
+          );
+
+          /** remove redirect storage items right after consuming */
+          window.sessionStorage.removeItem("redirectPath");
+          window.sessionStorage.removeItem("redirectState");
+
           if (redirectState !== null)
             window.history.replaceState(redirectState, "");
           if (redirectPath) {

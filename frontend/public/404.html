@@ -3,7 +3,7 @@
   <body>
     <script type="text/javascript">
       // redirect to root and pass page to router
-      console.debug("Redirecting from:", location);
+      console.debug("Redirecting from:", location.href);
       console.debug("With state:", history.state);
       const { origin, pathname, search, hash } = location;
       sessionStorage.redirectPath = pathname + search + hash;
