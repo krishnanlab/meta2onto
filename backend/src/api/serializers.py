@@ -258,6 +258,21 @@ class GEOSampleSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+# ===========================================================================
+# === Database statistics
+# ===========================================================================
+
+class DatabaseStatsSerializer(serializers.Serializer):
+    """Serializer for database statistics returned from /api/stats/ endpoint."""
+
+    terms = serializers.IntegerField()
+    studies = serializers.IntegerField()
+    samples = serializers.IntegerField()
+    species = serializers.IntegerField()
+    technologies = serializers.IntegerField()
+    feedback = serializers.IntegerField()
+
+
 
 # ===========================================================================
 # === Cart server-side state

@@ -43,6 +43,7 @@ from .models import (
     Organism,
     GEOPlatform,
     SearchTerm,
+    OntologyTerms,
     OntologyTermRating,
     GEOSeries,
     Feedback,
@@ -57,6 +58,7 @@ from .serializers import (
     GEOPlatformSerializer,
     SearchTermSerializer,
     GEOSeriesSerializer,
+    DatabaseStatsSerializer,
 )
 from .utils.auth import CsrfExemptSessionAuthentication
 
@@ -626,6 +628,28 @@ def ontology_search(request):
 
     results = OntologySearchResults.objects.search(query, max_results)
     serializer = OntologySearchResultsSerializer(results, many=True)
+    return Response(serializer.data)
+
+# ===========================================================================
+# === Database-wide statistics
+# ===========================================================================
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+@cache_page(settings.LONGTERM_CACHE_TIMEOUT)
+def database_statistics(request):
+    """
+    API endpoint for getting statistics about the database.
+    Accessible at /api/stats/
+    """
+    serializer = DatabaseStatsSerializer({
+        "terms": OntologyTerms.objects.count(),
+        "studies": GEOSeries.objects.count(),
+        "samples": GEOSample.objects.count(),
+        "species": GEOSample.objects.values("organism_ch1").distinct().count(),
+        "technologies": GEOPlatform.objects.values("technology").distinct().count(),
+        "feedback": Feedback.objects.count(),
+    }, many=False)
     return Response(serializer.data)
 
 
