@@ -47,7 +47,7 @@ export default function Button({
       <Link
         ref={ref as Ref<HTMLAnchorElement>}
         className={_class}
-        showArrow={false}
+        arrow={false}
         {...props}
       >
         {children}

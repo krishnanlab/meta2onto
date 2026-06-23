@@ -9,7 +9,7 @@ type Base = {
   /** force link opening in new/same tab */
   newTab?: boolean;
   /** force showing/hiding arrow icon */
-  showArrow?: boolean;
+  arrow?: boolean;
 };
 
 type _Anchor = ComponentProps<"a"> & { to: string };
@@ -21,7 +21,7 @@ export default function Link({
   to,
   children,
   newTab,
-  showArrow,
+  arrow,
   className,
   ...props
 }: Props) {
@@ -32,7 +32,7 @@ export default function Link({
   const target = (newTab ?? external) ? "_blank" : "";
 
   /** whether to show arrow icon */
-  const _showArrow = showArrow ?? target;
+  const showArrow = arrow ?? target;
 
   /** combine styles */
   const _class = clsx(
@@ -45,13 +45,13 @@ export default function Link({
     /** "external" plain link */
     <a ref={ref} href={to} target={target} className={_class} {...props}>
       {children}
-      {_showArrow && <ExternalLink />}
+      {showArrow && <ExternalLink />}
     </a>
   ) : (
     /** "internal" router link */
     <RouterLink ref={ref} to={to} target={target} className={_class} {...props}>
       {children}
-      {_showArrow && <ExternalLink />}
+      {showArrow && <ExternalLink />}
     </RouterLink>
   );
 
