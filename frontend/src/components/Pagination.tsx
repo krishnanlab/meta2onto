@@ -39,8 +39,6 @@ export default function Pagination({
   setLimit,
   children,
 }: Props) {
-  if (!count) return null;
-
   const _limit = Number(limit);
   const pages = Math.ceil(count / _limit);
 
