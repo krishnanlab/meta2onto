@@ -394,7 +394,7 @@ export default function Cart() {
                       key: "database",
                       name: "Databases",
                       render: (database) =>
-                        database.map((database, index) => (
+                        Object.entries(database).map(([database, data], index) => (
                           <DatabaseBadge key={index} database={database} />
                         )),
                     },

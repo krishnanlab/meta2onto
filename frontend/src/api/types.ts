@@ -36,7 +36,13 @@ export const study = z.object({
   }),
   submitted_at: z.iso.date(),
   platform: z.string(),
-  database: z.array(z.string()),
+  database: z.record(
+    z.string(),
+    z.object({
+      url: z.string().trim().url().nullable().optional(),
+      external_id: z.string().nullable().optional(),
+    })
+  ),
   classification: z.string(),
   sample_count: z.number(),
   keywords: z.array(z.string()),
