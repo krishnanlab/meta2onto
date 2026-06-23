@@ -52,10 +52,7 @@ export default function Ring() {
       strokeLinecap="round"
       strokeLinejoin="round"
       className={clsx(
-        `
-          absolute top-1/2 left-1/2 -z-10 size-full -translate-1/2 scale-275
-          text-theme
-        `,
+        `absolute top-1/2 left-1/2 -z-10 size-full -translate-1/2 scale-275 text-theme`,
         classes.svg,
       )}
       style={

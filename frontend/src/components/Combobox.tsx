@@ -31,13 +31,7 @@ export default function ComboBox<O extends Option>({
             <_Combobox.Chips className="flex flex-wrap gap-1">
               {value.map((item, index) => (
                 <_Combobox.Chip key={index}>
-                  <_Combobox.ChipRemove
-                    className="
-                      flex items-center gap-1 rounded-full bg-theme-light px-2
-                      py-1 text-sm transition
-                      hover:bg-stone-200
-                    "
-                  >
+                  <_Combobox.ChipRemove className="flex items-center gap-1 rounded-full bg-theme-light px-2 py-1 text-sm transition hover:bg-stone-200">
                     {item} <X />
                   </_Combobox.ChipRemove>
                 </_Combobox.Chip>
@@ -46,9 +40,7 @@ export default function ComboBox<O extends Option>({
             <_Combobox.InputGroup className="flex">
               <_Combobox.Input
                 placeholder={placeholder}
-                className="
-                  grow rounded-md border border-current/25 bg-white p-2
-                "
+                className="grow rounded-md border border-current/25 bg-white p-2"
               />
             </_Combobox.InputGroup>
           </Fragment>
@@ -57,12 +49,7 @@ export default function ComboBox<O extends Option>({
 
       <_Combobox.Portal>
         <_Combobox.Positioner className="z-10" collisionPadding={40}>
-          <_Combobox.Popup
-            className="
-              flex max-h-(--available-height) w-(--anchor-width) flex-col
-              overflow-y-auto rounded-md bg-white shadow-md
-            "
-          >
+          <_Combobox.Popup className="flex max-h-(--available-height) w-(--anchor-width) flex-col overflow-y-auto rounded-md bg-white shadow-md">
             <_Combobox.Empty>
               <div>No results</div>
             </_Combobox.Empty>
@@ -71,12 +58,7 @@ export default function ComboBox<O extends Option>({
                 <_Combobox.Item
                   key={item}
                   value={item}
-                  className="
-                    flex cursor-pointer items-center gap-2 p-1 transition
-                    hover:bg-stone-100
-                    data-highlighted:bg-stone-100
-                    data-selected:[&>svg]:opacity-100
-                  "
+                  className="flex cursor-pointer items-center gap-2 p-1 transition hover:bg-stone-100 data-highlighted:bg-stone-100 data-selected:[&>svg]:opacity-100"
                 >
                   <Check className="text-emerald-500 opacity-0 transition" />
                   <span>{item}</span>

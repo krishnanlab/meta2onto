@@ -185,10 +185,7 @@ export default function Table<Datum extends object>({
               table.getRowModel().rows.map((row, index) => (
                 <tr
                   key={row.id}
-                  className="
-                    odd:bg-white
-                    even:bg-stone-50
-                  "
+                  className="odd:bg-white even:bg-stone-50"
                   aria-rowindex={
                     table.getState().pagination.pageIndex *
                       table.getState().pagination.pageSize +

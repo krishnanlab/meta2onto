@@ -54,10 +54,7 @@ export default function Stats() {
   return (
     <aside
       className={clsx(
-        `
-          fixed right-0 bottom-0 z-100 flex flex-col overflow-hidden
-          rounded-tl-md bg-white leading-none shadow-md transition
-        `,
+        `fixed right-0 bottom-0 z-100 flex flex-col overflow-hidden rounded-tl-md bg-white leading-none shadow-md transition`,
         show ? "" : "translate-y-[calc(100%-(--spacing(8)))]",
       )}
     >

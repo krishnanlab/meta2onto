@@ -37,10 +37,7 @@ export default function Link({
   /** combine styles */
   const _class = clsx(
     className,
-    `
-      inline-flex items-center gap-1 text-theme
-      hover:text-current
-    `,
+    `inline-flex items-center gap-1 text-theme hover:text-current`,
   );
 
   /** full element to render */

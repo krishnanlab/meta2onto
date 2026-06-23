@@ -36,18 +36,12 @@ export default function Header() {
   return (
     <header
       ref={ref}
-      className="
-        sticky top-0 z-10 flex flex-row flex-wrap items-center justify-between
-        gap-4 bg-theme-dark p-4
-      "
+      className="sticky top-0 z-10 flex flex-row flex-wrap items-center justify-between gap-4 bg-theme-dark p-4"
     >
       {/* title */}
       <a
         href="/"
-        className="
-          flex items-center gap-2 rounded-md text-2xl tracking-wider text-white
-          no-underline
-        "
+        className="flex items-center gap-2 rounded-md text-2xl tracking-wider text-white no-underline"
       >
         <Logo color="currentColor" className="h-8" />
         {title}
@@ -73,11 +67,7 @@ export default function Header() {
       {/* nav bar */}
       <nav
         className={clsx(
-          `
-            flex flex-wrap items-center justify-center gap-4 text-xl
-            *:text-white
-            max-xs:flex-col
-          `,
+          `flex flex-wrap items-center justify-center gap-4 text-xl *:text-white max-xs:flex-col`,
           !open && "max-sm:hidden",
           open && "max-sm:w-full",
         )}
@@ -101,12 +91,7 @@ export default function Header() {
           <ShoppingCart />
           Cart
           {!!cart.studies.length && (
-            <div
-              className="
-                absolute -top-2 -right-2 grid size-5 place-items-center
-                rounded-full bg-theme-light text-sm text-black
-              "
-            >
+            <div className="absolute -top-2 -right-2 grid size-5 place-items-center rounded-full bg-theme-light text-sm text-black">
               {cart.studies.length}
             </div>
           )}

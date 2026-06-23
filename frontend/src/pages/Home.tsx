@@ -71,12 +71,7 @@ export default function Home() {
 
   return (
     <>
-      <section
-        className="
-          relative isolate overflow-hidden bg-theme-light py-20! text-center
-          width-sm
-        "
-      >
+      <section className="relative isolate overflow-hidden bg-theme-light py-20! text-center width-sm">
         <Rings />
 
         <hgroup className="flex flex-col items-center gap-y-1 width-sm">
@@ -98,13 +93,7 @@ export default function Home() {
       <section>
         <H2 className="sr-only">How it works</H2>
 
-        <div
-          className="
-            grid grid-cols-3 gap-8
-            max-md:grid-cols-2
-            max-sm:grid-cols-1
-          "
-        >
+        <div className="grid grid-cols-3 gap-8 max-md:grid-cols-2 max-sm:grid-cols-1">
           <Tile
             number={1}
             Icon={SearchCheck}
@@ -138,13 +127,7 @@ export default function Home() {
       <section>
         <H2 className="sr-only">Features</H2>
 
-        <div
-          className="
-            grid grid-cols-3 gap-8
-            max-md:grid-cols-2
-            max-sm:grid-cols-1
-          "
-        >
+        <div className="grid grid-cols-3 gap-8 max-md:grid-cols-2 max-sm:grid-cols-1">
           <Tile
             Icon={Glasses}
             title="Interpretable"
@@ -172,14 +155,7 @@ export default function Home() {
       <section>
         <H2 className="sr-only">Stats</H2>
 
-        <div
-          className="
-            grid grid-cols-6 gap-8
-            max-lg:grid-cols-3
-            max-md:grid-cols-2
-            max-sm:grid-cols-1
-          "
-        >
+        <div className="grid grid-cols-6 gap-8 max-lg:grid-cols-3 max-md:grid-cols-2 max-sm:grid-cols-1">
           <Tile
             Icon={PersonStanding}
             title={formatNumber(stats?.studies)}
@@ -329,11 +305,7 @@ function Tile({ number, Icon, title, description }: TileProps) {
       <Icon className="size-12 text-theme" />
       <div className="flex items-center gap-2 text-xl font-medium">
         {number && (
-          <div
-            className="
-              grid size-7 place-items-center rounded-full bg-theme-light text-lg
-            "
-          >
+          <div className="grid size-7 place-items-center rounded-full bg-theme-light text-lg">
             {number}
           </div>
         )}

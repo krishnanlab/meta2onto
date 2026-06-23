@@ -22,19 +22,8 @@ export default function Tooltip({ children, content }: Props) {
             collisionPadding={padding}
             className="z-20"
           >
-            <_Tooltip.Popup
-              className="
-                flex w-50 max-w-max flex-col gap-2 rounded-md bg-stone-900 p-4
-                text-white
-              "
-            >
-              <_Tooltip.Arrow
-                className="
-                  text-stone-900
-                  data-[side=bottom]:bottom-full data-[side=bottom]:rotate-180
-                  data-[side=top]:top-full
-                "
-              >
+            <_Tooltip.Popup className="flex w-50 max-w-max flex-col gap-2 rounded-md bg-stone-900 p-4 text-white">
+              <_Tooltip.Arrow className="text-stone-900 data-[side=bottom]:bottom-full data-[side=bottom]:rotate-180 data-[side=top]:top-full">
                 <Arrow />
               </_Tooltip.Arrow>
               {content}

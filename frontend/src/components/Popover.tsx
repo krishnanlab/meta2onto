@@ -31,21 +31,8 @@ export default function Popover({ children, content, onOpen, onClose }: Props) {
           collisionPadding={padding}
           className="z-20"
         >
-          <_Popover.Popup
-            className="
-              flex max-h-(--available-height) max-w-(--available-width) flex-col
-              gap-2 rounded-md bg-white p-4 shadow-overlay
-            "
-          >
-            <_Popover.Arrow
-              className="
-                text-white
-                data-[side=bottom]:bottom-full data-[side=bottom]:rotate-180
-                data-[side=left]:left-full data-[side=left]:-rotate-90
-                data-[side=right]:right-full data-[side=right]:rotate-90
-                data-[side=top]:top-full
-              "
-            >
+          <_Popover.Popup className="flex max-h-(--available-height) max-w-(--available-width) flex-col gap-2 rounded-md bg-white p-4 shadow-overlay">
+            <_Popover.Arrow className="text-white data-[side=bottom]:bottom-full data-[side=bottom]:rotate-180 data-[side=left]:left-full data-[side=left]:-rotate-90 data-[side=right]:right-full data-[side=right]:rotate-90 data-[side=top]:top-full">
               <Arrow />
             </_Popover.Arrow>
             {/* https://github.com/facebook/react/issues/34775 */}

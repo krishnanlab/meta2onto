@@ -151,18 +151,9 @@ export default function Studies() {
       <H1 className="sr-only">Search results for "{search}"</H1>
 
       <section className="width-lg">
-        <div
-          className="
-            grid grid-cols-[auto_1fr] gap-12
-            max-md:grid-cols-1
-          "
-        >
+        <div className="grid grid-cols-[auto_1fr] gap-12 max-md:grid-cols-1">
           {newSearch && (
-            <div
-              className="
-                col-span-full flex flex-wrap items-center justify-center gap-8
-              "
-            >
+            <div className="col-span-full flex flex-wrap items-center justify-center gap-8">
               <SearchBox className="grow" inputRef={searchRef} />
             </div>
           )}
@@ -211,12 +202,7 @@ function Filters({
   query: UseQueryResult<Studies>;
 }) {
   return (
-    <div
-      className="
-        flex w-60 flex-col gap-8
-        max-md:w-full max-md:flex-row max-md:flex-wrap
-      "
-    >
+    <div className="flex w-60 flex-col gap-8 max-md:w-full max-md:flex-row max-md:flex-wrap">
       {/* overview */}
       <dl>
         <dt>Searched</dt>
@@ -605,15 +591,7 @@ function ThumbsDownPopup({ id, keywords }: { id: string; keywords: string[] }) {
   const thumbsDown = () => setFeedback(id, "rating", -1);
 
   return (
-    <div
-      className="
-        grid max-h-100 max-w-100 grow grid-cols-2
-        grid-rows-[auto_minmax(0,1fr)_auto_auto] items-start gap-x-4 gap-y-2
-        leading-normal
-        *:max-h-full
-        max-md:grid-cols-1
-      "
-    >
+    <div className="grid max-h-100 max-w-100 grow grid-cols-2 grid-rows-[auto_minmax(0,1fr)_auto_auto] items-start gap-x-4 gap-y-2 leading-normal *:max-h-full max-md:grid-cols-1">
       {/* headings */}
       <em>Study qualities</em>
       <em>Keyword relevance</em>
@@ -644,11 +622,7 @@ function ThumbsDownPopup({ id, keywords }: { id: string; keywords: string[] }) {
       </div>
 
       {/* keywords */}
-      <div
-        className="
-          grid max-h-full grid-cols-[1fr_auto_auto] items-center overflow-auto
-        "
-      >
+      <div className="grid max-h-full grid-cols-[1fr_auto_auto] items-center overflow-auto">
         {keywords.map((keyword, index) => (
           <Fragment key={index}>
             <span className="truncate py-1 pr-1">{keyword}</span>

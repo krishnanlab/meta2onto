@@ -450,24 +450,15 @@ export default function Cart() {
                 createdCarts.length === 1
                   ? "grid-cols-1"
                   : createdCarts.length === 2
-                    ? `
-                      grid-cols-2
-                      max-sm:grid-cols-1
-                    `
-                    : `
-                      grid-cols-3
-                      max-md:grid-cols-2
-                      max-sm:grid-cols-1
-                    `,
+                    ? `grid-cols-2 max-sm:grid-cols-1`
+                    : `grid-cols-3 max-md:grid-cols-2 max-sm:grid-cols-1`,
               )}
             >
               {createdCarts.map(({ id, name, studies }, index) => (
                 <Link
                   key={index}
                   to={`/cart/${id}`}
-                  className="
-                    flex flex-col items-start gap-4 rounded-md p-4 shadow-md
-                  "
+                  className="flex flex-col items-start gap-4 rounded-md p-4 shadow-md"
                 >
                   <strong>{name || id}</strong>
                   <span>{formatNumber(studies.length)} studies</span>
