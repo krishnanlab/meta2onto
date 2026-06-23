@@ -1,7 +1,7 @@
 import z from "zod";
 
 export const stats = z.object({
-  ontologies: z.number(),
+  terms: z.number(),
   studies: z.number(),
   samples: z.number(),
   species: z.number(),

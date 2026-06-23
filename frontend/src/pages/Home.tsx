@@ -302,7 +302,9 @@ type TileProps = {
 function Tile({ number, Icon, title, description }: TileProps) {
   return (
     <div className="flex flex-col items-center gap-4">
-      <Icon className="size-12 text-theme" />
+      <div className="mb-2 grid size-16 place-items-center rounded-full bg-theme-light text-theme-dark">
+        <Icon className="size-10" />
+      </div>
       <div className="flex items-center gap-2 text-xl font-medium">
         {number && (
           <div className="grid size-7 place-items-center rounded-full bg-theme-light text-lg">
