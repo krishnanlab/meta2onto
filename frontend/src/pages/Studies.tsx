@@ -412,7 +412,7 @@ function Result({
     },
     {
       icon: Dna,
-      text: platform,
+      text: platform?.join(", "),
       tooltip: "Platform used in study",
     },
     {

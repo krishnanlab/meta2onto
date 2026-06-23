@@ -36,7 +36,7 @@ export const study = z.object({
     value: z.number(),
   }),
   submitted_at: z.iso.date(),
-  platform: z.string(),
+  platform: z.array(z.string()),
   database: z.record(
     z.string(),
     z.object({
