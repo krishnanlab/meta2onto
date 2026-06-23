@@ -4,8 +4,8 @@ import Tooltip from "@/components/Tooltip";
 
 type Props = {
   value?: string;
-  color?: string | Record<string, string>;
-  tooltip?: Exclude<ReactNode, object> | Record<string, ReactNode>;
+  color?: Record<string, string>;
+  tooltip?: Record<string, ReactNode>;
 } & Omit<ComponentProps<"div">, "color">;
 
 export default function Pill({
@@ -17,21 +17,11 @@ export default function Pill({
   ...props
 }: Props) {
   return (
-    <Tooltip
-      content={
-        typeof tooltip === "object"
-          ? (tooltip?.[value ?? ""] ?? tooltip?.default ?? "")
-          : tooltip
-      }
-    >
+    <Tooltip content={tooltip?.[value ?? ""] ?? tooltip?.default ?? ""}>
       <span
         className={clsx(
           `inline-flex items-center justify-center gap-1 rounded-full px-2`,
-          typeof color === "object"
-            ? (color?.[value ?? ""] ??
-                color?.default ??
-                "bg-theme-light text-black")
-            : color,
+          color?.[value ?? ""] ?? color?.default ?? "bg-theme-light text-black",
           className,
         )}
         {...props}

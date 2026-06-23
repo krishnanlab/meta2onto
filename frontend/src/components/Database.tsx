@@ -27,7 +27,7 @@ export default function Database({ study = "", database }: Props) {
       tabIndex={0}
       className="rounded-md bg-theme-light px-1 text-black"
     >
-      <Pill value={database} tooltip={tooltip} />
+      <Pill value={database} tooltip={{ [database]: tooltip }} />
     </Link>
   );
 }
