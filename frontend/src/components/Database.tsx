@@ -1,34 +1,38 @@
-import { dbLink, getDb } from "@/api/api";
+import type { ValueOf } from "type-fest";
+import type { Study } from "@/api/types";
+import { databaseTooltip } from "@/api/api";
 import Link from "@/components/Link";
 import Pill from "@/components/Pill";
 
 type Props = {
-  /** study id */
-  study?: string;
   /** database id */
-  database: string;
+  id: string;
+  /** database details */
+  details: ValueOf<Study["database"]>;
 };
 
 /** pill for database info */
-export default function Database({ study = "", database }: Props) {
-  const { description = "", link = "" } = getDb(database);
-
-  const tooltip = (
-    <div className="flex flex-col items-start gap-2">
-      <strong>{database}</strong>
-      <div className="text-balance">{description}</div>
-    </div>
-  );
-
+export default function Database({ id, details }: Props) {
+  console.log(details.url);
   return (
     <Link
-      key={database}
-      to={dbLink(link, study)}
+      key={id}
+      to={details.url?.trim() ?? ""}
       tabIndex={0}
       className="contents no-underline"
       arrow={false}
     >
-      <Pill value={database} tooltip={{ [database]: tooltip }} />
+      <Pill
+        value={id}
+        tooltip={{
+          [id]: (
+            <div className="flex flex-col items-start gap-2">
+              <strong>{id}</strong>
+              <div className="text-balance">{databaseTooltip[id]}</div>
+            </div>
+          ),
+        }}
+      />
     </Link>
   );
 }

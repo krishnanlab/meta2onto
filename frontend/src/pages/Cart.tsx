@@ -394,8 +394,8 @@ export default function Cart() {
                       key: "database",
                       name: "Databases",
                       render: (database) =>
-                        Object.keys(database).map((database, index) => (
-                          <Database key={index} database={database} />
+                        Object.entries(database).map(([id, details], index) => (
+                          <Database key={index} id={id} details={details} />
                         )),
                     },
                     {

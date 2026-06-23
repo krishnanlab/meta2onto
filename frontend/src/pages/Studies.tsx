@@ -257,7 +257,10 @@ function Filters({
               <Slider
                 label={(values) => (
                   <>
-                    {values.join(" – ")} {facetValues.label}
+                    {values
+                      .map((value) => formatNumber(value, true))
+                      .join(" – ")}{" "}
+                    {facetValues.label}
                   </>
                 )}
                 thumbLabel={[`${facetKey} minimum`, `${facetKey} maximum`]}
@@ -479,8 +482,8 @@ function Result({
       <div className="flex flex-wrap items-end gap-4">
         {/* databases */}
         <div className="flex flex-wrap gap-4">
-          {Object.entries(database).map(([database], index) => (
-            <Database key={index} study={id} database={database} />
+          {Object.entries(database).map(([id, details], index) => (
+            <Database key={index} id={id} details={details} />
           ))}
         </div>
 
