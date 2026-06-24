@@ -31,7 +31,7 @@ export default function ComboBox<O extends Option>({
             <_Combobox.Chips className="flex flex-wrap gap-1">
               {value.map((item, index) => (
                 <_Combobox.Chip key={index}>
-                  <_Combobox.ChipRemove className="flex items-center gap-1 rounded-full bg-theme-light px-2 py-1 text-sm transition hover:bg-stone-200">
+                  <_Combobox.ChipRemove className="flex items-center gap-1 rounded-full bg-theme-light px-2 py-1 transition hover:bg-stone-200">
                     {item} <X />
                   </_Combobox.ChipRemove>
                 </_Combobox.Chip>
@@ -58,7 +58,7 @@ export default function ComboBox<O extends Option>({
                 <_Combobox.Item
                   key={item}
                   value={item}
-                  className="flex cursor-pointer items-center gap-2 p-1 transition hover:bg-stone-100 data-highlighted:bg-stone-100 data-selected:[&>svg]:opacity-100"
+                  className="flex cursor-pointer items-center gap-2 p-1 hover:bg-stone-100 data-highlighted:bg-stone-100 data-selected:[&>svg]:opacity-100"
                 >
                   <Check className="text-emerald-500 opacity-0 transition" />
                   <span>{item}</span>

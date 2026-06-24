@@ -1,34 +1,37 @@
-import type { ValueOf } from "type-fest";
-import type { Study } from "@/api/types";
-import { databaseTooltip } from "@/api/api";
+import { databaseLink, databaseTooltip } from "@/api/maps";
 import Link from "@/components/Link";
 import Pill from "@/components/Pill";
 
 type Props = {
   /** database id */
-  id: string;
-  /** database details */
-  details: ValueOf<Study["database"]>;
+  database: string;
+  /** study id */
+  study?: string;
 };
 
 /** pill for database info */
-export default function Database({ id, details }: Props) {
-  console.log(details.url);
+export default function Database({ database, study = "" }: Props) {
+  let link = databaseLink[database] ?? "";
+
+  /** if study provided, insert */
+  if (study) link = link.replace("$STUDY", study);
+  /** else, remove between brackets (link to a more base page w/o search) */ else
+    link = link.replace(/\[.*]/, "");
+
   return (
     <Link
-      key={id}
-      to={details.url?.trim() ?? ""}
+      to={link}
       tabIndex={0}
       className="contents no-underline"
       arrow={false}
     >
       <Pill
-        value={id}
+        value={database}
         tooltip={{
-          [id]: (
+          [database]: (
             <div className="flex flex-col items-start gap-2">
-              <strong>{id}</strong>
-              <div className="text-balance">{databaseTooltip[id]}</div>
+              <strong>{database}</strong>
+              <div className="text-balance">{databaseTooltip[database]}</div>
             </div>
           ),
         }}

@@ -22,12 +22,8 @@ import {
   ThumbsUp,
   Wrench,
 } from "lucide-react";
-import {
-  getStats,
-  ontologySearch,
-  performanceColor,
-  typeColor,
-} from "@/api/api";
+import { getStats, ontologySearch } from "@/api/api";
+import { performanceColor, typeColor } from "@/api/maps";
 import Autocomplete from "@/components/Autocomplete";
 import { H2 } from "@/components/Heading";
 import Pill from "@/components/Pill";
@@ -198,13 +194,12 @@ export default function Home() {
   );
 }
 
-export function SearchBox({
-  inputRef,
-  className,
-}: {
+type SearchBoxProps = {
   inputRef?: RefObject<HTMLInputElement | null>;
   className?: string;
-}) {
+};
+
+export function SearchBox({ inputRef, className }: SearchBoxProps) {
   const navigate = useNavigate();
 
   /** search string state (immediate) */

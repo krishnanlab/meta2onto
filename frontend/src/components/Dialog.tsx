@@ -36,7 +36,7 @@ export default function Dialog({
                   {title}
                 </_Dialog.Title>
                 {subtitle && (
-                  <_Dialog.Description className="text-sm text-stone-500">
+                  <_Dialog.Description className="text-stone-500">
                     {subtitle}
                   </_Dialog.Description>
                 )}

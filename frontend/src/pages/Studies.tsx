@@ -29,13 +29,8 @@ import {
   Trash2,
   TriangleAlert,
 } from "lucide-react";
-import {
-  performanceColor,
-  performanceTooltip,
-  studyFeedback,
-  studySamples,
-  studySearch,
-} from "@/api/api";
+import { studyFeedback, studySamples, studySearch } from "@/api/api";
+import { performanceColor, performanceTooltip, typeColor } from "@/api/maps";
 import Button from "@/components/Button";
 import Checkbox from "@/components/Checkbox";
 import Combobox from "@/components/Combobox";
@@ -161,7 +156,6 @@ export default function Studies() {
 
           <Filters
             raw={raw}
-            search={search}
             params={params}
             setParams={setParams}
             newSearch={newSearch}
@@ -182,45 +176,55 @@ export default function Studies() {
   );
 }
 
-/** filters panel */
-function Filters({
-  raw,
-  search,
-  params,
-  setParams,
-  newSearch,
-  setNewSearch,
-  ordering,
-  query,
-}: {
+type FiltersProps = {
   raw: string;
-  search: string;
   params: URLSearchParams;
   setParams: ReturnType<typeof useDebouncedParams>[1];
   newSearch: boolean;
   setNewSearch: (value: boolean) => void;
   ordering: OrderingOption;
   query: UseQueryResult<Studies>;
-}) {
+};
+
+/** filters panel */
+function Filters({
+  raw,
+  params,
+  setParams,
+  newSearch,
+  setNewSearch,
+  ordering,
+  query,
+}: FiltersProps) {
+  /** destructure query */
+  const {
+    count = 0,
+    meta: { term = "", name = "", type = "", performance = "" } = {},
+    facets = {},
+  } = query.data ?? {};
+
   return (
     <div className="flex w-60 flex-col gap-8 max-md:w-full max-md:flex-row max-md:flex-wrap">
       {/* overview */}
       <dl>
-        <dt>Searched</dt>
-        <dd>{raw}</dd>
-        <dt>Selected</dt>
-        <dd>{search}</dd>
+        <dt className="text-sm text-stone-500">Raw Search</dt>
+        <dd className="text-sm text-stone-500">"{raw}"</dd>
+        <dt>Selection</dt>
+        <dd>
+          {type && <Pill value={type} color={typeColor} />}
+          {name} {term}
+        </dd>
         <dt>Performance</dt>
         <dd>
           <Pill
-            value={query.data?.meta.performance ?? ""}
+            value={performance}
             color={performanceColor}
             tooltip={performanceTooltip}
             className="w-full"
           />
         </dd>
         <dt>Results</dt>
-        <dd>{query.data?.count ? formatNumber(query.data.count) : "-"}</dd>
+        <dd>{count ? formatNumber(count) : "-"}</dd>
       </dl>
 
       {!newSearch && (
@@ -240,106 +244,98 @@ function Filters({
         }
       />
 
-      {Object.entries(query.data?.facets ?? {}).map(
-        ([facetKey, facetValues]) => {
-          /** control to use for facet */
-          let control: ReactNode;
+      {Object.entries(facets).map(([facetKey, facetValues]) => {
+        /** control to use for facet */
+        let control: ReactNode;
 
-          const { label, min, max } = facetValues;
+        const { label, min, max } = facetValues;
 
-          /** slider */
-          if (
-            typeof label === "string" &&
-            typeof min === "number" &&
-            typeof max === "number"
-          )
-            control = (
-              <Slider
-                label={(values) => (
-                  <>
-                    {values
-                      .map((value) => formatNumber(value, true))
-                      .join(" – ")}{" "}
-                    {facetValues.label}
-                  </>
-                )}
-                thumbLabel={[`${facetKey} minimum`, `${facetKey} maximum`]}
-                value={(() => {
-                  const [minValue, maxValue] =
-                    params.get(facetKey)?.split("-").map(Number) ?? [];
-                  return [minValue ?? min, maxValue ?? max];
-                })()}
-                onChange={(values) =>
-                  setParams((params) => {
-                    const [min = facetValues.min, max = facetValues.max] =
-                      values;
-                    params.set(facetKey, `${min}-${max}`);
-                  })
-                }
-                min={min}
-                max={max}
-                step={max - min > 1 ? 1 : 0.01}
-              />
-            );
-          /** combobox */ else if (size(facetValues) > facetThreshold)
-            control = (
-              <Combobox
-                options={Object.keys(facetValues)}
-                value={params.getAll(facetKey)}
-                onChange={(value) =>
-                  setParams((params) => {
-                    params.delete(facetKey);
-                    value.forEach((v) => params.append(facetKey, v));
-                  })
-                }
-              />
-            );
-          /** checkbox */ else
-            control = Object.entries(facetValues).map(
-              ([facetValue, facetCount]) => (
-                <Checkbox
-                  key={facetValue}
-                  /** sync facet with url */
-                  value={params.getAll(facetKey).includes(facetValue)}
-                  onChange={(checked) => {
-                    setParams((params) => {
-                      if (checked) {
-                        if (!params.has(facetKey, facetValue))
-                          params.append(facetKey, facetValue);
-                      } else params.delete(facetKey, facetValue);
-                    });
-                  }}
-                >
-                  {facetValue} ({facetCount})
-                </Checkbox>
-              ),
-            );
-
-          return (
-            <div key={facetKey} className="flex flex-col gap-2">
-              <strong>{facetKey}</strong>
-              {control}
-            </div>
+        /** slider */
+        if (
+          typeof label === "string" &&
+          typeof min === "number" &&
+          typeof max === "number"
+        )
+          control = (
+            <Slider
+              label={(values) =>
+                values.map((value) => formatNumber(value, true)).join(" – ")
+              }
+              thumbLabel={[`${facetKey} minimum`, `${facetKey} maximum`]}
+              value={(() => {
+                const [minValue, maxValue] =
+                  params.get(facetKey)?.split("-").map(Number) ?? [];
+                return [minValue ?? min, maxValue ?? max];
+              })()}
+              onChange={(values) =>
+                setParams((params) => {
+                  const [min = facetValues.min, max = facetValues.max] = values;
+                  params.set(facetKey, `${min}-${max}`);
+                })
+              }
+              min={min}
+              max={max}
+              step={max - min > 1 ? 1 : 0.01}
+            />
           );
-        },
-      )}
+        /** combobox */ else if (size(facetValues) > facetThreshold)
+          control = (
+            <Combobox
+              options={Object.keys(facetValues)}
+              value={params.getAll(facetKey)}
+              onChange={(value) =>
+                setParams((params) => {
+                  params.delete(facetKey);
+                  value.forEach((v) => params.append(facetKey, v));
+                })
+              }
+            />
+          );
+        /** checkbox */ else
+          control = Object.entries(facetValues).map(
+            ([facetValue, facetCount]) => (
+              <Checkbox
+                key={facetValue}
+                /** sync facet with url */
+                value={params.getAll(facetKey).includes(facetValue)}
+                onChange={(checked) => {
+                  setParams((params) => {
+                    if (checked) {
+                      if (!params.has(facetKey, facetValue))
+                        params.append(facetKey, facetValue);
+                    } else params.delete(facetKey, facetValue);
+                  });
+                }}
+              >
+                {facetValue} ({formatNumber(Number(facetCount), true)})
+              </Checkbox>
+            ),
+          );
+
+        return (
+          <div key={facetKey} className="flex flex-col gap-2">
+            <strong>{facetKey}</strong>
+            {control}
+          </div>
+        );
+      })}
     </div>
   );
 }
 
 /** results panel */
-function Results({
-  setParams,
-  offset,
-  limit,
-  query,
-}: {
+type ResultsProps = {
   setParams: ReturnType<typeof useDebouncedParams>[1];
   offset: number;
   limit: LimitOption;
   query: UseQueryResult<Studies>;
-}) {
+};
+
+function Results({ setParams, offset, limit, query }: ResultsProps) {
   const anyFeedback = !!Object.values(useAtomValue(feedbackAtom)).length;
+
+  /** destructure query */
+  const { count = 0, results = [] } = query.data ?? {};
 
   return (
     <div className="flex flex-col gap-8">
@@ -357,13 +353,13 @@ function Results({
       <Status query={query} />
 
       {/* results */}
-      {query.data?.results.map((result, index) => (
+      {results.map((result, index) => (
         <Result key={index} {...result} />
       ))}
 
       {/* pagination */}
       <Pagination
-        count={query.data?.count ?? 0}
+        count={count}
         offset={offset}
         setOffset={(page) =>
           setParams((params) => params.set("offset", String(page)))
@@ -455,14 +451,16 @@ function Result({
 
       {/* details */}
       <div className="flex flex-wrap gap-x-8 gap-y-4">
-        {details.map(({ icon: Icon, text, tooltip }, index) => (
-          <Tooltip key={index} content={tooltip}>
-            <div className="flex items-center gap-2 text-stone-500">
-              <Icon />
-              <span>{text}</span>
-            </div>
-          </Tooltip>
-        ))}
+        {details.map(({ icon: Icon, text, tooltip }, index) =>
+          text ? (
+            <Tooltip key={index} content={tooltip}>
+              <div className="flex items-center gap-2 text-stone-500">
+                <Icon />
+                <span>{text}</span>
+              </div>
+            </Tooltip>
+          ) : null,
+        )}
       </div>
 
       {/* description */}
@@ -482,8 +480,8 @@ function Result({
       <div className="flex flex-wrap items-end gap-4">
         {/* databases */}
         <div className="flex flex-wrap gap-4">
-          {Object.entries(database).map(([id, details], index) => (
-            <Database key={index} id={id} details={details} />
+          {Object.keys(database).map((database, index) => (
+            <Database key={index} database={database} study={id} />
           ))}
         </div>
 
@@ -493,7 +491,7 @@ function Result({
           {confidence.value > feedbackThreshold && (
             <>
               {!!allFeedback.vote_count && (
-                <span className="text-sm text-stone-500">
+                <span className="text-stone-500">
                   {formatNumber(allFeedback.vote_count)} others gave feedback
                 </span>
               )}
@@ -591,7 +589,12 @@ export function Highlight({ keywords, children }: HighlightProps) {
 const qualities = ["Incorrect prediction", "Irrelevant/incorrect keywords"];
 
 /** study negative feedback popup */
-function ThumbsDownPopup({ id, keywords }: { id: string; keywords: string[] }) {
+type ThumbsDownPopupProps = {
+  id: string;
+  keywords: string[];
+};
+
+function ThumbsDownPopup({ id, keywords }: ThumbsDownPopupProps) {
   /** feedback for this study */
   const feedback = useAtomValue(feedbackAtom)[id];
 
@@ -714,7 +717,11 @@ function ThumbsDownPopup({ id, keywords }: { id: string; keywords: string[] }) {
 }
 
 /** samples popup */
-function SamplesPopup({ id }: { id: string }) {
+type SamplesPopupProps = {
+  id: string;
+};
+
+function SamplesPopup({ id }: SamplesPopupProps) {
   /** pagination */
   const [_search, setSearch] = useState("");
   const search = useDebounce(_search, 500);
@@ -722,7 +729,7 @@ function SamplesPopup({ id }: { id: string }) {
   const [offset, setOffset] = useState(0);
   const [limit, setLimit] = useState<Limit>("10");
 
-  const studySamplesQuery = useQuery({
+  const query = useQuery({
     queryKey: ["study-samples", id, search, ordering, offset, limit],
     queryFn: () =>
       studySamples({
@@ -735,9 +742,12 @@ function SamplesPopup({ id }: { id: string }) {
     placeholderData: keepPreviousData,
   });
 
+  /** destructure query */
+  const { count = 0, results = [] } = query.data ?? {};
+
   /** count unique values in each column */
   const counts: Record<string, Record<string, number>> = {};
-  for (const row of studySamplesQuery.data?.results ?? [])
+  for (const row of results)
     for (let [key, value] of Object.entries(row)) {
       counts[key] ??= {};
       value = String(value);
@@ -793,14 +803,11 @@ function SamplesPopup({ id }: { id: string }) {
         )}
 
         <div className="relative">
-          <Status
-            query={studySamplesQuery}
-            className="absolute inset-0 opacity-90"
-          />
+          <Status query={query} className="absolute inset-0 opacity-90" />
           <Table
             className="w-full"
             cols={cols}
-            rows={studySamplesQuery.data?.results ?? []}
+            rows={results}
             sort={ordering}
             onSort={setOrdering}
             page={offset}
@@ -811,7 +818,7 @@ function SamplesPopup({ id }: { id: string }) {
 
       {/* pagination */}
       <Pagination
-        count={studySamplesQuery.data?.count ?? 0}
+        count={count}
         offset={offset}
         setOffset={setOffset}
         limit={limit}

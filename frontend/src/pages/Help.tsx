@@ -1,4 +1,4 @@
-import { performanceColor, performanceTooltip } from "@/api/api";
+import { performanceColor, performanceTooltip } from "@/api/maps";
 import { H1, H2, H3 } from "@/components/Heading";
 import Link from "@/components/Link";
 import Meta from "@/components/Meta";

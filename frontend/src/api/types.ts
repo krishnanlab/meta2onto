@@ -64,6 +64,9 @@ export const studies = z.object({
     z.record(z.string(), z.union([z.number(), z.string()])),
   ),
   meta: z.object({
+    type: z.string(),
+    term: z.string(),
+    name: z.string(),
     performance: z.string(),
   }),
 });

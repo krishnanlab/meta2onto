@@ -460,12 +460,17 @@ class GEOSeriesViewSet(viewsets.ReadOnlyModelViewSet):
         # --- build final result set, either paginated or not
         # ---------------------------------------------------------------
 
+
+        type_row = OntologyTerms.objects.filter(id=query).values("type").first()
+        name_row = OntologyTerms.objects.filter(id=query).values("name").first()
         performance_row = (
             OntologyTermRating.objects
                 .filter(term=query).values("performance").first()
         )
         meta = {
             "term": query,
+            "name": name_row.get("name", "") if name_row else "",
+            "type": type_row.get("type", "") if type_row else "",
             "performance": (
                 performance_row.get("performance", "unknown")
                 if performance_row else

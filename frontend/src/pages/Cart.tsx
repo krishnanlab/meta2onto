@@ -394,8 +394,8 @@ export default function Cart() {
                       key: "database",
                       name: "Databases",
                       render: (database) =>
-                        Object.entries(database).map(([id, details], index) => (
-                          <Database key={index} id={id} details={details} />
+                        Object.keys(database).map((database, index) => (
+                          <Database key={index} database={database} />
                         )),
                     },
                     {
@@ -488,7 +488,11 @@ export default function Cart() {
 }
 
 /** clear cart button */
-function Clear({ size }: { size: number }) {
+type ClearProps = {
+  size: number;
+};
+
+function Clear({ size }: ClearProps) {
   return (
     <Button
       color="accent"
