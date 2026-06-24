@@ -70,7 +70,7 @@
   }
 
   hr {
-    @apply my-12 border-none block bg-stone-300 h-px shrink-0;
+    @apply my-12 block h-px shrink-0 border-none bg-stone-300;
   }
 
   a {
