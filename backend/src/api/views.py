@@ -642,21 +642,30 @@ def ontology_search(request):
 # === Database-wide statistics
 # ===========================================================================
 
+def _cache_fetch(key, compute_func, timeout=settings.LONGTERM_CACHE_TIMEOUT):
+    """
+    Fetch a value from the cache, computing and caching it if not present.
+    """
+    value = cache.get(key)
+    if value is None:
+        value = compute_func()
+        cache.set(key, value, timeout=timeout)
+    return value
+
 @api_view(["GET"])
 @permission_classes([AllowAny])
-# @cache_page(settings.LONGTERM_CACHE_TIMEOUT)
 def database_statistics(request):
     """
     API endpoint for getting statistics about the database.
     Accessible at /api/stats/
     """
     serializer = DatabaseStatsSerializer({
-        "tissues": OntologyTerms.objects.filter(type="tissue").count(),
-        "diseases": OntologyTerms.objects.filter(type="disease").count(),
-        "studies": GEOSeries.objects.count(),
-        "samples": GEOSample.objects.count(),
-        "species": GEOSample.objects.values("organism_ch1").distinct().count(),
-        "technologies": GEOPlatform.objects.values("technology").distinct().count(),
+        "tissues": _cache_fetch("site-stats:tissues", lambda: OntologyTerms.objects.filter(type="tissue").count()),
+        "diseases": _cache_fetch("site-stats:diseases", lambda: OntologyTerms.objects.filter(type="disease").count()),
+        "studies": _cache_fetch("site-stats:studies", lambda: GEOSeries.objects.count()),
+        "samples": _cache_fetch("site-stats:samples", lambda: GEOSample.objects.count()),
+        "species": _cache_fetch("site-stats:species", lambda: GEOSample.objects.values("organism_ch1").distinct().count()),
+        "technologies": _cache_fetch("site-stats:technologies", lambda: GEOPlatform.objects.values("technology").distinct().count()),
         "feedback": Feedback.objects.count(),
     }, many=False)
     return Response(serializer.data)
