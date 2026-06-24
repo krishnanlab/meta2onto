@@ -339,7 +339,7 @@ function Results({ setParams, offset, limit, query }: ResultsProps) {
 
   return (
     <div className="flex flex-col gap-8">
-      {anyFeedback && (
+      {/* {anyFeedback && (
         <p>
           We especially appreciate feedback on{" "}
           <Link to="?Classification=Neutral">
@@ -347,7 +347,7 @@ function Results({ setParams, offset, limit, query }: ResultsProps) {
           </Link>
           !
         </p>
-      )}
+      )} */}
 
       {/* query status */}
       <Status query={query} />

@@ -14,9 +14,9 @@ export default function Database({ database, study = "" }: Props) {
   let link = databaseLink[database] ?? "";
 
   /** if study provided, insert */
-  if (study) link = link.replace("$STUDY", study);
+  if (study) link = link.replaceAll("$STUDY", study).replaceAll(/[\[\]]/g, "");
   /** else, remove between brackets (link to a more base page w/o search) */ else
-    link = link.replace(/\[.*]/, "");
+    link = link.replaceAll(/\[.*]/, "");
 
   return (
     <Link
