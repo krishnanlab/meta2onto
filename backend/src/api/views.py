@@ -648,7 +648,8 @@ def database_statistics(request):
     Accessible at /api/stats/
     """
     serializer = DatabaseStatsSerializer({
-        "terms": OntologyTerms.objects.count(),
+        "tissues": OntologyTerms.objects.filter(type="tissue").count(),
+        "diseases": OntologyTerms.objects.filter(type="disease").count(),
         "studies": GEOSeries.objects.count(),
         "samples": GEOSample.objects.count(),
         "species": GEOSample.objects.values("organism_ch1").distinct().count(),

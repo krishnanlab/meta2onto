@@ -265,7 +265,8 @@ class GEOSampleSerializer(serializers.ModelSerializer):
 class DatabaseStatsSerializer(serializers.Serializer):
     """Serializer for database statistics returned from /api/stats/ endpoint."""
 
-    terms = serializers.IntegerField()
+    tissues = serializers.IntegerField()
+    diseases = serializers.IntegerField()
     studies = serializers.IntegerField()
     samples = serializers.IntegerField()
     species = serializers.IntegerField()
