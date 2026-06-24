@@ -644,7 +644,7 @@ def ontology_search(request):
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
-@cache_page(settings.LONGTERM_CACHE_TIMEOUT)
+# @cache_page(settings.LONGTERM_CACHE_TIMEOUT)
 def database_statistics(request):
     """
     API endpoint for getting statistics about the database.
