@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { useDebounce } from "@reactuses/core";
 import { useQuery } from "@tanstack/react-query";
+import clsx from "clsx";
 import { omit } from "lodash";
 import {
   ArrowLeftRight,
@@ -90,14 +91,16 @@ export default function Home() {
       <section>
         <H2 className="sr-only">How it works</H2>
 
-        <div className="grid grid-cols-3 gap-8 max-md:grid-cols-2 max-sm:grid-cols-1">
+        <div className="grid grid-cols-3 gap-8 self-center max-md:grid-cols-2 max-sm:grid-cols-1">
           <Tile
+            big
             number={1}
             Icon={SearchCheck}
             title="Discover"
             description="Search for tissue or disease term you're interested in"
           />
           <Tile
+            big
             number={2}
             Icon={ShoppingCart}
             title="Collect"
@@ -109,6 +112,7 @@ export default function Home() {
             }
           />
           <Tile
+            big
             number={3}
             Icon={Recycle}
             title="Reuse"
@@ -124,8 +128,9 @@ export default function Home() {
       <section>
         <H2 className="sr-only">Features</H2>
 
-        <div className="grid grid-cols-3 gap-8 max-md:grid-cols-2 max-sm:grid-cols-1">
+        <div className="grid grid-cols-3 gap-8 self-center max-md:grid-cols-2 max-sm:grid-cols-1">
           <Tile
+            big
             Icon={Glasses}
             title="Interpretable"
             description={
@@ -137,11 +142,13 @@ export default function Home() {
             }
           />
           <Tile
+            big
             Icon={RotateCcw}
             title="Up-to-date"
             description="We update our predictions semi-annually so results reflect the latest studies available on GEO"
           />
           <Tile
+            big
             Icon={ArrowLeftRight}
             title="Standardized"
             description="We standardize annotations to biomedical ontologies, ensuring consistency and interoperability across studies"
@@ -152,7 +159,7 @@ export default function Home() {
       <section>
         <H2 className="sr-only">Stats</H2>
 
-        <div className="grid grid-cols-7 gap-8 max-lg:grid-cols-4 max-md:grid-cols-3 max-sm:grid-cols-2">
+        <div className="grid grid-cols-7 gap-8 self-center max-lg:grid-cols-4 max-md:grid-cols-3 max-sm:grid-cols-2">
           <Tile
             Icon={Brain}
             title={formatNumber(stats?.tissues)}
@@ -294,17 +301,25 @@ export function SearchBox({ inputRef, className }: SearchBoxProps) {
 }
 
 type TileProps = {
+  big?: boolean;
   Icon: FunctionComponent<{ className?: string }>;
   number?: number;
   title: ReactNode;
   description: ReactNode;
 };
 
-function Tile({ number, Icon, title, description }: TileProps) {
+function Tile({ big = false, number, Icon, title, description }: TileProps) {
   return (
-    <div className="flex flex-col items-center gap-4">
-      <div className="mb-2 grid size-16 place-items-center rounded-full bg-theme-light text-theme-dark">
-        <Icon className="size-10" />
+    <div
+      className={clsx("flex flex-col items-center", big ? "gap-4" : "gap-0")}
+    >
+      <div
+        className={clsx(
+          "mb-2 grid place-items-center rounded-full bg-theme-light text-theme-dark",
+          big ? "size-16" : "size-12",
+        )}
+      >
+        <Icon className="size-1/2" />
       </div>
       <div className="flex items-center gap-2 text-xl font-medium">
         {number && (
