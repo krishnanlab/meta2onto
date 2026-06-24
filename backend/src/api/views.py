@@ -461,16 +461,19 @@ class GEOSeriesViewSet(viewsets.ReadOnlyModelViewSet):
         # ---------------------------------------------------------------
 
 
-        type_row = OntologyTerms.objects.filter(id=query).values("type").first()
-        name_row = OntologyTerms.objects.filter(id=query).values("name").first()
+        try:
+            rec_type, rec_name = OntologyTerms.objects.filter(id=query).values_list("type", "name").first()
+        except TypeError:
+            rec_type, rec_name = "", ""
+    
         performance_row = (
             OntologyTermRating.objects
                 .filter(term=query).values("performance").first()
         )
         meta = {
             "term": query,
-            "name": name_row.get("name", "") if name_row else "",
-            "type": type_row.get("type", "") if type_row else "",
+            "name": rec_name,
+            "type": rec_type,
             "performance": (
                 performance_row.get("performance", "unknown")
                 if performance_row else
