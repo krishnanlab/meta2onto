@@ -37,8 +37,8 @@ import Combobox from "@/components/Combobox";
 import Database from "@/components/Database";
 import Dialog from "@/components/Dialog";
 import { getCartRef } from "@/components/Header";
-import { H1 } from "@/components/Heading";
-import Link from "@/components/Link";
+import { H1, H3 } from "@/components/Heading";
+// import Link from "@/components/Link";
 import Meta from "@/components/Meta";
 import Meter from "@/components/Meter";
 import Pagination from "@/components/Pagination";
@@ -332,7 +332,7 @@ type ResultsProps = {
 };
 
 function Results({ setParams, offset, limit, query }: ResultsProps) {
-  const anyFeedback = !!Object.values(useAtomValue(feedbackAtom)).length;
+  // const anyFeedback = !!Object.values(useAtomValue(feedbackAtom)).length;
 
   /** destructure query */
   const { count = 0, results = [] } = query.data ?? {};
@@ -750,7 +750,7 @@ function SamplesPopup({ id }: SamplesPopupProps) {
   for (const row of results)
     for (let [key, value] of Object.entries(row)) {
       counts[key] ??= {};
-      value = String(value);
+      value = value ? String(value) : "-";
       counts[key][value] = (counts[key][value] || 0) + 1;
     }
 
@@ -790,30 +790,30 @@ function SamplesPopup({ id }: SamplesPopupProps) {
 
   return (
     <>
-      <div className="flex flex-col gap-4 overflow-y-auto">
-        {!isEmpty(common) && (
-          <dl>
-            {Object.entries(common).map(([key, value]) => (
-              <Fragment key={key}>
-                <dt>{upperFirst(key)}</dt>
-                <dd>{value}</dd>
-              </Fragment>
-            ))}
-          </dl>
-        )}
+      <H3 className="justify-start">Common Sample Details</H3>
+      {!isEmpty(common) && (
+        <dl>
+          {Object.entries(common).map(([key, value]) => (
+            <Fragment key={key}>
+              <dt>{upperFirst(key)}</dt>
+              <dd>{value}</dd>
+            </Fragment>
+          ))}
+        </dl>
+      )}
 
-        <div className="relative">
-          <Status query={query} className="absolute inset-0 opacity-90" />
-          <Table
-            className="w-full"
-            cols={cols}
-            rows={results}
-            sort={ordering}
-            onSort={setOrdering}
-            page={offset}
-            perPage={Number(limit)}
-          />
-        </div>
+      <H3 className="justify-start">Individual Sample Details</H3>
+      <div className="relative">
+        <Status query={query} className="absolute inset-0 opacity-90" />
+        <Table
+          className="w-full"
+          cols={cols}
+          rows={results}
+          sort={ordering}
+          onSort={setOrdering}
+          page={offset}
+          perPage={Number(limit)}
+        />
       </div>
 
       {/* pagination */}

@@ -69,6 +69,10 @@
     @apply text-lg tracking-wide;
   }
 
+  hr {
+    @apply my-12 border-none block bg-stone-300 h-px shrink-0;
+  }
+
   a {
     @apply transition-all;
   }

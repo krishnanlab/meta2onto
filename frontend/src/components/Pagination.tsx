@@ -1,4 +1,5 @@
-import type { ReactNode } from "react";
+import type { ComponentProps, ReactNode } from "react";
+import { clsx } from "clsx";
 import {
   ChevronLeft,
   ChevronRight,
@@ -28,7 +29,7 @@ type Props = {
   limit: Limit;
   setLimit: (limit: Limit) => void;
   children?: ReactNode;
-};
+} & ComponentProps<"div">;
 
 /** pagination controls */
 export default function Pagination({
@@ -37,6 +38,7 @@ export default function Pagination({
   setOffset,
   limit,
   setLimit,
+  className,
   children,
 }: Props) {
   const _limit = Number(limit);
@@ -47,7 +49,12 @@ export default function Pagination({
     sleep().then(() => setOffset(Math.floor(offset / _limit) * _limit));
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-8">
+    <div
+      className={clsx(
+        "flex flex-wrap items-center justify-between gap-8",
+        className,
+      )}
+    >
       {/* pagination */}
       <div className="flex items-center">
         {!!count && (
