@@ -62,6 +62,7 @@ from .serializers import (
     DatabaseStatsSerializer,
 )
 from .utils.auth import CsrfExemptSessionAuthentication
+from api.utils.query import Array
 
 # ===========================================================================
 # === Helpers
@@ -498,7 +499,7 @@ class GEOSeriesViewSet(viewsets.ReadOnlyModelViewSet):
     )
     def samples(self, request, pk=None):
         series = self.get_object()
-        samples = GEOSample.objects.filter(series_set__contains=series.gse).all()
+        samples = GEOSample.objects.filter(series_set__contains=[series.gse]).all()
 
         # if query was provided, search within the samples for that series
         query = request.query_params.get("query")
