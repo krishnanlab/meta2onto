@@ -186,6 +186,25 @@ STATIC_ROOT = "/opt/static"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+VERBOSE_DB_LOGGING = is_truthy(os.environ.get("VERBOSE_DB_LOGGING", "0"))
+
+if VERBOSE_DB_LOGGING:
+    LOGGING = {
+        "version": 1,
+        "disable_existing_loggers": False,
+        "handlers": {
+            "console": {
+                "class": "logging.StreamHandler",
+            },
+        },
+        "loggers": {
+            "django.db.backends": {
+                "handlers": ["console"],
+                "level": "DEBUG",
+            },
+        },
+    }
+
 # add django rest framework settings
 REST_FRAMEWORK = {
     # Use Django's standard `django.contrib.auth` permissions,
@@ -207,10 +226,18 @@ REST_FRAMEWORK = {
 
 # app-specific settings
 # cache timeout for search results, which are relatively static and can be cached longer-term
-# (default currently set to 30 days in seconds)
-LONGTERM_CACHE_TIMEOUT = int(os.environ.get("LONGTERM_CACHE_TIMEOUT", str(60 * 60 * 24 * 30)))
+# (default currently set to slightly less than 30 days in seconds)
+# (note that >= 30 days, the timeout is interpreted as a UNIX timestamp and not a duration from now)
+LONGTERM_CACHE_TIMEOUT = int(os.environ.get("LONGTERM_CACHE_TIMEOUT", str(60 * 60 * 24 * 29)))
 # maximum number of search results to return, which can be overridden by environment variable
-SEARCH_MAX_RESULTS = int(os.environ.get("SEARCH_MAX_RESULTS", "1000000000"))
+# (-1 means no limit, which is the default)
+SEARCH_MAX_RESULTS = int(os.environ.get("SEARCH_MAX_RESULTS", "-1"))
+if SEARCH_MAX_RESULTS < 0:
+    SEARCH_MAX_RESULTS = None
+
+# if true, uses django's caching mechanism to cache search results for 30 days (or until memcached is cleared)
+# if false, performs search queries directly against the database each time
+USE_SEARCH_CACHE = is_truthy(os.environ.get("USE_SEARCH_CACHE", "0"))
 
 # if true, computes facets per request
 # if false, consults the global Facet and FacetEntry tables for precomputed facet values
