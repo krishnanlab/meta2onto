@@ -22,6 +22,7 @@ from django.db.models.functions import Coalesce
 from django.http import HttpResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
+from django.core.cache import cache
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
@@ -147,41 +148,14 @@ class GEOSeriesViewSet(viewsets.ReadOnlyModelViewSet):
         """
         Keep queryset at one row per GEOSeries while annotating sample counts.
         """
-        return queryset.annotate(
-            samples_ct=Coalesce(
-                Subquery(
-                    GEOSample.objects.filter(series_id=OuterRef("gse"))
-                    .values("series_id")
-                    .annotate(c=Count("gsm"))
-                    .values("c")[:1],
-                    output_field=IntegerField(),
-                ),
-                Value(0),
-                output_field=IntegerField(),
-            )
-        )
+        return GEOSeries.objects.with_samples_count(queryset)
 
     def _with_facet_buckets(self, queryset):
         """
         Add stable bucket annotations used by facets and filters.
         Assumes prob may or may not be present, and samples_ct is present.
         """
-        return queryset.annotate(
-            confidence_level=Case(
-                When(prob__gte=0.8, then=Value("high")),
-                When(prob__gte=0.5, then=Value("medium")),
-                When(prob__lt=0.5, then=Value("low")),
-                default=Value("unknown"),
-                output_field=CharField(),
-            ),
-            # study_size=Case(
-            #     When(samples_ct__lt=10, then=Value("small")),
-            #     When(samples_ct__gte=10, samples_ct__lte=50, then=Value("medium")),
-            #     When(samples_ct__gt=50, then=Value("large")),
-            #     default=Value("unknown"),
-            #     output_field=CharField(),
-            # ),
-        )
+        return GEOSeries.objects.with_facet_buckets(queryset, confidence_levels=True, study_sizes=False)
 
     def _build_facets(self, queryset):
         """Compute facets for the search result set."""

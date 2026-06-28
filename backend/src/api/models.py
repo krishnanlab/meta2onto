@@ -22,6 +22,8 @@ from django.contrib.postgres.fields import ArrayField
 from django_cte import CTE, with_cte
 from django_cte.raw import raw_cte_sql
 
+from api.utils.query import Array
+
 
 class TimeStampedModel(models.Model):
     """Abstract base with created/modified timestamps."""
@@ -293,6 +295,13 @@ class GEOSample(models.Model):
         blank=True,
     )
 
+    # since 'series' can be a semicolon-delimited list, this column
+    # breaks it out into a list of GSE IDs for easier querying and filtering
+    series_set = ArrayField(
+        models.CharField(), default=list, blank=True, null=True,
+        help_text="List of GSE IDs this sample belongs to"
+    )
+
     # # the platform to which this sample belongs
     # platform = models.ForeignKey(
     #     "Platform",
@@ -311,6 +320,7 @@ class GEOSample(models.Model):
             models.Index(fields=["series"]),
             models.Index(fields=["gpl_raw"]),
             models.Index(fields=["organism_ch1"]),
+            GinIndex(fields=["series_set"], name="geosample_series_set_gin"),
         ]
 
     def __str__(self):
