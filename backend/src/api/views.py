@@ -498,7 +498,7 @@ class GEOSeriesViewSet(viewsets.ReadOnlyModelViewSet):
     )
     def samples(self, request, pk=None):
         series = self.get_object()
-        samples = GEOSample.objects.filter(series_id=series.gse).all()
+        samples = GEOSample.objects.filter(series_set__contains=series.gse).all()
 
         # if query was provided, search within the samples for that series
         query = request.query_params.get("query")
