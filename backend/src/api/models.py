@@ -60,27 +60,32 @@ class Organism(models.Model):
 class GEOSeriesManager(models.Manager):
     def with_samples_count(self, queryset=None):
         """
-        Annotate each GEOSeries row with samples_ct using a Subquery so the
-        queryset stays one-row-per-series.
+        Annotate each GEOSeries row with samples_ct.
+
+        Counts GEOSample rows where GEOSample.series_set contains the outer
+        GEOSeries.gse value.
         """
         if queryset is None:
             queryset = self.get_queryset()
 
+        samples_count_subquery = (
+            GEOSample.objects
+            .filter(series_set__contains=Array(OuterRef("gse")))
+            .order_by()
+            .annotate(_group=Value(1, output_field=IntegerField()))
+            .values("_group")
+            .annotate(c=Count("gsm"))
+            .values("c")[:1]
+        )
+
         return queryset.annotate(
             samples_ct=Coalesce(
-                Subquery(
-                    GEOSample.objects.filter(series_id=OuterRef("gse"))
-                    .values("series_id")
-                    .annotate(c=Count("gsm"))
-                    .values("c")[:1],
-                    output_field=IntegerField(),
-                ),
+                Subquery(samples_count_subquery, output_field=IntegerField()),
                 Value(0),
-                output_field=IntegerField(),
             )
         )
 
-    def with_facet_buckets(self, queryset=None):
+    def with_facet_buckets(self, queryset=None, confidence_levels=True, study_sizes=True):
         """
         Annotate a queryset with:
           - confidence_level, derived from prob
@@ -90,24 +95,31 @@ class GEOSeriesManager(models.Manager):
         if queryset is None:
             queryset = self.get_queryset()
 
-        return queryset.annotate(
-            confidence_level=Case(
-                When(prob__gte=0.8, then=Value("high")),
-                When(prob__gte=0.5, then=Value("medium")),
-                When(prob__lt=0.5, then=Value("low")),
-                default=Value("unknown"),
-                output_field=CharField(),
-            ),
-            study_size=Case(
-                When(samples_ct__lt=10, then=Value("small")),
-                When(samples_ct__gte=10, samples_ct__lte=50, then=Value("medium")),
-                When(samples_ct__gt=50, then=Value("large")),
-                default=Value("unknown"),
-                output_field=CharField(),
-            ),
-        )
+        if confidence_levels:
+            result = queryset.annotate(
+                confidence_level=Case(
+                    When(prob__gte=0.8, then=Value("high")),
+                    When(prob__gte=0.5, then=Value("medium")),
+                    When(prob__lt=0.5, then=Value("low")),
+                    default=Value("unknown"),
+                    output_field=CharField(),
+                )
+            )
 
-    def search_gse_with_prob(self, query: str, limit: int = 50):
+        if study_sizes:
+            result = queryset.annotate(
+                study_size=Case(
+                    When(samples_ct__lt=10, then=Value("small")),
+                    When(samples_ct__gte=10, samples_ct__lte=50, then=Value("medium")),
+                    When(samples_ct__gt=50, then=Value("large")),
+                    default=Value("unknown"),
+                    output_field=CharField(),
+                ),
+            )
+    
+        return result
+
+    def search_gse_with_prob(self, query: str, limit: int | None = 50):
         """
         Returns a queryset of GEOSeries joined to a CTE containing:
             (series_id, prob)
@@ -155,8 +167,30 @@ class GEOSeriesManager(models.Manager):
         )
 
         return with_cte(hits, select=qs)
+    
+    def order_by_custom(self, queryset=None, order_by="relevance"):
+        """
+        Order a queryset of GEOSeries by the given order_by parameter.
+        """
+        if queryset is None:
+            queryset = self.get_queryset()
 
-    def search(self, query: str, max_results: int = 50, order_by: str = "relevance"):
+        if order_by == "relevance":
+            return queryset.order_by("-prob", "gse")
+        elif order_by == "-relevance":
+            return queryset.order_by("prob", "gse")
+        elif order_by == "date":
+            return queryset.order_by("-submission_date", "gse")
+        elif order_by == "-date":
+            return queryset.order_by("submission_date", "gse")
+        elif order_by == "samples":
+            return queryset.order_by("-samples_ct", "gse")
+        elif order_by == "-samples":
+            return queryset.order_by("samples_ct", "gse")
+        else:
+            return queryset.order_by("gse")
+
+    def search(self, query: str, max_results: int | None = 50, order_by: str = "relevance"):
         """
         Search GEOSeries and return a stable queryset annotated with:
           - prob
@@ -165,20 +199,7 @@ class GEOSeriesManager(models.Manager):
         qs = self.search_gse_with_prob(query=query, limit=max_results)
         qs = self.with_samples_count(qs)
 
-        if order_by == "relevance":
-            qs = qs.order_by("-prob", "gse")
-        elif order_by == "-relevance":
-            qs = qs.order_by("prob", "gse")
-        elif order_by == "date":
-            qs = qs.order_by("-submission_date", "gse")
-        elif order_by == "-date":
-            qs = qs.order_by("submission_date", "gse")
-        elif order_by == "samples":
-            qs = qs.order_by("-samples_ct", "gse")
-        elif order_by == "-samples":
-            qs = qs.order_by("samples_ct", "gse")
-        else:
-            qs = qs.order_by("gse")
+        qs = self.order_by_custom(qs, order_by=order_by)
 
         return qs
 
@@ -613,7 +634,7 @@ class Facet(models.Model):
 
 
 class OntologySearchResultsManager(models.Manager):
-    def search(self, query: str, max_results: int = 5000):
+    def search(self, query: str, max_results: int | None = 5000):
         """
         Perform a search for the given query string across ontology terms + synonyms.
 
@@ -629,7 +650,7 @@ class OntologySearchResultsManager(models.Manager):
         )
         return qs
 
-    def search_series(self, query: str, max_results: int = 5000):
+    def search_series(self, query: str, max_results: int | None = 5000):
         """
         Perform a search for the given query string across ontology terms;
         joins the ontology terms against api_searchterm to get associated GEOSeries.
