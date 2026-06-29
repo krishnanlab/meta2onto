@@ -31,8 +31,8 @@ export default function Dialog({
       <_Dialog.Portal>
         <_Dialog.Backdrop className="fixed inset-0 z-10 bg-black/50" />
         <_Dialog.Popup className="pointer-events-none fixed inset-0 z-20 grid place-items-center p-12">
-          <div className="pointer-events-auto flex max-h-full min-h-0 max-w-full min-w-0 flex-col rounded-md bg-white *:px-4 *:py-2">
-            <div className="flex items-start gap-4 shadow-md">
+          <div className="pointer-events-auto flex max-h-full min-h-0 max-w-full min-w-0 flex-col rounded-md bg-white">
+            <div className="flex items-start gap-4 p-4 shadow-md">
               <div className="flex grow flex-col justify-start">
                 <_Dialog.Title className="justify-start text-left">
                   {title}
@@ -47,9 +47,11 @@ export default function Dialog({
                 <X />
               </_Dialog.Close>
             </div>
-            <div className="flex flex-col gap-4 overflow-y-auto">{content}</div>
+            <div className="flex flex-col gap-4 overflow-y-auto p-4">
+              {content}
+            </div>
             {bottom && (
-              <div className="flex flex-wrap gap-4 shadow-md">{bottom}</div>
+              <div className="flex flex-wrap gap-4 p-4 shadow-md">{bottom}</div>
             )}
           </div>
         </_Dialog.Popup>

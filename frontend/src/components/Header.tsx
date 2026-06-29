@@ -73,14 +73,14 @@ export default function Header() {
           open && "max-md:w-full",
         )}
       >
+        <Button to="/" color="none">
+          Search
+        </Button>
         <Button to="/about" color="none">
           About
         </Button>
         <Button to="/help" color="none">
           Help
-        </Button>
-        <Button to="/" color="none">
-          Search
         </Button>
         <Button
           ref={(el: HTMLAnchorElement) => {

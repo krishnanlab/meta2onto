@@ -11,6 +11,7 @@ import {
 } from "@tanstack/react-query";
 import clsx from "clsx";
 import { useAtomValue } from "jotai";
+import { sum } from "lodash";
 import {
   ArrowRight,
   Braces,
@@ -146,6 +147,13 @@ export default function Cart() {
   const refineBioStudyIds = studyDetails
     .filter((study) => "Refine.bio" in study.database)
     .map((study) => study.id);
+
+  /** total number of samples in refine.bio studies */
+  const refineBioSamples = sum(
+    studyDetails
+      .filter((study) => "Refine.bio" in study.database)
+      .map((study) => study.sample_count),
+  );
 
   /** export to refine.bio */
   const refineBioMutation = useMutation({
@@ -287,7 +295,7 @@ export default function Cart() {
                     </Popover>
 
                     <Dialog
-                      title="Export to Refine.bio"
+                      title="Cart to Refine.bio"
                       content={
                         <>
                           {showStatus({ query: refineBioMutation }) ? (
@@ -321,21 +329,32 @@ export default function Cart() {
                             </>
                           ) : (
                             <>
-                              <div>
-                                Export {formatNumber(refineBioStudyIds.length)}{" "}
-                                supported studies in this cart to a Refine.bio
-                                dataset
-                              </div>
+                              <p>
+                                Export this cart to a Refine.bio dataset.
+                                <br />
+                                <strong>
+                                  {formatNumber(refineBioStudyIds.length)}
+                                </strong>{" "}
+                                supported studies
+                                <br />
+                                <strong>
+                                  {formatNumber(refineBioSamples)}
+                                </strong>{" "}
+                                supported samples
+                              </p>
+
                               <Textbox
                                 placeholder="Email (optional)"
                                 value={userEmail}
                                 onChange={setUserEmail}
                               />
+
+                              {!refineBioSamples && <i>Nothing to export</i>}
                               <Button
                                 onClick={() => refineBioMutation.mutate()}
-                                aria-disabled={!refineBioStudyIds.length}
+                                aria-disabled={!refineBioSamples}
                               >
-                                <LinkIcon />
+                                <SquareArrowRightEnter />
                                 Export
                               </Button>
                             </>
