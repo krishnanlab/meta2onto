@@ -16,7 +16,7 @@ export default function Database({ database, study = "" }: Props) {
   /** if study provided, insert */
   if (study) link = link.replaceAll("$STUDY", study).replaceAll(/[\[\]]/g, "");
   /** else, remove between brackets (link to a more base page w/o search) */ else
-    link = link.replaceAll(/\[.*]/, "");
+    link = link.replaceAll(/\[.*]/g, "");
 
   return (
     <Link

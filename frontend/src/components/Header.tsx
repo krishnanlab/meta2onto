@@ -7,6 +7,7 @@ import Button from "@/components/Button";
 import Logo from "@/components/Logo";
 import Tooltip from "@/components/Tooltip";
 import { cartAtom } from "@/state/cart";
+import { formatNumber } from "@/util/string";
 
 const { VITE_TITLE: title } = import.meta.env;
 
@@ -55,7 +56,7 @@ export default function Header() {
             return () => (toggleRef = undefined);
           }}
           color="none"
-          className="sm:hidden"
+          className="text-white md:hidden"
           onClick={() => setOpen(!open)}
           aria-expanded={open}
           aria-controls="nav"
@@ -68,8 +69,8 @@ export default function Header() {
       <nav
         className={clsx(
           `flex flex-wrap items-center justify-center gap-4 text-xl *:text-white max-xs:flex-col`,
-          !open && "max-sm:hidden",
-          open && "max-sm:w-full",
+          !open && "max-md:hidden",
+          open && "max-md:w-full",
         )}
       >
         <Button to="/about" color="none">
@@ -95,7 +96,7 @@ export default function Header() {
           Cart
           {!!cart.studies.length && (
             <div className="absolute -top-2 -right-2 grid size-5 place-items-center rounded-full bg-theme-light text-sm text-black">
-              {cart.studies.length}
+              {formatNumber(cart.studies.length)}
             </div>
           )}
         </Button>

@@ -67,7 +67,7 @@ export default function Cart() {
 
   /** look up study ids from cart id */
   const cartLookupQuery = useQuery({
-    queryKey: ["cart-lookup", id],
+    queryKey: ["cartLookup", id],
     queryFn: () => cartLookup(id),
     enabled: shared,
   });
@@ -97,7 +97,7 @@ export default function Cart() {
 
   /** look up study details from study ids */
   const studyBatchLookupQuery = useQuery({
-    queryKey: ["study-batch-lookup", id, ordering, offset, limit],
+    queryKey: ["studyBatchLookup", studyIds, ordering, offset, limit],
     queryFn: () =>
       studyBatchLookup({
         ids: studyIds,
@@ -322,8 +322,9 @@ export default function Cart() {
                           ) : (
                             <>
                               <div>
-                                Export supported studies in this cart to a
-                                Refine.bio dataset
+                                Export {formatNumber(refineBioStudyIds.length)}{" "}
+                                supported studies in this cart to a Refine.bio
+                                dataset
                               </div>
                               <Textbox
                                 placeholder="Email (optional)"
@@ -332,6 +333,7 @@ export default function Cart() {
                               />
                               <Button
                                 onClick={() => refineBioMutation.mutate()}
+                                aria-disabled={!refineBioStudyIds.length}
                               >
                                 <LinkIcon />
                                 Export
@@ -366,7 +368,7 @@ export default function Cart() {
 
             <Status
               query={studyBatchLookupQuery}
-              loading={`Loading ${studyIds.length} studies`}
+              loading={`Loading ${formatNumber(studyIds.length)} studies`}
             />
 
             {!!studyDetails.length && (
@@ -441,7 +443,7 @@ export default function Cart() {
             <H2>History</H2>
 
             <p className="self-center text-center">
-              Carts you've created on this device
+              Carts you've shared from this device
             </p>
 
             <div

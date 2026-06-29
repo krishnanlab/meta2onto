@@ -38,6 +38,7 @@ import Database from "@/components/Database";
 import Dialog from "@/components/Dialog";
 import { getCartRef } from "@/components/Header";
 import { H1, H3 } from "@/components/Heading";
+import Link from "@/components/Link";
 // import Link from "@/components/Link";
 import Meta from "@/components/Meta";
 import Meter from "@/components/Meter";
@@ -134,7 +135,7 @@ export default function Studies() {
 
   /** search results */
   const studySearchQuery = useQuery({
-    queryKey: ["study-search", search, ordering, offset, limit, facets],
+    queryKey: ["studySearch", search, ordering, offset, limit, facets],
     queryFn: () =>
       studySearch({ search, ordering, offset, limit: Number(limit), facets }),
     placeholderData: keepPreviousData,
@@ -332,14 +333,14 @@ type ResultsProps = {
 };
 
 function Results({ setParams, offset, limit, query }: ResultsProps) {
-  // const anyFeedback = !!Object.values(useAtomValue(feedbackAtom)).length;
+  const anyFeedback = !!Object.values(useAtomValue(feedbackAtom)).length;
 
   /** destructure query */
   const { count = 0, results = [] } = query.data ?? {};
 
   return (
     <div className="flex flex-col gap-8">
-      {/* {anyFeedback && (
+      {anyFeedback && (
         <p>
           We especially appreciate feedback on{" "}
           <Link to="?Classification=Neutral">
@@ -347,7 +348,7 @@ function Results({ setParams, offset, limit, query }: ResultsProps) {
           </Link>
           !
         </p>
-      )} */}
+      )}
 
       {/* query status */}
       <Status query={query} />
@@ -730,7 +731,7 @@ function SamplesPopup({ id }: SamplesPopupProps) {
   const [limit, setLimit] = useState<Limit>("10");
 
   const query = useQuery({
-    queryKey: ["study-samples", id, search, ordering, offset, limit],
+    queryKey: ["studySamples", id, search, ordering, offset, limit],
     queryFn: () =>
       studySamples({
         id,
