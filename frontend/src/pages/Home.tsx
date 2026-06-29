@@ -223,7 +223,7 @@ export function SearchBox({ inputRef, className }: SearchBoxProps) {
 
   /** ontology search results */
   const ontologySearchQuery = useQuery({
-    queryKey: ["ontology-search", search],
+    queryKey: ["ontologySearch", search],
     queryFn: () => ontologySearch(search),
   });
 

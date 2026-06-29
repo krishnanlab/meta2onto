@@ -3,12 +3,7 @@ import type { Cart } from "@/api/types";
 import type { Limit } from "@/components/Pagination";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router";
-import {
-  keepPreviousData,
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import clsx from "clsx";
 import { useAtomValue } from "jotai";
 import { sum } from "lodash";
@@ -19,7 +14,7 @@ import {
   Download,
   LinkIcon,
   Mail,
-  Plus,
+  Search,
   Share2,
   SquareArrowRightEnter,
   Table2,
@@ -107,12 +102,11 @@ export default function Cart() {
         limit: Number(limit),
       }),
     enabled: !!size,
-    placeholderData: keepPreviousData,
   });
 
-  /** reset query state on disable */
+  /** reset query state */
   const queryClient = useQueryClient();
-  if (!size) queryClient.resetQueries({ queryKey: ["study-batch-lookup"] });
+  if (!size) queryClient.resetQueries({ queryKey: ["studyBatchLookup"] });
 
   /** full study details */
   const studyDetails = studyBatchLookupQuery.data?.results || [];
@@ -379,7 +373,7 @@ export default function Cart() {
               <div className="flex flex-col items-center gap-8">
                 <div>No studies yet</div>
                 <Button to="/">
-                  <Plus />
+                  <Search />
                   Search
                 </Button>
               </div>
