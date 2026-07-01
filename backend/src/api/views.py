@@ -145,12 +145,6 @@ class GEOSeriesViewSet(viewsets.ReadOnlyModelViewSet):
     ordering = ["gse"]
     pagination_class = GEOSeriesSearchPagination
 
-    def _with_samples_count(self, queryset):
-        """
-        Keep queryset at one row per GEOSeries while annotating sample counts.
-        """
-        return GEOSeries.objects.with_samples_count(queryset)
-
     def _with_facet_buckets(self, queryset):
         """
         Add stable bucket annotations used by facets and filters.
@@ -162,8 +156,7 @@ class GEOSeriesViewSet(viewsets.ReadOnlyModelViewSet):
         """Compute facets for the search result set."""
 
         if settings.COMPUTE_FACETS_DYNAMICALLY:
-            annotated_qs = self._with_samples_count(queryset)
-            annotated_qs = self._with_facet_buckets(annotated_qs).order_by()
+            annotated_qs = self._with_facet_buckets(queryset)
 
             # # confidence facet
             # removed b/c we now hardcode the response
@@ -283,7 +276,6 @@ class GEOSeriesViewSet(viewsets.ReadOnlyModelViewSet):
         results = GEOSeries.objects.search(query, max_results=max_results, order_by=ordering)
 
         # adds annotations used for building facets
-        results = self._with_samples_count(results)
         results = self._with_facet_buckets(results)
 
         # Build facets BEFORE applying facet filters, so facets describe the full
@@ -406,22 +398,17 @@ class GEOSeriesViewSet(viewsets.ReadOnlyModelViewSet):
                 )
 
         # ---------------------------------------------------------------
-        # --- apply ordering, limit options from request
+        # --- apply limit options from request, prepare for final render
         # ---------------------------------------------------------------
 
-        # apply ordering again after facet filters if needed
-        if ordering == "relevance":
-            results = results.order_by("-prob", "gse")
-        elif ordering == "-relevance":
-            results = results.order_by("prob", "gse")
-        elif ordering == "date":
-            results = results.order_by("-submission_date", "gse")
-        elif ordering == "-date":
-            results = results.order_by("submission_date", "gse")
-        elif ordering == "samples":
-            results = results.order_by("-samples_ct", "gse")
-        elif ordering == "-samples":
-            results = results.order_by("samples_ct", "gse")
+        # reduce to the columns that are actually used in the frontend
+        results = results.only(
+            "gse",
+            "title",
+            "summary",
+            "submission_date",
+            "samples_ct",
+        )
 
         # paginate the response
         if limit is not None:

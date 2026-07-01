@@ -164,7 +164,7 @@ class GEOSeriesSerializer(serializers.ModelSerializer):
     # serializer layer.
     id = serializers.CharField(source="gse", read_only=True)
     name = serializers.CharField(source="title", read_only=True)
-    submitted_at = serializers.DateTimeField(source="submission_date", read_only=True)
+    submitted_at = serializers.DateField(source="submission_date", read_only=True)
     description = serializers.CharField(source="summary", read_only=True)
     # platform = serializers.CharField(source="database", read_only=True)
 

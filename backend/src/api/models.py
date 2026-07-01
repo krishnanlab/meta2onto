@@ -2,27 +2,16 @@ import uuid
 
 from django.db import models
 from django.db.models import (
+    F,
     Case,
     When,
     Value,
     CharField,
-    IntegerField,
-    FloatField,
-    Count,
-    OuterRef,
-    Subquery,
 )
-from django.db.models.functions import Coalesce
-from django.db.models.sql.constants import INNER
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.contrib.postgres.indexes import GinIndex
 from django.contrib.postgres.search import TrigramSimilarity, SearchVector
 from django.contrib.postgres.fields import ArrayField
-
-from django_cte import CTE, with_cte
-from django_cte.raw import raw_cte_sql
-
-from api.utils.query import Array
 
 
 class TimeStampedModel(models.Model):
@@ -58,33 +47,6 @@ class Organism(models.Model):
 # ===========================================================================
 
 class GEOSeriesManager(models.Manager):
-    def with_samples_count(self, queryset=None):
-        """
-        Annotate each GEOSeries row with samples_ct.
-
-        Counts GEOSample rows where GEOSample.series_set contains the outer
-        GEOSeries.gse value.
-        """
-        if queryset is None:
-            queryset = self.get_queryset()
-
-        samples_count_subquery = (
-            GEOSample.objects
-            .filter(series_set__contains=Array(OuterRef("gse")))
-            .order_by()
-            .annotate(_group=Value(1, output_field=IntegerField()))
-            .values("_group")
-            .annotate(c=Count("gsm"))
-            .values("c")[:1]
-        )
-
-        return queryset.annotate(
-            samples_ct=Coalesce(
-                Subquery(samples_count_subquery, output_field=IntegerField()),
-                Value(0),
-            )
-        )
-
     def with_facet_buckets(self, queryset=None, confidence_levels=True, study_sizes=True):
         """
         Annotate a queryset with:
@@ -94,6 +56,9 @@ class GEOSeriesManager(models.Manager):
         """
         if queryset is None:
             queryset = self.get_queryset()
+
+        # return queryset if neither confidence_levels nor study_sizes are requested
+        result = queryset
 
         if confidence_levels:
             result = queryset.annotate(
@@ -119,7 +84,7 @@ class GEOSeriesManager(models.Manager):
     
         return result
 
-    def search_gse_with_prob(self, query: str, limit: int | None = 50):
+    def search_gse_with_prob(self, query: str):
         """
         Returns a queryset of GEOSeries joined to a CTE containing:
             (series_id, prob)
@@ -127,46 +92,14 @@ class GEOSeriesManager(models.Manager):
         'query' should be an ontology ID from api_searchterm,
         e.g. 'MONDO:0000270'.
         """
-        hits = CTE(
-            raw_cte_sql(
-                """
-                SELECT
-                    st.series_id AS series_id,
-                    st.confidence AS prob,
-                    st.related_words AS keywords
-                FROM api_searchterm st
-                WHERE st.term = %s
-                LIMIT %s
-                """,
-                [query, limit],
-                {
-                    "series_id": CharField(),
-                    "prob": FloatField(),
-                },
-            ),
-            name="hits",
-        )
-
-        qs = hits.join(
-            self.get_queryset(),
-            gse=hits.col.series_id,
-            _join_type=INNER,
-        ).annotate(prob=hits.col.prob)
-
-        # we need to join against api_searchterm and retrieve related_words for each GSE
-        # on the following fields:
-        # - series_id=the GSE ID
-        # - term=the original query term
-        qs = qs.annotate(
-            keywords=Subquery(
-                SearchTerm.objects.filter(
-                    series_id=OuterRef("gse"),
-                    term=query,
-                ).values("related_words")[:1]
+        return (
+            self.get_queryset()
+            .filter(search_terms__term=query)
+            .annotate(
+                prob=F("search_terms__confidence"),
+                keywords=F("search_terms__related_words"),
             )
         )
-
-        return with_cte(hits, select=qs)
     
     def order_by_custom(self, queryset=None, order_by="relevance"):
         """
@@ -191,18 +124,13 @@ class GEOSeriesManager(models.Manager):
             return queryset.order_by("gse")
 
     def search(self, query: str, max_results: int | None = 50, order_by: str = "relevance"):
-        """
-        Search GEOSeries and return a stable queryset annotated with:
-          - prob
-          - samples_ct
-        """
-        qs = self.search_gse_with_prob(query=query, limit=max_results)
-        qs = self.with_samples_count(qs)
-
+        qs = self.search_gse_with_prob(query=query)
         qs = self.order_by_custom(qs, order_by=order_by)
 
-        return qs
+        if max_results is not None:
+            qs = qs[:max_results]
 
+        return qs
 
 class GEOSeries(models.Model):
     """
@@ -216,7 +144,8 @@ class GEOSeries(models.Model):
     title = models.TextField(null=True, blank=True)
     gse = models.CharField(primary_key=True)
     status = models.CharField(null=True, blank=True)
-    submission_date = models.CharField(null=True, blank=True)
+    # submission_date = models.CharField(null=True, blank=True)
+    submission_date = models.DateField(null=True, blank=True)
     last_update_date = models.CharField(null=True, blank=True)
     pubmed_id = models.BigIntegerField(null=True, blank=True)
     summary = models.TextField(null=True, blank=True)
@@ -233,10 +162,12 @@ class GEOSeries(models.Model):
 
     doc = models.TextField(blank=True, null=True)
 
+    samples_ct = models.IntegerField(null=True, blank=True)
+
     # runtime annotations
     prob: float | None = None
     keywords: str | None = None
-    samples_ct: int | None = None
+    # samples_ct: int | None = None
     confidence_level: str | None = None
     study_size: str | None = None
 
@@ -254,7 +185,7 @@ class GEOSeries(models.Model):
     
     class Meta:
         indexes = [
-            models.Index(fields=["gse"]),
+            models.Index(fields=["submission_date"]),
         ]
 
     def __str__(self):
