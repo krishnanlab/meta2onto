@@ -86,6 +86,15 @@
     @apply leading-loose;
   }
 
+  svg {
+    @apply overflow-visible;
+  }
+
+  img,
+  svg {
+    @apply shrink-0;
+  }
+
   a {
     @apply text-accent underline hover:text-current;
   }

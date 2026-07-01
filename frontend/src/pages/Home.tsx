@@ -14,13 +14,14 @@ import {
   History,
   Lightbulb,
   Microscope,
+  MoveDown,
+  MoveRight,
   Pipette,
   Rat,
   Recycle,
   RotateCcw,
   SearchCheck,
   ShoppingCart,
-  ThumbsUp,
   Wrench,
 } from "lucide-react";
 import { getStats, ontologySearch } from "@/api/api";
@@ -91,17 +92,19 @@ export default function Home() {
       <section>
         <H2 className="sr-only">How it works</H2>
 
-        <div className="grid grid-cols-3 gap-8 self-center max-md:grid-cols-2 max-sm:grid-cols-1">
+        <div className="flex justify-center gap-8 max-md:flex-col [&>svg]:size-8 [&>svg]:self-center [&>svg]:text-stone-300">
           <Tile
             big
-            number={1}
+            className="text-accent"
             Icon={SearchCheck}
             title="Discover"
             description="Search for tissue or disease term you're interested in"
           />
+          <MoveRight className="max-md:hidden" />
+          <MoveDown className="md:hidden" />
           <Tile
             big
-            number={2}
+            className="text-accent"
             Icon={ShoppingCart}
             title="Collect"
             description={
@@ -111,9 +114,11 @@ export default function Home() {
               </>
             }
           />
+          <MoveRight className="max-md:hidden" />
+          <MoveDown className="md:hidden" />
           <Tile
             big
-            number={3}
+            className="text-accent"
             Icon={Recycle}
             title="Reuse"
             description={
@@ -131,6 +136,7 @@ export default function Home() {
         <div className="grid grid-cols-3 gap-8 self-center max-md:grid-cols-2 max-sm:grid-cols-1">
           <Tile
             big
+            className="text-theme"
             Icon={Glasses}
             title="Interpretable"
             description={
@@ -143,12 +149,14 @@ export default function Home() {
           />
           <Tile
             big
+            className="text-theme"
             Icon={RotateCcw}
             title="Up-to-date"
             description="We update our predictions semi-annually so results reflect the latest studies available on GEO"
           />
           <Tile
             big
+            className="text-theme"
             Icon={ArrowLeftRight}
             title="Standardized"
             description="We standardize annotations to biomedical ontologies, ensuring consistency and interoperability across studies"
@@ -159,7 +167,7 @@ export default function Home() {
       <section>
         <H2 className="sr-only">Stats</H2>
 
-        <div className="grid grid-cols-7 gap-8 self-center max-lg:grid-cols-4 max-md:grid-cols-3 max-sm:grid-cols-2">
+        <div className="grid grid-cols-6 gap-8 self-center max-lg:grid-cols-3 max-md:grid-cols-3 max-sm:grid-cols-2">
           <Tile
             Icon={Brain}
             title={formatNumber(stats?.tissues)}
@@ -190,11 +198,12 @@ export default function Home() {
             title={formatNumber(stats?.technologies)}
             description="technologies"
           />
-          <Tile
+          {/* re-enable when we have more to brag about */}
+          {/* <Tile
             Icon={ThumbsUp}
             title={formatNumber(stats?.feedback)}
             description="user feedback"
-          />
+          /> */}
         </div>
       </section>
     </>
@@ -302,33 +311,36 @@ export function SearchBox({ inputRef, className }: SearchBoxProps) {
 
 type TileProps = {
   big?: boolean;
+  className?: string;
   Icon: FunctionComponent<{ className?: string }>;
-  number?: number;
   title: ReactNode;
   description: ReactNode;
 };
 
-function Tile({ big = false, number, Icon, title, description }: TileProps) {
+function Tile({
+  big = false,
+  className = "text-stone-500",
+  Icon,
+  title,
+  description,
+}: TileProps) {
   return (
     <div
-      className={clsx("flex flex-col items-center", big ? "gap-4" : "gap-0")}
+      className={clsx(
+        "flex flex-col items-center",
+        big ? "gap-4" : "gap-0",
+        className,
+      )}
     >
       <div
         className={clsx(
-          "mb-2 grid place-items-center rounded-full bg-theme-light text-theme-dark",
-          big ? "size-16" : "size-12",
+          "mb-2 grid place-items-center rounded-full",
+          big ? "size-16 bg-current/10" : "size-12 border-2 border-current/10",
         )}
       >
         <Icon className="size-1/2" />
       </div>
-      <div className="flex items-center gap-2 text-xl font-medium">
-        {number && (
-          <div className="grid size-7 place-items-center rounded-full bg-theme-light text-lg">
-            {number}
-          </div>
-        )}
-        {title}
-      </div>
+      <div className="flex items-center gap-2 text-xl font-medium">{title}</div>
       <p className="text-center text-balance text-stone-700">{description}</p>
     </div>
   );
