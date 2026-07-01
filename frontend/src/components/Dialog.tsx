@@ -8,6 +8,7 @@ type Props = {
   title: ReactNode;
   subtitle?: ReactNode;
   content: ReactNode;
+  bottom?: ReactNode;
   onOpen?: () => void;
   onClose?: () => void;
 };
@@ -17,6 +18,7 @@ export default function Dialog({
   title,
   subtitle,
   content,
+  bottom,
   onOpen,
   onClose,
 }: Props) {
@@ -28,24 +30,15 @@ export default function Dialog({
       <_Dialog.Trigger render={children} />
       <_Dialog.Portal>
         <_Dialog.Backdrop className="fixed inset-0 z-10 bg-black/50" />
-        <_Dialog.Popup
-          className="
-            pointer-events-none fixed inset-0 z-20 grid place-items-center p-4
-          "
-        >
-          <div
-            className="
-              pointer-events-auto flex max-h-full min-h-0 max-w-full min-w-0
-              flex-col gap-4 rounded-sm bg-white p-4
-            "
-          >
-            <div className="flex items-start gap-4">
+        <_Dialog.Popup className="pointer-events-none fixed inset-0 z-20 grid place-items-center p-12">
+          <div className="pointer-events-auto flex max-h-full min-h-0 max-w-full min-w-0 flex-col rounded-md bg-white">
+            <div className="flex items-start gap-4 p-4 shadow-md">
               <div className="flex grow flex-col justify-start">
                 <_Dialog.Title className="justify-start text-left">
                   {title}
                 </_Dialog.Title>
                 {subtitle && (
-                  <_Dialog.Description className="text-sm text-stone-500">
+                  <_Dialog.Description className="text-stone-500">
                     {subtitle}
                   </_Dialog.Description>
                 )}
@@ -54,7 +47,12 @@ export default function Dialog({
                 <X />
               </_Dialog.Close>
             </div>
-            {content}
+            <div className="flex flex-col gap-4 overflow-y-auto p-4">
+              {content}
+            </div>
+            {bottom && (
+              <div className="flex flex-wrap gap-4 p-4 shadow-md">{bottom}</div>
+            )}
           </div>
         </_Dialog.Popup>
       </_Dialog.Portal>

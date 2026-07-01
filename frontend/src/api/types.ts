@@ -1,11 +1,24 @@
 import z from "zod";
 
+export const stats = z.object({
+  tissues: z.number(),
+  diseases: z.number(),
+  studies: z.number(),
+  samples: z.number(),
+  species: z.number(),
+  technologies: z.number(),
+  feedback: z.number(),
+});
+
+export type Stats = z.infer<typeof stats>;
+
 export const ontology = z.object({
   id: z.string(),
   type: z.string(),
   name: z.string(),
   description: z.string(),
   series: z.string(),
+  performance: z.string(),
 });
 
 export type Ontology = z.infer<typeof ontology>;
@@ -23,11 +36,22 @@ export const study = z.object({
     value: z.number(),
   }),
   submitted_at: z.iso.date(),
-  platform: z.string(),
-  database: z.array(z.string()),
+  platform: z.array(z.string()),
+  database: z.record(
+    z.string(),
+    z.object({
+      url: z.string().trim().url().nullable().optional(),
+      external_id: z.string().nullable().optional(),
+    }),
+  ),
   classification: z.string(),
   sample_count: z.number(),
   keywords: z.array(z.string()),
+  feedback: z.object({
+    vote_count: z.number(),
+    likes: z.number(),
+    dislikes: z.number(),
+  }),
 });
 
 export type Study = z.infer<typeof study>;
@@ -39,6 +63,12 @@ export const studies = z.object({
     z.string(),
     z.record(z.string(), z.union([z.number(), z.string()])),
   ),
+  meta: z.object({
+    type: z.string(),
+    term: z.string(),
+    name: z.string(),
+    performance: z.string(),
+  }),
 });
 
 export type Studies = z.infer<typeof studies>;
@@ -46,7 +76,7 @@ export type Studies = z.infer<typeof studies>;
 export const sample = z.object({
   id: z.string(),
   type: z.string(),
-  description: z.string(),
+  description: z.nullable(z.string()),
   submission_date: z.iso.date(),
   last_update_date: z.iso.date(),
 });

@@ -1,5 +1,8 @@
 from rest_framework import serializers
+from django.db.models import Avg, Count, Sum, Q
+
 from .models import (
+    Feedback,
     GEOSample,
     GEOSeries,
     GEOSeriesToGEOPlatforms,
@@ -154,23 +157,23 @@ class GEOSeriesSerializer(serializers.ModelSerializer):
             label = "low"
         return {"name": label, "value": obj.prob}
 
-    database = serializers.ListField(child=serializers.CharField(), read_only=True)
+    database = serializers.DictField(child=serializers.DictField(), read_only=True)
 
     # FIXME: renames to support frontend changes; i'm probably going to
     # keep the db layer the same to ease imports and just rename fields at the
     # serializer layer.
     id = serializers.CharField(source="gse", read_only=True)
     name = serializers.CharField(source="title", read_only=True)
-    submitted_at = serializers.DateTimeField(source="submission_date", read_only=True)
+    submitted_at = serializers.DateField(source="submission_date", read_only=True)
     description = serializers.CharField(source="summary", read_only=True)
     # platform = serializers.CharField(source="database", read_only=True)
 
     platform = serializers.SerializerMethodField()
 
-    def get_platform(self, obj):
+    def get_platform(self, obj) -> list[str]:
         """Get the platform name associated with this series."""
         gse_obj = GEOSeriesToGEOPlatforms.objects.filter(gse=obj.gse).first()
-        return str(gse_obj.platforms) if gse_obj else ""
+        return gse_obj.platforms if gse_obj else []
 
     keywords = serializers.SerializerMethodField()
 
@@ -186,6 +189,25 @@ class GEOSeriesSerializer(serializers.ModelSerializer):
         """Returns values Positive or Negative; supposed to represent 'Classification of study in model training'?"""
         # FIXME: figure out how to actually determine this
         return "Positive"
+    
+    feedback = serializers.SerializerMethodField()
+
+    def get_feedback(self, obj) -> dict[str, int | float]:
+        """Returns aggregate rating and number of votes for this series.
+        
+        In the Feedback model, "likes" have a rating of 1 and "dislikes" have a rating of -1.
+
+        """
+        feedback = (
+            Feedback.objects.filter(series_id=obj)
+                .aggregate(
+                    vote_count=Count('id'),
+                    likes=Count('id', filter=Q(rating=1)),
+                    dislikes=Count('id', filter=Q(rating=-1)),
+                )
+        )
+        
+        return feedback if feedback else {"avg_rating": 0, "vote_count": 0, "sum_rating": 0, "likes": 0, "dislikes": 0}
 
     class Meta:
         model = GEOSeries
@@ -216,11 +238,12 @@ class GEOSeriesSerializer(serializers.ModelSerializer):
             # from joining with api_sample count
             "sample_count", # FIXME: review if samples_ct can be remapped to this
             # from joining with api_seriesdatabase
-            "database", # FIXME: review if still used
+            "database",
             "platform",
 
             "keywords",
             "classification",
+            "feedback"
         ]
 
 class GEOSampleSerializer(serializers.ModelSerializer):
@@ -233,6 +256,22 @@ class GEOSampleSerializer(serializers.ModelSerializer):
         model = GEOSample
         # fields = ['sample_id', 'doc', 'created_at', 'updated_at']
         fields = "__all__"
+
+
+# ===========================================================================
+# === Database statistics
+# ===========================================================================
+
+class DatabaseStatsSerializer(serializers.Serializer):
+    """Serializer for database statistics returned from /api/stats/ endpoint."""
+
+    tissues = serializers.IntegerField()
+    diseases = serializers.IntegerField()
+    studies = serializers.IntegerField()
+    samples = serializers.IntegerField()
+    species = serializers.IntegerField()
+    technologies = serializers.IntegerField()
+    feedback = serializers.IntegerField()
 
 
 

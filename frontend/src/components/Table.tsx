@@ -18,6 +18,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
+import clsx from "clsx";
 import { ArrowUpDown, MoveDown, MoveUp } from "lucide-react";
 import Button from "@/components/Button";
 import Tooltip from "@/components/Tooltip";
@@ -32,6 +33,7 @@ type Props<Datum extends object> = {
   onPage?: (page: PaginationState["pageIndex"]) => void;
   perPage?: PaginationState["pageSize"];
   onPerPage?: (perPage: PaginationState["pageSize"]) => void;
+  className?: string;
 };
 
 export type Col<
@@ -68,6 +70,7 @@ export default function Table<Datum extends object>({
   onPage,
   perPage,
   onPerPage,
+  className,
 }: Props<Datum>) {
   "use no memo";
 
@@ -135,7 +138,7 @@ export default function Table<Datum extends object>({
         <table
           aria-rowcount={table.getPrePaginationRowModel().rows.length}
           aria-colcount={cols.length}
-          className="border-collapse"
+          className={clsx("border-collapse", className)}
         >
           <thead>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -182,10 +185,7 @@ export default function Table<Datum extends object>({
               table.getRowModel().rows.map((row, index) => (
                 <tr
                   key={row.id}
-                  className="
-                    odd:bg-white
-                    even:bg-stone-50
-                  "
+                  className="odd:bg-white even:bg-stone-50"
                   aria-rowindex={
                     table.getState().pagination.pageIndex *
                       table.getState().pagination.pageSize +

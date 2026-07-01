@@ -21,6 +21,7 @@ services:
       - backend
 
   memcached:
+    command: ["memcached", "-m", "1024", "-I", "5m"]
     image: memcached:latest
 
   db:

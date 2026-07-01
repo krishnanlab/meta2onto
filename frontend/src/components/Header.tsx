@@ -7,6 +7,7 @@ import Button from "@/components/Button";
 import Logo from "@/components/Logo";
 import Tooltip from "@/components/Tooltip";
 import { cartAtom } from "@/state/cart";
+import { formatNumber } from "@/util/string";
 
 const { VITE_TITLE: title } = import.meta.env;
 
@@ -36,17 +37,12 @@ export default function Header() {
   return (
     <header
       ref={ref}
-      className="
-        sticky top-0 z-10 flex flex-row flex-wrap items-center justify-between
-        gap-4 bg-theme-dark p-4 text-white
-        [&_a,&_button]:text-white
-        [&_a,&_button]:hover:bg-stone-800
-      "
+      className="sticky top-0 z-10 flex flex-row flex-wrap items-center justify-between gap-4 bg-theme-dark p-4"
     >
       {/* title */}
       <a
         href="/"
-        className="flex items-center gap-2 rounded-md text-2xl tracking-wider"
+        className="flex items-center gap-2 rounded-md text-2xl tracking-wider text-white no-underline"
       >
         <Logo color="currentColor" className="h-8" />
         {title}
@@ -60,7 +56,7 @@ export default function Header() {
             return () => (toggleRef = undefined);
           }}
           color="none"
-          className="sm:hidden"
+          className="text-white md:hidden"
           onClick={() => setOpen(!open)}
           aria-expanded={open}
           aria-controls="nav"
@@ -72,19 +68,19 @@ export default function Header() {
       {/* nav bar */}
       <nav
         className={clsx(
-          `
-            flex flex-wrap items-center justify-center gap-4 text-xl
-            max-xs:flex-col
-          `,
-          !open && "max-sm:hidden",
-          open && "max-sm:w-full",
+          `flex flex-wrap items-center justify-center gap-4 text-xl *:text-white max-xs:flex-col`,
+          !open && "max-md:hidden",
+          open && "max-md:w-full",
         )}
       >
+        <Button to="/" color="none">
+          Search
+        </Button>
         <Button to="/about" color="none">
           About
         </Button>
-        <Button to="/search" color="none">
-          Search
+        <Button to="/help" color="none">
+          Help
         </Button>
         <Button
           ref={(el: HTMLAnchorElement) => {
@@ -99,13 +95,8 @@ export default function Header() {
           <ShoppingCart />
           Cart
           {!!cart.studies.length && (
-            <div
-              className="
-                absolute -top-2 -right-2 grid size-5 place-items-center
-                rounded-full bg-theme-light text-sm text-black
-              "
-            >
-              {cart.studies.length}
+            <div className="absolute -top-2 -right-2 grid size-5 place-items-center rounded-full bg-theme-light text-sm text-black">
+              {formatNumber(cart.studies.length)}
             </div>
           )}
         </Button>

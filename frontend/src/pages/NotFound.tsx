@@ -1,4 +1,4 @@
-import Heading from "@/components/Heading";
+import { H1 } from "@/components/Heading";
 import Meta from "@/components/Meta";
 
 export default function NotFound() {
@@ -7,7 +7,7 @@ export default function NotFound() {
       <Meta title="Not Found" />
 
       <section>
-        <Heading level={1}>Not Found</Heading>
+        <H1>Not Found</H1>
 
         <p>The page you're looking for doesn't exist!</p>
       </section>

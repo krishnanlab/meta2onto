@@ -2,25 +2,16 @@ import uuid
 
 from django.db import models
 from django.db.models import (
+    F,
     Case,
     When,
     Value,
     CharField,
-    IntegerField,
-    FloatField,
-    Count,
-    OuterRef,
-    Subquery,
 )
-from django.db.models.functions import Coalesce
-from django.db.models.sql.constants import INNER
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.contrib.postgres.indexes import GinIndex
 from django.contrib.postgres.search import TrigramSimilarity, SearchVector
 from django.contrib.postgres.fields import ArrayField
-
-from django_cte import CTE, with_cte
-from django_cte.raw import raw_cte_sql
 
 
 class TimeStampedModel(models.Model):
@@ -56,29 +47,7 @@ class Organism(models.Model):
 # ===========================================================================
 
 class GEOSeriesManager(models.Manager):
-    def with_samples_count(self, queryset=None):
-        """
-        Annotate each GEOSeries row with samples_ct using a Subquery so the
-        queryset stays one-row-per-series.
-        """
-        if queryset is None:
-            queryset = self.get_queryset()
-
-        return queryset.annotate(
-            samples_ct=Coalesce(
-                Subquery(
-                    GEOSample.objects.filter(series_id=OuterRef("gse"))
-                    .values("series_id")
-                    .annotate(c=Count("gsm"))
-                    .values("c")[:1],
-                    output_field=IntegerField(),
-                ),
-                Value(0),
-                output_field=IntegerField(),
-            )
-        )
-
-    def with_facet_buckets(self, queryset=None):
+    def with_facet_buckets(self, queryset=None, confidence_levels=True, study_sizes=True):
         """
         Annotate a queryset with:
           - confidence_level, derived from prob
@@ -88,24 +57,34 @@ class GEOSeriesManager(models.Manager):
         if queryset is None:
             queryset = self.get_queryset()
 
-        return queryset.annotate(
-            confidence_level=Case(
-                When(prob__gte=0.8, then=Value("high")),
-                When(prob__gte=0.5, then=Value("medium")),
-                When(prob__lt=0.5, then=Value("low")),
-                default=Value("unknown"),
-                output_field=CharField(),
-            ),
-            study_size=Case(
-                When(samples_ct__lt=10, then=Value("small")),
-                When(samples_ct__gte=10, samples_ct__lte=50, then=Value("medium")),
-                When(samples_ct__gt=50, then=Value("large")),
-                default=Value("unknown"),
-                output_field=CharField(),
-            ),
-        )
+        # return queryset if neither confidence_levels nor study_sizes are requested
+        result = queryset
 
-    def search_gse_with_prob(self, query: str, limit: int = 50):
+        if confidence_levels:
+            result = queryset.annotate(
+                confidence_level=Case(
+                    When(prob__gte=0.8, then=Value("high")),
+                    When(prob__gte=0.5, then=Value("medium")),
+                    When(prob__lt=0.5, then=Value("low")),
+                    default=Value("unknown"),
+                    output_field=CharField(),
+                )
+            )
+
+        if study_sizes:
+            result = queryset.annotate(
+                study_size=Case(
+                    When(samples_ct__lt=10, then=Value("small")),
+                    When(samples_ct__gte=10, samples_ct__lte=50, then=Value("medium")),
+                    When(samples_ct__gt=50, then=Value("large")),
+                    default=Value("unknown"),
+                    output_field=CharField(),
+                ),
+            )
+    
+        return result
+
+    def search_gse_with_prob(self, query: str):
         """
         Returns a queryset of GEOSeries joined to a CTE containing:
             (series_id, prob)
@@ -113,73 +92,45 @@ class GEOSeriesManager(models.Manager):
         'query' should be an ontology ID from api_searchterm,
         e.g. 'MONDO:0000270'.
         """
-        hits = CTE(
-            raw_cte_sql(
-                """
-                SELECT
-                    st.series_id AS series_id,
-                    st.confidence AS prob,
-                    st.related_words AS keywords
-                FROM api_searchterm st
-                WHERE st.term = %s
-                LIMIT %s
-                """,
-                [query, limit],
-                {
-                    "series_id": CharField(),
-                    "prob": FloatField(),
-                },
-            ),
-            name="hits",
-        )
-
-        qs = hits.join(
-            self.get_queryset(),
-            gse=hits.col.series_id,
-            _join_type=INNER,
-        ).annotate(prob=hits.col.prob)
-
-        # we need to join against api_searchterm and retrieve related_words for each GSE
-        # on the following fields:
-        # - series_id=the GSE ID
-        # - term=the original query term
-        qs = qs.annotate(
-            keywords=Subquery(
-                SearchTerm.objects.filter(
-                    series_id=OuterRef("gse"),
-                    term=query,
-                ).values("related_words")[:1]
+        return (
+            self.get_queryset()
+            .filter(search_terms__term=query)
+            .annotate(
+                prob=F("search_terms__confidence"),
+                keywords=F("search_terms__related_words"),
             )
         )
-
-        return with_cte(hits, select=qs)
-
-    def search(self, query: str, max_results: int = 50, order_by: str = "relevance"):
+    
+    def order_by_custom(self, queryset=None, order_by="relevance"):
         """
-        Search GEOSeries and return a stable queryset annotated with:
-          - prob
-          - samples_ct
+        Order a queryset of GEOSeries by the given order_by parameter.
         """
-        qs = self.search_gse_with_prob(query=query, limit=max_results)
-        qs = self.with_samples_count(qs)
+        if queryset is None:
+            queryset = self.get_queryset()
 
         if order_by == "relevance":
-            qs = qs.order_by("-prob", "gse")
+            return queryset.order_by("-prob", "gse")
         elif order_by == "-relevance":
-            qs = qs.order_by("prob", "gse")
+            return queryset.order_by("prob", "gse")
         elif order_by == "date":
-            qs = qs.order_by("-submission_date", "gse")
+            return queryset.order_by("-submission_date", "gse")
         elif order_by == "-date":
-            qs = qs.order_by("submission_date", "gse")
+            return queryset.order_by("submission_date", "gse")
         elif order_by == "samples":
-            qs = qs.order_by("-samples_ct", "gse")
+            return queryset.order_by("-samples_ct", "gse")
         elif order_by == "-samples":
-            qs = qs.order_by("samples_ct", "gse")
+            return queryset.order_by("samples_ct", "gse")
         else:
-            qs = qs.order_by("gse")
+            return queryset.order_by("gse")
+
+    def search(self, query: str, max_results: int | None = 50, order_by: str = "relevance"):
+        qs = self.search_gse_with_prob(query=query)
+        qs = self.order_by_custom(qs, order_by=order_by)
+
+        if max_results is not None:
+            qs = qs[:max_results]
 
         return qs
-
 
 class GEOSeries(models.Model):
     """
@@ -193,7 +144,8 @@ class GEOSeries(models.Model):
     title = models.TextField(null=True, blank=True)
     gse = models.CharField(primary_key=True)
     status = models.CharField(null=True, blank=True)
-    submission_date = models.CharField(null=True, blank=True)
+    # submission_date = models.CharField(null=True, blank=True)
+    submission_date = models.DateField(null=True, blank=True)
     last_update_date = models.CharField(null=True, blank=True)
     pubmed_id = models.BigIntegerField(null=True, blank=True)
     summary = models.TextField(null=True, blank=True)
@@ -210,27 +162,30 @@ class GEOSeries(models.Model):
 
     doc = models.TextField(blank=True, null=True)
 
+    samples_ct = models.IntegerField(null=True, blank=True)
+
     # runtime annotations
     prob: float | None = None
     keywords: str | None = None
-    samples_ct: int | None = None
+    # samples_ct: int | None = None
     confidence_level: str | None = None
     study_size: str | None = None
 
     @property
     def database(self):
-        inlined_db = getattr(self, "_database", None)
-        if inlined_db is not None:
-            return inlined_db
-        return list(
-            GEOSeriesDatabase.objects.filter(series_id=self.gse).values_list(
-                "database_name", flat=True
-            )
-        )
+        series_dbs = {k: {"url": v.strip() if v else v} for (k,v) in GEOSeriesDatabase.objects.filter(series_id=self.gse).values_list(
+            "database", "url"
+        )}
 
+        external_refs = {k: {"external_id": v.strip() if v else v} for (k,v) in ExternalDbRefs.objects.filter(series_id=self.gse).values_list(
+            "database", "external_id"
+        )}
+
+        return {**series_dbs, **external_refs}
+    
     class Meta:
         indexes = [
-            models.Index(fields=["gse"]),
+            models.Index(fields=["submission_date"]),
         ]
 
     def __str__(self):
@@ -292,6 +247,13 @@ class GEOSample(models.Model):
         blank=True,
     )
 
+    # since 'series' can be a semicolon-delimited list, this column
+    # breaks it out into a list of GSE IDs for easier querying and filtering
+    series_set = ArrayField(
+        models.CharField(), default=list, blank=True, null=True,
+        help_text="List of GSE IDs this sample belongs to"
+    )
+
     # # the platform to which this sample belongs
     # platform = models.ForeignKey(
     #     "Platform",
@@ -309,6 +271,8 @@ class GEOSample(models.Model):
             models.Index(fields=["gsm"]),
             models.Index(fields=["series"]),
             models.Index(fields=["gpl_raw"]),
+            models.Index(fields=["organism_ch1"]),
+            GinIndex(fields=["series_set"], name="geosample_series_set_gin"),
         ]
 
     def __str__(self):
@@ -407,9 +371,6 @@ class GEOSeriesDatabase(models.Model):
     """
     Database source for a GEOSeries, e.g., GEO, ArrayExpress, SRA.
 
-    We'll eventually use ExternalRelation for this, but for now it's faster to
-    have a dedicated table that just lists databases.
-
     This model is populated by the management command import_series_databases
     which takes ids__level-series.parquet as an input, specifically its
     "relations" column.
@@ -423,17 +384,53 @@ class GEOSeriesDatabase(models.Model):
         on_delete=models.DO_NOTHING,
         db_constraint=False,
     )
-    database_name = models.CharField()
+    database = models.CharField()
     url = models.CharField(null=True, blank=True)
 
     class Meta:
         indexes = [
             models.Index(fields=["series"]),
-            models.Index(fields=["database_name"]),
+            models.Index(fields=["database"]),
+            models.Index(fields=["database", "series_id"]),
         ]
 
     def __str__(self):
-        return f"{self.series.series_id} in {self.database_name}"
+        return f"{self.series.series_id} in {self.database}"
+    
+
+class ExternalDbRefs(models.Model):
+    """
+    External database references for a GEOSeries, e.g., ARCHS4, Recount3, refine.bio.
+
+    This model is populated by the management command import_external_db_refs
+    which takes the following files as input:
+        - data/expression_db_references/archs4_studies_*.txt
+        - data/expression_db_references/recount3_studies_*.parquet
+        - data/expression_db_references/refinebio_studies_*.parquet
+    """
+
+    series = models.ForeignKey(
+        GEOSeries,
+        related_name="external_db_refs",
+        null=True,
+        blank=True,
+        on_delete=models.DO_NOTHING,
+        db_constraint=False,
+    )
+    database = models.CharField()
+    external_id = models.CharField(null=True, blank=True, help_text="ID of the series in the external database, if available")
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["series"]),
+            models.Index(fields=["database"]),
+            models.Index(fields=["database", "series_id"]),
+        ]
+        # make (series, database) unique together to avoid duplicates
+        unique_together = ("series", "database")
+
+    def __str__(self):
+        return f"{self.series.series_id} in {self.database} {' (ID: ' + self.external_id + ')' if self.external_id else ''}"
 
 
 # ===========================================================================
@@ -503,10 +500,64 @@ class OntologyTermRating(models.Model):
 
     (Note that, while not required, as of 2026-06-05, SearchTerm has as many
     unique values of 'term' as there rows in this table.)
+
+    Loaded from the following files:
+    - data/search_tables/disease_predictions.parquet
+    - data/search_tables/eval.parquet
+    - data/search_tables/tissue_predictions.parquet
     """
     term = models.CharField(max_length=256, db_index=True)
     performance = models.CharField(max_length=64)
     type = models.CharField(max_length=64)
+
+class FacetEntry(models.Model):
+    """
+    Individual facet value for a categorical facet.
+
+    This is used to store the individual values and counts for a categorical facet,
+    e.g. "Platform" or "Technology".
+    """
+
+    facet = models.ForeignKey(
+        "Facet",
+        related_name="entries",
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE
+    )
+    name = models.CharField(max_length=256)
+    count = models.IntegerField()
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["name"]),
+        ]
+
+    def __str__(self):
+        return f"{self.name}: {self.count}"
+
+class Facet(models.Model):
+    """
+    Global facet values for the entire dataset, used to populate the sidebar filters.
+
+    If the facet has min and max defined, that's passed verbatim to the frontend.
+    Otherwise, we return the values of FacetEntry associated with this facet.
+
+    (On why global facets were introduced: normally, facets are computed on the
+    current query results and updated as the user selects additional filtering
+    options. Unfotunately, running these queries on the fly for the current
+    search is too slow, and caching, the natural choice for speeding up slow
+    queries, is complicated by the introduction of user-supplied feedback to the
+    series response.)
+    """
+
+    name = models.CharField(max_length=256, unique=True)
+    min = models.IntegerField(null=True, blank=True)
+    max = models.IntegerField(null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.name}: {self.value}"
+
 
 # ===========================================================================
 # === Ontology search terms from meta-hq
@@ -514,7 +565,7 @@ class OntologyTermRating(models.Model):
 
 
 class OntologySearchResultsManager(models.Manager):
-    def search(self, query: str, max_results: int = 5000):
+    def search(self, query: str, max_results: int | None = 5000):
         """
         Perform a search for the given query string across ontology terms + synonyms.
 
@@ -530,7 +581,7 @@ class OntologySearchResultsManager(models.Manager):
         )
         return qs
 
-    def search_series(self, query: str, max_results: int = 5000):
+    def search_series(self, query: str, max_results: int | None = 5000):
         """
         Perform a search for the given query string across ontology terms;
         joins the ontology terms against api_searchterm to get associated GEOSeries.
@@ -728,6 +779,9 @@ class Feedback(TimeStampedModel):
     qualities = ArrayField(models.CharField(max_length=256), blank=True, default=list)
     keywords = models.JSONField(null=True, blank=True)
     elaborate = models.TextField(null=True, blank=True)
+
+    class Meta:
+        unique_together = ("series_id", "user_id")
 
     def __str__(self):
         return f"Feedback from {self.name or 'anonymous'} ({self.email or 'no email'}) at {self.created_at}"

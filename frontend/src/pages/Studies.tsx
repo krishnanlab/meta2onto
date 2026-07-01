@@ -8,7 +8,7 @@ import { Fragment, useEffect, useRef, useState } from "react";
 import analytics from "react-ga4";
 import Highlighter from "react-highlight-words";
 import { useParams } from "react-router";
-import { useDebounce, useLocalStorage } from "@reactuses/core";
+import { useDebounce } from "@reactuses/core";
 import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
 import clsx from "clsx";
 import { useAtomValue } from "jotai";
@@ -30,16 +30,20 @@ import {
   TriangleAlert,
 } from "lucide-react";
 import { studyFeedback, studySamples, studySearch } from "@/api/api";
+import { performanceColor, performanceTooltip, typeColor } from "@/api/maps";
 import Button from "@/components/Button";
 import Checkbox from "@/components/Checkbox";
-import DatabaseBadge from "@/components/Database";
+import Combobox from "@/components/Combobox";
+import Database from "@/components/Database";
 import Dialog from "@/components/Dialog";
 import { getCartRef } from "@/components/Header";
-import Heading from "@/components/Heading";
+import { H1, H3 } from "@/components/Heading";
 import Link from "@/components/Link";
+// import Link from "@/components/Link";
 import Meta from "@/components/Meta";
 import Meter from "@/components/Meter";
 import Pagination from "@/components/Pagination";
+import Pill from "@/components/Pill";
 import Popover from "@/components/Popover";
 import Select from "@/components/Select";
 import Slider from "@/components/Slider";
@@ -48,6 +52,7 @@ import Table from "@/components/Table";
 import Textbox from "@/components/Textbox";
 import Tooltip from "@/components/Tooltip";
 import { SearchBox } from "@/pages/Home";
+import { useUser } from "@/pages/user";
 import { addToCart, cartAtom, inCart, removeFromCart } from "@/state/cart";
 import { clearFeedback, feedbackAtom, setFeedback } from "@/state/feedback";
 import { fly } from "@/util/dom";
@@ -57,13 +62,19 @@ import { formatDate, formatNumber } from "@/util/string";
 /** don't show feedback if confidence below this */
 const feedbackThreshold = 0.75;
 
+/**
+ * if facet has more than this many unique values, use combobox instead of
+ * checkboxes
+ */
+const facetThreshold = 10;
+
 /** per page select options */
 const limitOptions = [
   { value: "5" },
   { value: "10" },
   { value: "20" },
   { value: "50" },
-  { value: "50" },
+  { value: "100" },
 ] as const;
 
 type LimitOption = (typeof limitOptions)[number]["value"];
@@ -77,7 +88,7 @@ const orderingOptions = [
 
 type OrderingOption = (typeof orderingOptions)[number]["value"];
 
-export default function Search() {
+export default function Studies() {
   const { search = "" } = useParams<{ search: string }>();
 
   /** url search params state */
@@ -124,7 +135,7 @@ export default function Search() {
 
   /** search results */
   const studySearchQuery = useQuery({
-    queryKey: ["study-search", search, ordering, offset, limit, facets],
+    queryKey: ["studySearch", search, ordering, offset, limit, facets],
     queryFn: () =>
       studySearch({ search, ordering, offset, limit: Number(limit), facets }),
     placeholderData: keepPreviousData,
@@ -134,30 +145,18 @@ export default function Search() {
     <>
       <Meta title={title} />
 
-      <Heading level={1} className="sr-only">
-        Search results for "{search}"
-      </Heading>
+      <H1 className="sr-only">Search results for "{search}"</H1>
 
-      <section>
-        <div
-          className="
-            grid grid-cols-[auto_1fr] gap-12
-            max-md:grid-cols-1
-          "
-        >
+      <section className="width-lg">
+        <div className="grid grid-cols-[auto_1fr] gap-12 max-md:grid-cols-1">
           {newSearch && (
-            <div
-              className="
-                col-span-full flex flex-wrap items-center justify-center gap-8
-              "
-            >
+            <div className="col-span-full flex flex-wrap items-center justify-center gap-8">
               <SearchBox className="grow" inputRef={searchRef} />
             </div>
           )}
 
           <Filters
             raw={raw}
-            search={search}
             params={params}
             setParams={setParams}
             newSearch={newSearch}
@@ -178,137 +177,166 @@ export default function Search() {
   );
 }
 
-/** filters panel */
-const Filters = ({
-  raw,
-  search,
-  params,
-  setParams,
-  newSearch,
-  setNewSearch,
-  ordering,
-  query,
-}: {
+type FiltersProps = {
   raw: string;
-  search: string;
   params: URLSearchParams;
   setParams: ReturnType<typeof useDebouncedParams>[1];
   newSearch: boolean;
   setNewSearch: (value: boolean) => void;
   ordering: OrderingOption;
   query: UseQueryResult<Studies>;
-}) => (
-  <div
-    className="
-      flex w-50 flex-col gap-8
-      max-md:w-full max-md:flex-row max-md:flex-wrap
-    "
-  >
-    {/* overview */}
-    <div className="flex flex-col gap-2">
-      <div>
-        Searched "<strong>{raw}</strong>"
-      </div>
-      <div>
-        Selected "<strong>{search}</strong>"
-      </div>
-      <div>
-        <strong>
-          {query.data?.count ? formatNumber(query.data.count) : "-"}
-        </strong>{" "}
-        results
-      </div>
-    </div>
+};
 
-    {/* sort */}
-    <Select
-      label={<strong>Sort</strong>}
-      options={orderingOptions}
-      value={ordering}
-      onChange={(checked) =>
-        setParams((params) => params.set("ordering", checked))
-      }
-    />
+/** filters panel */
+function Filters({
+  raw,
+  params,
+  setParams,
+  newSearch,
+  setNewSearch,
+  ordering,
+  query,
+}: FiltersProps) {
+  /** destructure query */
+  const {
+    count = 0,
+    meta: { term = "", name = "", type = "", performance = "" } = {},
+    facets = {},
+  } = query.data ?? {};
 
-    {/* facet filter */}
-    {isEmpty(query.data?.facets) && (
-      <span className="text-stone-500">Filters</span>
-    )}
-    {Object.entries(query.data?.facets ?? {}).map(([facetKey, facetValues]) => (
-      <div key={facetKey} className="flex flex-col gap-2">
-        <strong>{facetKey}</strong>
-
-        {typeof facetValues.label === "string" &&
-        typeof facetValues.min === "number" &&
-        typeof facetValues.max === "number" ? (
-          /** range facet */
-          <Slider
-            label={(values) => (
-              <>
-                {values.join(" – ")} {facetValues.label}
-              </>
-            )}
-            thumbLabel={[`${facetKey} minimum`, `${facetKey} maximum`]}
-            value={(() => {
-              const [min = facetValues.min, max = facetValues.max] =
-                params.get(facetKey)?.split("-").map(Number) ?? [];
-              return [min, max];
-            })()}
-            onChange={(values) =>
-              setParams((params) => {
-                const [min = facetValues.min, max = facetValues.max] = values;
-                params.set(facetKey, `${min}-${max}`);
-              })
-            }
-            min={facetValues.min}
-            max={facetValues.max}
-            step={facetValues.max - facetValues.min > 1 ? 1 : 0.01}
+  return (
+    <div className="flex w-60 flex-col gap-8 max-md:w-full max-md:flex-row max-md:flex-wrap">
+      {/* overview */}
+      <dl>
+        <dt className="text-sm text-stone-500">Raw Search</dt>
+        <dd className="text-sm text-stone-500">"{raw}"</dd>
+        <dt>Selection</dt>
+        <dd>
+          {type && <Pill value={type} color={typeColor} />}
+          {name} {term}
+        </dd>
+        <dt>Performance</dt>
+        <dd>
+          <Pill
+            value={performance}
+            color={performanceColor}
+            tooltip={performanceTooltip}
+            className="w-full"
           />
-        ) : (
-          /** boolean facet */
-          Object.entries(facetValues).map(([facetValue, facetCount]) => (
-            <Checkbox
-              key={facetValue}
-              /** sync facet with url */
-              value={params.getAll(facetKey).includes(facetValue)}
-              onChange={(checked) => {
-                setParams((params) => {
-                  if (checked) {
-                    if (!params.has(facetKey, facetValue))
-                      params.append(facetKey, facetValue);
-                  } else params.delete(facetKey, facetValue);
-                });
-              }}
-            >
-              {facetValue} ({facetCount})
-            </Checkbox>
-          ))
-        )}
-      </div>
-    ))}
+        </dd>
+        <dt>Results</dt>
+        <dd>{count ? formatNumber(count) : "-"}</dd>
+      </dl>
 
-    {!newSearch && (
-      <Button onClick={() => setNewSearch(true)}>
-        <RefreshCcw />
-        New Search
-      </Button>
-    )}
-  </div>
-);
+      {!newSearch && (
+        <Button onClick={() => setNewSearch(true)}>
+          <RefreshCcw />
+          New Search
+        </Button>
+      )}
+
+      {/* sort */}
+      <Select
+        label={<strong>Sort</strong>}
+        options={orderingOptions}
+        value={ordering}
+        onChange={(checked) =>
+          setParams((params) => params.set("ordering", checked))
+        }
+      />
+
+      {Object.entries(facets).map(([facetKey, facetValues]) => {
+        /** control to use for facet */
+        let control: ReactNode;
+
+        const { label, min, max } = facetValues;
+
+        /** slider */
+        if (
+          typeof label === "string" &&
+          typeof min === "number" &&
+          typeof max === "number"
+        )
+          control = (
+            <Slider
+              label={(values) =>
+                values.map((value) => formatNumber(value, true)).join(" – ")
+              }
+              thumbLabel={[`${facetKey} minimum`, `${facetKey} maximum`]}
+              value={(() => {
+                const [minValue, maxValue] =
+                  params.get(facetKey)?.split("-").map(Number) ?? [];
+                return [minValue ?? min, maxValue ?? max];
+              })()}
+              onChange={(values) =>
+                setParams((params) => {
+                  const [min = facetValues.min, max = facetValues.max] = values;
+                  params.set(facetKey, `${min}-${max}`);
+                })
+              }
+              min={min}
+              max={max}
+              step={max - min > 1 ? 1 : 0.01}
+            />
+          );
+        /** combobox */ else if (size(facetValues) > facetThreshold)
+          control = (
+            <Combobox
+              options={Object.keys(facetValues)}
+              value={params.getAll(facetKey)}
+              onChange={(value) =>
+                setParams((params) => {
+                  params.delete(facetKey);
+                  value.forEach((v) => params.append(facetKey, v));
+                })
+              }
+            />
+          );
+        /** checkbox */ else
+          control = Object.entries(facetValues).map(
+            ([facetValue, facetCount]) => (
+              <Checkbox
+                key={facetValue}
+                /** sync facet with url */
+                value={params.getAll(facetKey).includes(facetValue)}
+                onChange={(checked) => {
+                  setParams((params) => {
+                    if (checked) {
+                      if (!params.has(facetKey, facetValue))
+                        params.append(facetKey, facetValue);
+                    } else params.delete(facetKey, facetValue);
+                  });
+                }}
+              >
+                {facetValue} ({formatNumber(Number(facetCount), true)})
+              </Checkbox>
+            ),
+          );
+
+        return (
+          <div key={facetKey} className="flex flex-col gap-2">
+            <strong>{facetKey}</strong>
+            {control}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 /** results panel */
-const Results = ({
-  setParams,
-  offset,
-  limit,
-  query,
-}: {
+type ResultsProps = {
   setParams: ReturnType<typeof useDebouncedParams>[1];
   offset: number;
   limit: LimitOption;
   query: UseQueryResult<Studies>;
-}) => {
+};
+
+function Results({ setParams, offset, limit, query }: ResultsProps) {
   const anyFeedback = !!Object.values(useAtomValue(feedbackAtom)).length;
+
+  /** destructure query */
+  const { count = 0, results = [] } = query.data ?? {};
 
   return (
     <div className="flex flex-col gap-8">
@@ -326,13 +354,13 @@ const Results = ({
       <Status query={query} />
 
       {/* results */}
-      {query.data?.results.map((result, index) => (
+      {results.map((result, index) => (
         <Result key={index} {...result} />
       ))}
 
       {/* pagination */}
       <Pagination
-        count={query.data?.count ?? 0}
+        count={count}
         offset={offset}
         setOffset={(page) =>
           setParams((params) => params.set("offset", String(page)))
@@ -342,13 +370,10 @@ const Results = ({
       />
     </div>
   );
-};
-
-const userNameKey = "user-name";
-const userEmailKey = "user-email";
+}
 
 /** search result */
-const Result = ({
+function Result({
   id,
   name,
   description,
@@ -359,7 +384,8 @@ const Result = ({
   platform,
   classification,
   keywords,
-}: Study) => {
+  feedback: allFeedback,
+}: Study) {
   /** current cart state */
   const cart = useAtomValue(cartAtom);
 
@@ -367,8 +393,7 @@ const Result = ({
   const feedback = useAtomValue(feedbackAtom)[id];
 
   /** user self-identification */
-  const [userName] = useLocalStorage(userNameKey, "");
-  const [userEmail] = useLocalStorage(userEmailKey, "");
+  const { userName, userEmail } = useUser();
 
   /** study top-level details */
   const details = [
@@ -384,7 +409,7 @@ const Result = ({
     },
     {
       icon: Dna,
-      text: platform,
+      text: platform?.join(", "),
       tooltip: "Platform used in study",
     },
     {
@@ -417,26 +442,8 @@ const Result = ({
       <LoaderCircle className="animate-spin" />
     ) : null;
 
-  /** custom highlight */
-  const Highlight = ({ children }: { children: ReactNode }) => {
-    /** get position of highlight in keywords list */
-    const index =
-      typeof children === "string" ? keywords.indexOf(children) : -1;
-    /** keywords listed first considered stronger matches */
-    const strength = 1 - index / keywords.length;
-    return (
-      <mark className="relative isolate bg-transparent">
-        <span
-          className="absolute inset-0 -z-10 bg-orange-200"
-          style={{ opacity: strength }}
-        />
-        {children}
-      </mark>
-    );
-  };
-
   return (
-    <div className="flex flex-col gap-4 rounded-sm p-6 shadow-md">
+    <div className="flex flex-col gap-4 rounded-md p-6 shadow-md">
       {/* top row */}
       <div className="flex items-start justify-between gap-8">
         <strong>{name}</strong>
@@ -445,21 +452,25 @@ const Result = ({
 
       {/* details */}
       <div className="flex flex-wrap gap-x-8 gap-y-4">
-        {details.map(({ icon: Icon, text, tooltip }, index) => (
-          <Tooltip key={index} content={tooltip}>
-            <div className="flex items-center gap-2 text-stone-500">
-              <Icon />
-              <span>{text}</span>
-            </div>
-          </Tooltip>
-        ))}
+        {details.map(({ icon: Icon, text, tooltip }, index) =>
+          text ? (
+            <Tooltip key={index} content={tooltip}>
+              <div className="flex items-center gap-2 text-stone-500">
+                <Icon />
+                <span>{text}</span>
+              </div>
+            </Tooltip>
+          ) : null,
+        )}
       </div>
 
       {/* description */}
       <p className="truncate-lines" tabIndex={0}>
         <Highlighter
           className="contents"
-          highlightTag={Highlight}
+          highlightTag={({ children }) => (
+            <Highlight keywords={keywords}>{children}</Highlight>
+          )}
           caseSensitive
           searchWords={keywords}
           textToHighlight={description}
@@ -470,24 +481,28 @@ const Result = ({
       <div className="flex flex-wrap items-end gap-4">
         {/* databases */}
         <div className="flex flex-wrap gap-4">
-          {database.map((database, index) => (
-            <DatabaseBadge key={index} study={id} database={database} />
+          {Object.keys(database).map((database, index) => (
+            <Database key={index} database={database} study={id} />
           ))}
         </div>
 
         {/* actions */}
         <div className="ml-auto flex flex-wrap items-center justify-center gap-4">
           {/* feedback */}
-
           {confidence.value > feedbackThreshold && (
             <>
+              {!!allFeedback.vote_count && (
+                <span className="text-stone-500">
+                  {formatNumber(allFeedback.vote_count)} others gave feedback
+                </span>
+              )}
               <Button
                 color={feedback?.rating === 1 ? "theme" : "none"}
                 onClick={() => {
                   setFeedback(id, "rating", (old) => (old === 1 ? 0 : 1));
                   mutation.mutate();
                 }}
-                aria-label="Thumbs up this study"
+                title="Everything looks good (study prediction is accurate and keywords are relevant)"
                 aria-disabled={!!status}
               >
                 {status || <ThumbsUp />}
@@ -498,7 +513,7 @@ const Result = ({
               >
                 <Button
                   color={feedback?.rating === -1 ? "theme" : "none"}
-                  aria-label="Thumbs down this study"
+                  title="Something looks wrong (study prediction is incorrect and/or keywords are irrelevant)"
                   aria-disabled={!!status}
                 >
                   {status || <ThumbsDown />}
@@ -548,42 +563,50 @@ const Result = ({
       </div>
     </div>
   );
+}
+
+type HighlightProps = {
+  keywords: string[];
+  children: ReactNode;
 };
 
-const qualities = [
-  "Lorem ipsum dolor sit amet",
-  "Consectetur adipiscing elit",
-  "Sed do eiusmod tempor incididunt",
-];
+/** custom highlight */
+export function Highlight({ keywords, children }: HighlightProps) {
+  /** get position of highlight in keywords list */
+  const index = typeof children === "string" ? keywords.indexOf(children) : -1;
+  /** keywords listed first considered stronger matches */
+  const strength = 1 - index / keywords.length;
+  return (
+    <mark className="relative isolate bg-transparent">
+      <span
+        className="absolute inset-0 -z-10 bg-orange-200"
+        style={{ opacity: strength }}
+      />
+      {children}
+    </mark>
+  );
+}
+
+const qualities = ["Incorrect prediction", "Irrelevant/incorrect keywords"];
 
 /** study negative feedback popup */
-const ThumbsDownPopup = ({
-  id,
-  keywords,
-}: {
+type ThumbsDownPopupProps = {
   id: string;
   keywords: string[];
-}) => {
+};
+
+function ThumbsDownPopup({ id, keywords }: ThumbsDownPopupProps) {
   /** feedback for this study */
   const feedback = useAtomValue(feedbackAtom)[id];
 
   /** user self-identification */
-  const [userName, setUserName] = useLocalStorage(userNameKey, "");
-  const [userEmail, setUserEmail] = useLocalStorage(userEmailKey, "");
+  const { userName, userEmail, setUserName, setUserEmail } = useUser();
 
   /** give negative rating, to be called on any change to popup */
   const thumbsDown = () => setFeedback(id, "rating", -1);
 
   return (
-    <div
-      className="
-        grid max-h-100 max-w-100 grow grid-cols-2
-        grid-rows-[auto_minmax(0,1fr)_auto_auto] items-start gap-x-4 gap-y-2
-        leading-normal
-        *:max-h-full
-        max-md:grid-cols-1
-      "
-    >
+    <div className="grid max-h-100 max-w-100 grow grid-cols-2 grid-rows-[auto_minmax(0,1fr)_auto_auto] items-start gap-x-4 gap-y-2 leading-normal *:max-h-full max-md:grid-cols-1">
       {/* headings */}
       <em>Study qualities</em>
       <em>Keyword relevance</em>
@@ -608,17 +631,13 @@ const ThumbsDownPopup = ({
                 );
             }}
           >
-            {quality}{" "}
+            {quality}
           </Checkbox>
         ))}
       </div>
 
       {/* keywords */}
-      <div
-        className="
-          grid max-h-full grid-cols-[1fr_auto_auto] items-center overflow-auto
-        "
-      >
+      <div className="grid max-h-full grid-cols-[1fr_auto_auto] items-center overflow-auto">
         {keywords.map((keyword, index) => (
           <Fragment key={index}>
             <span className="truncate py-1 pr-1">{keyword}</span>
@@ -696,10 +715,14 @@ const ThumbsDownPopup = ({
       </div>
     </div>
   );
-};
+}
 
 /** samples popup */
-const SamplesPopup = ({ id }: { id: string }) => {
+type SamplesPopupProps = {
+  id: string;
+};
+
+function SamplesPopup({ id }: SamplesPopupProps) {
   /** pagination */
   const [_search, setSearch] = useState("");
   const search = useDebounce(_search, 500);
@@ -707,8 +730,8 @@ const SamplesPopup = ({ id }: { id: string }) => {
   const [offset, setOffset] = useState(0);
   const [limit, setLimit] = useState<Limit>("10");
 
-  const studySamplesQuery = useQuery({
-    queryKey: ["study-samples", id, search, ordering, offset, limit],
+  const query = useQuery({
+    queryKey: ["studySamples", id, search, ordering, offset, limit],
     queryFn: () =>
       studySamples({
         id,
@@ -720,12 +743,15 @@ const SamplesPopup = ({ id }: { id: string }) => {
     placeholderData: keepPreviousData,
   });
 
+  /** destructure query */
+  const { count = 0, results = [] } = query.data ?? {};
+
   /** count unique values in each column */
   const counts: Record<string, Record<string, number>> = {};
-  for (const row of studySamplesQuery.data?.results ?? [])
+  for (const row of results)
     for (let [key, value] of Object.entries(row)) {
       counts[key] ??= {};
-      value = String(value);
+      value = value ? String(value) : "-";
       counts[key][value] = (counts[key][value] || 0) + 1;
     }
 
@@ -750,14 +776,14 @@ const SamplesPopup = ({ id }: { id: string }) => {
 
   const extraCols: Col<Sample>[] = [
     {
-      key: "created_at",
+      key: "submission_date",
       name: "Created At",
-      render: (cell) => formatDate(cell),
+      render: (cell) => (cell ? formatDate(cell) : "-"),
     },
     {
-      key: "updated_at",
+      key: "last_update_date",
       name: "Updated At",
-      render: (cell) => formatDate(cell),
+      render: (cell) => (cell ? formatDate(cell) : "-"),
     },
   ];
 
@@ -765,37 +791,37 @@ const SamplesPopup = ({ id }: { id: string }) => {
 
   return (
     <>
-      <div className="flex flex-col gap-4 overflow-y-auto">
-        {!isEmpty(common) && (
-          <dl>
-            {Object.entries(common).map(([key, value]) => (
-              <Fragment key={key}>
-                <dt>{upperFirst(key)}</dt>
-                <dd>{value}</dd>
-              </Fragment>
-            ))}
-          </dl>
-        )}
+      <H3 className="justify-start">Common Sample Details</H3>
+      {!isEmpty(common) ? (
+        <dl>
+          {Object.entries(common).map(([key, value]) => (
+            <Fragment key={key}>
+              <dt>{upperFirst(key)}</dt>
+              <dd>{value}</dd>
+            </Fragment>
+          ))}
+        </dl>
+      ) : (
+        "-"
+      )}
 
-        <div className="relative">
-          <Status
-            query={studySamplesQuery}
-            className="absolute inset-0 opacity-90"
-          />
-          <Table
-            cols={cols}
-            rows={studySamplesQuery.data?.results ?? []}
-            sort={ordering}
-            onSort={setOrdering}
-            page={offset}
-            perPage={Number(limit)}
-          />
-        </div>
+      <H3 className="justify-start">Individual Sample Details</H3>
+      <div className="relative">
+        <Status query={query} className="absolute inset-0 opacity-90" />
+        <Table
+          className="w-full"
+          cols={cols}
+          rows={results}
+          sort={ordering}
+          onSort={setOrdering}
+          page={offset}
+          perPage={Number(limit)}
+        />
       </div>
 
       {/* pagination */}
       <Pagination
-        count={studySamplesQuery.data?.count ?? 0}
+        count={count}
         offset={offset}
         setOffset={setOffset}
         limit={limit}
@@ -813,4 +839,4 @@ const SamplesPopup = ({ id }: { id: string }) => {
       </Pagination>
     </>
   );
-};
+}

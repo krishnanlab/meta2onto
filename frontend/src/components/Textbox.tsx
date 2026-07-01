@@ -22,12 +22,12 @@ export default function Textbox({
   ...props
 }: Props) {
   const _class = clsx(
-    "rounded-sm border border-current/25 bg-white p-2",
+    "rounded-md border border-current/25 bg-white p-2",
     className,
   );
   return multi ? (
     <textarea
-      className={clsx("min-h-[calc(3lh+--spacing(4))]", _class)}
+      className={clsx("min-h-[calc(3lh+(--spacing(4)))]", _class)}
       onChange={(event) => onChange?.(event.currentTarget.value)}
       {...(props as ComponentPropsWithRef<"textarea">)}
     />

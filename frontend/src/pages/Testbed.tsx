@@ -1,6 +1,6 @@
 import Button from "@/components/Button";
 import Dialog from "@/components/Dialog";
-import Heading from "@/components/Heading";
+import { H1, H2, H3, H4 } from "@/components/Heading";
 import Link from "@/components/Link";
 import Logo from "@/components/Logo";
 import Meta from "@/components/Meta";
@@ -13,13 +13,13 @@ export default function Testbed() {
       <Meta title="Testbed" />
 
       <section className="bg-theme-light">
-        <Heading level={1}>Testbed</Heading>
+        <H1>Testbed</H1>
       </section>
 
       <section>
-        <Heading level={2}>Heading 2</Heading>
-        <Heading level={3}>Heading 3</Heading>
-        <Heading level={4}>Heading 4</Heading>
+        <H2>Heading 2</H2>
+        <H3>Heading 3</H3>
+        <H4>Heading 4</H4>
 
         <p>
           Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
@@ -97,12 +97,7 @@ export default function Testbed() {
           <Logo />
         </div>
 
-        <div
-          className="
-            flex h-100 w-150 items-center justify-center gap-5 bg-theme-light
-            text-[50px] text-theme
-          "
-        >
+        <div className="flex h-100 w-150 items-center justify-center gap-5 bg-theme-light text-[50px] text-theme">
           <Logo className="size-25" />
           <span>
             <span className="">Meta</span>

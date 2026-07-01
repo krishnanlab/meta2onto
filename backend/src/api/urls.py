@@ -13,6 +13,7 @@ from .views import (
     # GEOSeriesRelationsViewSet,
     # ExternalRelationViewSet,
     ontology_search,
+    database_statistics,
 )
 
 # Create a router and register our viewsets with it
@@ -31,5 +32,6 @@ router.register(r"cart", CartViewSet, basename="cart")
 urlpatterns = [
     path("", include(router.urls)),
     path("ontology/search/", ontology_search, name="ontology-search"),
+    path("stats/", database_statistics, name="ontology-search"),
     # path('cart/download/', download_cart, name='cart-download'),
 ]
