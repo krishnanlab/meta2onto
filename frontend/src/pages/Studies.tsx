@@ -792,7 +792,7 @@ function SamplesPopup({ id }: SamplesPopupProps) {
   return (
     <>
       <H3 className="justify-start">Common Sample Details</H3>
-      {!isEmpty(common) && (
+      {!isEmpty(common) ? (
         <dl>
           {Object.entries(common).map(([key, value]) => (
             <Fragment key={key}>
@@ -801,6 +801,8 @@ function SamplesPopup({ id }: SamplesPopupProps) {
             </Fragment>
           ))}
         </dl>
+      ) : (
+        "-"
       )}
 
       <H3 className="justify-start">Individual Sample Details</H3>
