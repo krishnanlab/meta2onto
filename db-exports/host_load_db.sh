@@ -1,12 +1,16 @@
 #!/usr/bin/env bash
 
-# this script is intended to be run from the host machine, not inside a container
+# this script is used to load the database from a dump file on the host machine.
+# it uses optimized settings for loading the database, which are different from
+# the settings used for running the database in production.
 
-# it does the following:
+# the script does the following:
 # 1. brings down any running containers in the stack
 # 2. starts the database container with a load-optimized configuration
 # 3. loads meta2onto_latest.dump from the /db-exports/ directory
 # 4. brings down the database container
+
+# this script is intended to be run from the host machine, not inside a container
 
 set -euo pipefail
 
@@ -35,6 +39,8 @@ time (
 		# use the regular optimized loader
 		export PGCONFIG_PATH="./services/postgres/configs/postgresql_load.conf"
 	fi
+
+	echo "* Loading database from dump file using config: ${PGCONFIG_PATH}"
 
 	docker compose run --rm -it \
 		-v ${PGCONFIG_PATH}:/opt/postgresql.conf \
