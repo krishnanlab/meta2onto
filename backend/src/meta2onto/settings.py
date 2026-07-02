@@ -38,7 +38,7 @@ DEBUG = is_truthy(os.environ.get("DJANGO_DEBUG", "1"))
 
 DOMAIN = os.environ.get("DOMAIN", "localhost")
 
-ALLOWED_HOSTS = ["localhost", DOMAIN]
+ALLOWED_HOSTS = ["localhost", DOMAIN, "meta2onto.org"]
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3050",
@@ -46,6 +46,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:8051",
     f"http://{DOMAIN}",
     f"https://{DOMAIN}",
+    "https://meta2onto.org",
 ]
 
 CORS_ALLOWED_ORIGIN_REGEXES = [
