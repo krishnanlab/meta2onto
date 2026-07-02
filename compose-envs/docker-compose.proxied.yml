@@ -46,12 +46,3 @@ services:
       ingress:
         aliases:
           - meta2onto-caddy
-
-  # ensure db starts with an e2-medium friendly config
-  db:
-    volumes:
-        - ./services/postgres/configs/postgresql_serving_2-med.conf:/etc/postgresql/postgresql.conf:ro
-    command:
-      - postgres
-      - -c
-      - config_file=/etc/postgresql/postgresql.conf
