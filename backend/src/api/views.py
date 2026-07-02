@@ -622,8 +622,8 @@ def database_statistics(request):
     Accessible at /api/stats/
     """
     serializer = DatabaseStatsSerializer({
-        "tissues": _cache_fetch("site-stats:tissues", lambda: OntologyTerms.objects.filter(type="tissue").count()),
-        "diseases": _cache_fetch("site-stats:diseases", lambda: OntologyTerms.objects.filter(type="disease").count()),
+        "tissues": _cache_fetch("site-stats:tissues", lambda: SearchTerm.objects.exclude(term__startswith="MONDO:").count()),
+        "diseases": _cache_fetch("site-stats:diseases", lambda: SearchTerm.objects.filter(term__startswith="MONDO:").count()),
         "studies": _cache_fetch("site-stats:studies", lambda: GEOSeries.objects.count()),
         "samples": _cache_fetch("site-stats:samples", lambda: GEOSample.objects.count()),
         "species": _cache_fetch("site-stats:species", lambda: GEOSample.objects.values("organism_ch1").distinct().count()),
