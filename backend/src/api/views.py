@@ -5,6 +5,7 @@ from django.conf import settings
 from django.db import models, transaction
 from django.db.models import (
     Case,
+    TextField,
     When,
     Value,
     Count,
@@ -17,8 +18,7 @@ from django.db.models import (
     Func,
     Exists,
 )
-from django.db.models.expressions import RawSQL
-from django.db.models.functions import Coalesce
+from django.db.models.functions import Cast
 from django.http import HttpResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
@@ -32,6 +32,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
 from .models import (
+    ORGANISM_ARRAY_FIELD,
     Cart,
     CartItem,
     GEOPlatform,
@@ -39,6 +40,7 @@ from .models import (
     GEOSeries,
     GEOSeriesToGEOPlatforms,
     GEOSeriesDatabase,
+    SearchSeriesTechnology,
     ExternalDbRefs,
     OntologySearchResults,
     Organism,
@@ -356,19 +358,12 @@ class GEOSeriesViewSet(viewsets.ReadOnlyModelViewSet):
         # 3. filter results to those GSEs
         technologies = request.query_params.getlist("Technologies")
         if technologies:
-            tech_gpls = list(
-                GEOPlatform.objects.filter(technology__in=technologies).values_list(
-                    "gpl", flat=True
-                )
-            )
-
-            tech_gse_values = (
-                GEOSeriesToGEOPlatforms.objects.filter(platforms__overlap=tech_gpls)
-                .values_list("gse", flat=True)
-                .distinct()
-            )
-
-            results = results.filter(gse__in=Subquery(tech_gse_values))
+            # intersect results, a GEOSeries queryset, with
+            # SearchSeriesTechnology.series, which is a list of GSEs whose platforms have the requested technologies
+            results = results.filter(
+                technologies__technology__in=technologies
+            ).distinct()
+            
 
         # if Databases is provided, filter results to those GSEs whose database
         # field matches the requested databases in either of our two tables for
@@ -396,6 +391,21 @@ class GEOSeriesViewSet(viewsets.ReadOnlyModelViewSet):
                 results = results.filter(
                     Exists(in_geo_series_database) | Exists(in_external_refs)
                 )
+
+        # if Organisms is provided, filter results to those GSEs whose samples have the requested organisms
+        organisms = [
+            organism.strip()
+            for organism in request.query_params.getlist("Organisms")
+            if organism.strip()
+        ]
+
+        if organisms:
+            results = results.filter(
+                organism_names__contains=Cast(
+                    Value(organisms),
+                    output_field=ORGANISM_ARRAY_FIELD,
+                )
+            )
 
         # ---------------------------------------------------------------
         # --- apply limit options from request, prepare for final render

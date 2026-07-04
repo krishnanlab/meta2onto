@@ -2,16 +2,22 @@ import uuid
 
 from django.db import models
 from django.db.models import (
-    F,
+    F, Q,
     Case,
+    Exists,
+    OuterRef, TextField,
     When,
     Value,
     CharField,
 )
+from django.db.models.functions import Cast
+from django.contrib.postgres.aggregates import ArrayAgg
+from django.contrib.postgres.fields import ArrayField
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.contrib.postgres.indexes import GinIndex
 from django.contrib.postgres.search import TrigramSimilarity, SearchVector
-from django.contrib.postgres.fields import ArrayField
+
+ORGANISM_ARRAY_FIELD = ArrayField(TextField())
 
 
 class TimeStampedModel(models.Model):
@@ -61,7 +67,7 @@ class GEOSeriesManager(models.Manager):
         result = queryset
 
         if confidence_levels:
-            result = queryset.annotate(
+            result = result.annotate(
                 confidence_level=Case(
                     When(prob__gte=0.8, then=Value("high")),
                     When(prob__gte=0.5, then=Value("medium")),
@@ -72,7 +78,7 @@ class GEOSeriesManager(models.Manager):
             )
 
         if study_sizes:
-            result = queryset.annotate(
+            result = result.annotate(
                 study_size=Case(
                     When(samples_ct__lt=10, then=Value("small")),
                     When(samples_ct__gte=10, samples_ct__lte=50, then=Value("medium")),
@@ -84,6 +90,21 @@ class GEOSeriesManager(models.Manager):
     
         return result
 
+    def with_organisms(self, queryset=None):
+        if queryset is None:
+            queryset = self.get_queryset()
+
+        return queryset.annotate(
+            organism_names=Cast(
+                ArrayAgg(
+                    "organisms__organism",
+                    distinct=True,
+                    filter=Q(organisms__organism__isnull=False),
+                ),
+                output_field=ORGANISM_ARRAY_FIELD,
+            )
+        )
+    
     def search_gse_with_prob(self, query: str):
         """
         Returns a queryset of GEOSeries joined to a CTE containing:
@@ -139,6 +160,9 @@ class GEOSeriesManager(models.Manager):
     def search(self, query: str, max_results: int | None = 50, order_by: str = "relevance"):
         qs = self.search_gse_with_prob(query=query)
         qs = self.order_by_custom(qs, order_by=order_by)
+
+        # add in organisms as 'organism_names' array field
+        qs = self.with_organisms(qs)
 
         if max_results is not None:
             qs = qs[:max_results]

@@ -201,6 +201,20 @@ class GEOSeriesSerializer(serializers.ModelSerializer):
         )
         
         return feedback if feedback else {"avg_rating": 0, "vote_count": 0, "sum_rating": 0, "likes": 0, "dislikes": 0}
+    
+    organisms = serializers.SerializerMethodField()
+
+    def get_organisms(self, obj) -> list[str]:
+        sentinel = object()
+        annotated_organisms = getattr(obj, "organism_names", sentinel)
+
+        if annotated_organisms is not sentinel:
+            return annotated_organisms or []
+
+        return [
+            organism.organism
+            for organism in obj.organisms.all()
+        ]
 
     class Meta:
         model = GEOSeries
@@ -233,6 +247,7 @@ class GEOSeriesSerializer(serializers.ModelSerializer):
             # from joining with api_seriesdatabase
             "database",
             "platform",
+            "organisms",
 
             "keywords",
             "classification",
