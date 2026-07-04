@@ -92,12 +92,25 @@ class GEOSeriesManager(models.Manager):
         'query' should be an ontology ID from api_searchterm,
         e.g. 'MONDO:0000270'.
         """
+        positive_annotations = PositiveStudyAnnotation.objects.filter(
+            series_id=OuterRef("pk"),
+            term=query,
+        )
+        
         return (
             self.get_queryset()
             .filter(search_terms__term=query)
             .annotate(
                 prob=F("search_terms__confidence"),
                 keywords=F("search_terms__related_words"),
+                classification=Case(
+                    When(
+                        Exists(positive_annotations),  # noqa: F821
+                        then=Value("Positive"),
+                    ),
+                    default=Value("Negative"),
+                    output_field=CharField(),
+                ),
             )
         )
     
@@ -167,7 +180,7 @@ class GEOSeries(models.Model):
     # runtime annotations
     prob: float | None = None
     keywords: str | None = None
-    # samples_ct: int | None = None
+    classification: str | None = None
     confidence_level: str | None = None
     study_size: str | None = None
 

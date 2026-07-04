@@ -183,13 +183,6 @@ class GEOSeriesSerializer(serializers.ModelSerializer):
             return [kw.strip() for kw in obj.keywords.split(",")]
         return []
     
-    classification = serializers.SerializerMethodField()
-
-    def get_classification(self, obj):
-        """Returns values Positive or Negative; supposed to represent 'Classification of study in model training'?"""
-        # FIXME: figure out how to actually determine this
-        return "Positive"
-    
     feedback = serializers.SerializerMethodField()
 
     def get_feedback(self, obj) -> dict[str, int | float]:
