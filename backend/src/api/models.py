@@ -461,7 +461,9 @@ class SearchTerm(models.Model):
     backend.src.api.views.ontology_search for how the actual fetching
     of matching GEOSeries is performed.
 
-    Originates from disease_predictions.parquet and tissue_predictions.parquet
+    Loaded from the following files in management/commands/import_search_parquet.py:
+    - data/search_tables/disease_predictions.parquet
+    - data/search_tables/tissue_predictions.parquet
     """
 
     objects = SearchTermManager()
@@ -501,14 +503,34 @@ class OntologyTermRating(models.Model):
     (Note that, while not required, as of 2026-06-05, SearchTerm has as many
     unique values of 'term' as there rows in this table.)
 
-    Loaded from the following files:
-    - data/search_tables/disease_predictions.parquet
+    Loaded from the following file in management/commands/import_search_parquet.py:
     - data/search_tables/eval.parquet
-    - data/search_tables/tissue_predictions.parquet
     """
     term = models.CharField(max_length=256, db_index=True)
     performance = models.CharField(max_length=64)
     type = models.CharField(max_length=64)
+
+class PositiveStudyAnnotation(models.Model):
+    """
+    Positive study annotations for each ontology term.
+
+    Loaded from the following file in management/commands/import_search_parquet.py:
+    - data/search_tables/positive_study_annotations.parquet
+    """
+    term = models.CharField(max_length=256, db_index=True)
+    series = models.ForeignKey(
+        GEOSeries,
+        related_name="positive_annotations",
+        null=True,
+        blank=True,
+        on_delete=models.DO_NOTHING,
+        db_constraint=False,
+    )
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["term", "series"]),
+        ]
 
 class FacetEntry(models.Model):
     """

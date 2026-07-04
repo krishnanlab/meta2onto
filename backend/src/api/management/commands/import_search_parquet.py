@@ -12,7 +12,7 @@ from django.db import transaction, connection
 
 import pyarrow.parquet as pq
 
-from api.models import SearchTerm, GEOSeries, OntologyTermRating
+from api.models import SearchTerm, GEOSeries, OntologyTermRating, PositiveStudyAnnotation
 
 # ============================================================================
 # === Utilities
@@ -106,6 +106,37 @@ def import_eval_terms(path: Path, batch_size: int = DEFAULT_BATCH_SIZE):
 
     return inserted
 
+def import_positive_annotations(path: Path, batch_size: int = DEFAULT_BATCH_SIZE):
+    """
+    positive_study_annotations.parquet files have the following columns:
+      term, ID (GSE)
+    """
+
+    pf = pq.ParquetFile(path)
+    inserted = 0
+
+    for batch in tqdm(
+        pf.iter_batches(batch_size=batch_size),
+        total=_total_batches(pf, batch_size),
+        desc="Importing Positive Study Annotations",
+    ):
+        with transaction.atomic():
+            rows = batch.to_pylist()
+
+            # now, bulk create PositiveStudyAnnotation entries
+            inserted += len(PositiveStudyAnnotation.objects.bulk_create(
+                [
+                    PositiveStudyAnnotation(
+                        term=row["term"],
+                        series_id=row["ID"],
+                    )
+                    for row in rows
+                ],
+                ignore_conflicts=True,
+            ))
+    
+    return inserted
+
 # ============================================================================
 # === entrypoint
 # ============================================================================
@@ -146,6 +177,11 @@ class Command(BaseCommand):
             action="store_true",
             help="Skip importing eval terms.",
         )
+        parser.add_argument(
+            "--skip-positive-annotations",
+            action="store_true",
+            help="Skip importing positive study annotations.",
+        )
 
         # add an argument to delete all existing data before import?
         parser.add_argument(
@@ -171,6 +207,7 @@ class Command(BaseCommand):
                 models_to_clear = (
                     SearchTerm,
                     OntologyTermRating,
+                    PositiveStudyAnnotation,
                 )
 
                 with connection.cursor() as cursor:
@@ -207,5 +244,17 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.WARNING(f"Eval terms file not found, skipping: {eval_terms_path}"))
         else:
             self.stdout.write(self.style.WARNING("Skipping eval terms import"))
+
+        # import positive study annotations if provided
+        if not opts["skip_positive_annotations"]:
+            positive_annotations_path = root / "positive_study_annotations.parquet"
+            if positive_annotations_path.exists():
+                self.stdout.write(self.style.HTTP_INFO(f"Importing: {positive_annotations_path}"))
+                positive_annotations_inserted = import_positive_annotations(positive_annotations_path, batch_size=500)
+                self.stdout.write(self.style.SUCCESS(f"✓ {positive_annotations_inserted} positive study annotation(s) imported"))
+            else:
+                self.stdout.write(self.style.WARNING(f"Positive study annotations file not found, skipping: {positive_annotations_path}"))
+        else:
+            self.stdout.write(self.style.WARNING("Skipping positive study annotations import"))
 
         self.stdout.write(self.style.MIGRATE_HEADING("Import complete"))
