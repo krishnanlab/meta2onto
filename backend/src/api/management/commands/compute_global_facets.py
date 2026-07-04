@@ -147,6 +147,32 @@ def populate_databases():
             for database, total in rows
         ])
 
+def populate_organisms():
+    """
+    Populates the Organisms facet with each unique organism and the number of
+    studies overall associated with that organism.
+    """
+    with transaction.atomic():
+        facet = Facet.objects.create(name="Organisms")
+
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT organism, COUNT(*) AS total
+                FROM api_geoseries_organism
+                GROUP BY organism
+            """)
+
+            rows = cursor.fetchall()
+
+        FacetEntry.objects.bulk_create([
+            FacetEntry(
+                facet=facet,
+                name=organism,
+                count=total,
+            )
+            for organism, total in rows
+        ])
+
 # definitions of which facets we want to compute
 # - the key in this dict is the name of the facet, the type
 #   (minmax or categorical) determines which attributes of the Facet
@@ -159,6 +185,7 @@ FACETS = [
     ("Platforms", "categorical", populate_platforms),
     ("Technologies", "categorical", populate_technologies),
     ("Databases", "categorical", populate_databases),
+    ("Organisms", "categorical", populate_organisms),
 ]
 
 class Command(BaseCommand):
