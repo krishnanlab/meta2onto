@@ -423,15 +423,6 @@ class GEOSeriesViewSet(viewsets.ReadOnlyModelViewSet):
         # --- apply limit options from request, prepare for final render
         # ---------------------------------------------------------------
 
-        # reduce to the columns that are actually used in the frontend
-        results = results.only(
-            "gse",
-            "title",
-            "summary",
-            "submission_date",
-            "samples_ct",
-        )
-
         # paginate the response
         if limit is not None:
             self.pagination_class.limit = limit
