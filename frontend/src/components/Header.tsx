@@ -68,7 +68,7 @@ export default function Header() {
       {/* nav bar */}
       <nav
         className={clsx(
-          `flex flex-wrap items-center justify-center gap-4 text-xl *:text-white max-xs:flex-col`,
+          "flex flex-wrap items-center justify-center gap-4 text-xl *:text-white max-xs:flex-col",
           !open && "max-md:hidden",
           open && "max-md:w-full",
         )}

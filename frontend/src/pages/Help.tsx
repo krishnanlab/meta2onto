@@ -106,7 +106,7 @@ export default function Help() {
         </p>
 
         <div>
-          <Meter value={0.5}>medium</Meter>
+          <Meter value={0.75}>medium</Meter>
         </div>
 
         <p>

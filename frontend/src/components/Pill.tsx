@@ -20,7 +20,7 @@ export default function Pill({
     <Tooltip content={tooltip?.[value ?? ""] ?? tooltip?.default ?? ""}>
       <span
         className={clsx(
-          `inline-flex items-center justify-center gap-1 rounded-full px-2`,
+          "inline-flex items-center justify-center gap-1 rounded-full px-2",
           color?.[value ?? ""] ?? color?.default,
           className,
         )}
