@@ -92,7 +92,7 @@ def import_external_db_refs(db_name: str, path: Path, batch_size: int = DEFAULT_
                 inserted += len(ExternalDbRefs.objects.bulk_create(
                     [
                         ExternalDbRefs(
-                            series_id=row["geo"],
+                            series_id=row["gse"],
                             database=db_name,
                             external_id=row.get("accession", None),
                         )
