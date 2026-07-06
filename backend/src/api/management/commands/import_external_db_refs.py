@@ -38,10 +38,10 @@ DEFAULT_BATCH_SIZE = 5000
 
 
 # @transaction.atomic
-def import_external_db_refs(db_name: str, path: Path, batch_size: int = DEFAULT_BATCH_SIZE):
+def import_external_db_refs(db_name: str, path: Path, batch_size: int = DEFAULT_BATCH_SIZE, gse_col: str = "geo"):
     """
     *_predictions.parquet files have the following columns:
-      term, ID (GSE), confidence, related_words
+      term, ID (<gse_col>), confidence, related_words
     """
 
     inserted = 0
@@ -92,7 +92,7 @@ def import_external_db_refs(db_name: str, path: Path, batch_size: int = DEFAULT_
                 inserted += len(ExternalDbRefs.objects.bulk_create(
                     [
                         ExternalDbRefs(
-                            series_id=row["gse"],
+                            series_id=row[gse_col],
                             database=db_name,
                             external_id=row.get("accession", None),
                         )
@@ -153,6 +153,8 @@ class Command(BaseCommand):
 
             #  map 'refinebio' to the canonical 'refine.bio', even though the filename doesn't include it
             db_name = 'refine.bio' if external_db == 'refinebio' else external_db
+            # map the gse_col based on the external_db; for archs4 and recount3 it's "geo", for refinebio it's "gse"
+            gse_col = "geo" if external_db in ('archs4', 'recount3') else "gse"
 
             if not matching_files:
                 self.stdout.write(self.style.WARNING(f"No file found for {external_db}, skipping..."))
@@ -164,7 +166,7 @@ class Command(BaseCommand):
 
             # import that file; import_external_db_refs will determine if it's parquet or txt based on the extension and import it appropriately
             self.stdout.write(self.style.HTTP_INFO(f"Importing: {file_to_import}"))
-            inserted = import_external_db_refs(db_name=db_name, path=file_to_import, batch_size=500)
+            inserted = import_external_db_refs(db_name=db_name, path=file_to_import, batch_size=500, gse_col=gse_col)
             self.stdout.write(self.style.SUCCESS(f"✓ {inserted} {db_name} reference(s) imported"))
 
 
