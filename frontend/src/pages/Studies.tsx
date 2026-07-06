@@ -343,7 +343,7 @@ function Results({ setParams, offset, limit, query }: ResultsProps) {
       {anyFeedback && (
         <p>
           We especially appreciate feedback on{" "}
-          <Link to="?Classification=Neutral">
+          <Link to="?Classification=Unlabeled">
             studies not in our training set
           </Link>
           !

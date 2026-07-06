@@ -407,6 +407,18 @@ class GEOSeriesViewSet(viewsets.ReadOnlyModelViewSet):
                 )
             )
 
+        # filter on Classification
+        classifications = [
+            classification.strip()
+            for classification in request.query_params.getlist("Classification")
+            if classification.strip()
+        ]
+
+        if classifications:
+            results = results.filter(
+                classification__in=classifications
+            )
+
         # ---------------------------------------------------------------
         # --- apply limit options from request, prepare for final render
         # ---------------------------------------------------------------
