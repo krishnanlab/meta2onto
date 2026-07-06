@@ -129,7 +129,7 @@ class GEOSeriesManager(models.Manager):
                         Exists(positive_annotations),  # noqa: F821
                         then=Value("Positive"),
                     ),
-                    default=Value("Negative"),
+                    default=Value("Unlabeled"),
                     output_field=CharField(),
                 ),
             )
