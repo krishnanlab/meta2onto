@@ -95,7 +95,7 @@ export default function Home() {
         <div className="flex justify-center gap-8 max-md:flex-col [&>svg]:size-8 [&>svg]:self-center [&>svg]:text-stone-300">
           <Tile
             big
-            className="text-accent"
+            className="text-theme"
             Icon={SearchCheck}
             title="Discover"
             description="Search for tissue or disease term you're interested in"
@@ -104,7 +104,7 @@ export default function Home() {
           <MoveDown className="md:hidden" />
           <Tile
             big
-            className="text-accent"
+            className="text-theme"
             Icon={ShoppingCart}
             title="Collect"
             description={
@@ -118,7 +118,7 @@ export default function Home() {
           <MoveDown className="md:hidden" />
           <Tile
             big
-            className="text-accent"
+            className="text-theme"
             Icon={Recycle}
             title="Reuse"
             description={

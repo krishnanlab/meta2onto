@@ -383,8 +383,8 @@ function Result({
   submitted_at,
   platform,
   classification,
+  organisms,
   keywords,
-  feedback: allFeedback,
 }: Study) {
   /** current cart state */
   const cart = useAtomValue(cartAtom);
@@ -486,16 +486,22 @@ function Result({
           ))}
         </div>
 
+        {/* species */}
+        <div className="flex flex-wrap gap-4">
+          {organisms?.map((organism, index) => (
+            <Pill
+              key={index}
+              value={organism}
+              color={{ default: "bg-purple-500/25" }}
+            />
+          ))}
+        </div>
+
         {/* actions */}
         <div className="ml-auto flex flex-wrap items-center justify-center gap-4">
           {/* feedback */}
           {confidence.value > feedbackThreshold && (
             <>
-              {!!allFeedback.vote_count && (
-                <span className="text-stone-500">
-                  {formatNumber(allFeedback.vote_count)} others gave feedback
-                </span>
-              )}
               <Button
                 color={feedback?.rating === 1 ? "theme" : "none"}
                 onClick={() => {

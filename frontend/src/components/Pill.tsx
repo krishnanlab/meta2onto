@@ -21,7 +21,7 @@ export default function Pill({
       <span
         className={clsx(
           `inline-flex items-center justify-center gap-1 rounded-full px-2`,
-          color?.[value ?? ""] ?? color?.default ?? "bg-theme-light text-black",
+          color?.[value ?? ""] ?? color?.default,
           className,
         )}
         {...props}

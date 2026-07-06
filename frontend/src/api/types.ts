@@ -45,6 +45,7 @@ export const study = z.object({
     }),
   ),
   classification: z.string(),
+  organisms: z.array(z.string()),
   sample_count: z.number(),
   keywords: z.array(z.string()),
   feedback: z.object({

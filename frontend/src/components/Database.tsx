@@ -22,13 +22,14 @@ export default function Database({ database, study = "" }: Props) {
     <Link
       to={link}
       tabIndex={0}
-      className="contents no-underline"
+      className="contents text-[unset]! no-underline"
       arrow={false}
     >
       <Pill
         value={database}
+        color={{ default: "bg-blue-500/25" }}
         tooltip={{
-          [database]: (
+          default: (
             <div className="flex flex-col items-start gap-2">
               <strong>{database}</strong>
               <div className="text-balance">{databaseTooltip[database]}</div>
