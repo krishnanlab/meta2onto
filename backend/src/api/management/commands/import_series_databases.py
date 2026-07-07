@@ -114,6 +114,36 @@ def import_series_databases(path: Path, batch_size: int = DEFAULT_BATCH_SIZE):
                             series_id=series_id, database=rel_type, url=rel_value
                         )
 
+def import_geoseries_bioprojects(path: Path, batch_size: int = DEFAULT_BATCH_SIZE):
+    """
+    geo_series.parquet
+      columns: accession, bioprojects, ...
+
+    Column details:
+    - "accession" is the series ID (GSE).
+    - "bioprojects" is a list of BioProject IDs associated with the series
+    """
+
+    pf = pq.ParquetFile(path)
+
+    for batch in tqdm(
+        pf.iter_batches(batch_size=batch_size),
+        total=_total_batches(pf, batch_size),
+        desc="Importing BioProject GEOSeriesRelations from geo_series.parquet",
+    ):
+        with transaction.atomic():
+            rows = batch.to_pylist()
+
+            for row in rows:
+                relations = row["bioprojects"] if row["bioprojects"] is not None else []
+
+                for rel in relations:
+                    # create GEOSeriesRelations entry
+                    GEOSeriesDatabase.objects.get_or_create(
+                        series_id=row["accession"],
+                        database="BioProject",
+                        url=f" https://www.ncbi.nlm.nih.gov/bioproject/{rel}"
+                    )
 
 # ============================================================================
 # === entrypoint
@@ -130,6 +160,7 @@ class Command(BaseCommand):
             help="Directory containing the ids__level-series.parquet file.",
         )
         parser.add_argument("--ids-series", default="ids__level-series.parquet")
+        parser.add_argument("--geo-series", default="geo_series.parquet")
 
         # add an argument to delete all existing data before import?
         parser.add_argument(
@@ -173,5 +204,10 @@ class Command(BaseCommand):
         self.stdout.write(self.style.HTTP_INFO(f"Importing: {ids_series}"))
         import_series_databases(ids_series, batch_size=50)
         self.stdout.write(self.style.SUCCESS("✓ ids__level-series imported"))
+
+        geo_series = root / opts["geo_series"]
+        self.stdout.write(self.style.HTTP_INFO(f"Importing: {geo_series}"))
+        import_geoseries_bioprojects(geo_series, batch_size=50)
+        self.stdout.write(self.style.SUCCESS("✓ geo_series imported"))
 
         self.stdout.write(self.style.MIGRATE_HEADING("Import complete"))
