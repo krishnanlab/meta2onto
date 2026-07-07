@@ -284,6 +284,13 @@ class GEOSeriesViewSet(viewsets.ReadOnlyModelViewSet):
         # searched result set
         facets = self._build_facets(results)
 
+        # prefetch models we join against to avoid N+1 queries
+        results = results.prefetch_related(
+            "technologies",
+            "databases",
+            "external_db_refs",
+        )
+
         # ---------------------------------------------------------------
         # --- apply faceting filter options from request
         # ---------------------------------------------------------------
@@ -640,8 +647,8 @@ def database_statistics(request):
     Accessible at /api/stats/
     """
     serializer = DatabaseStatsSerializer({
-        "tissues": _cache_fetch("site-stats:tissues", lambda: SearchTerm.objects.exclude(term__startswith="MONDO:").count()),
-        "diseases": _cache_fetch("site-stats:diseases", lambda: SearchTerm.objects.filter(term__startswith="MONDO:").count()),
+        "tissues": _cache_fetch("site-stats:tissues", lambda: SearchTerm.objects.exclude(term__startswith="MONDO:").values("term").distinct().count()),
+        "diseases": _cache_fetch("site-stats:diseases", lambda: SearchTerm.objects.filter(term__startswith="MONDO:").values("term").distinct().count()),
         "studies": _cache_fetch("site-stats:studies", lambda: GEOSeries.objects.count()),
         "samples": _cache_fetch("site-stats:samples", lambda: GEOSample.objects.count()),
         "species": _cache_fetch("site-stats:species", lambda: GEOSample.objects.values("organism_ch1").distinct().count()),
