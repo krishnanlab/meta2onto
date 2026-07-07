@@ -399,17 +399,21 @@ function Result({
   const details = [
     {
       icon: Hash,
-      text: id,
+      content: (
+        <Link to={`https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=${id}`}>
+          {id}
+        </Link>
+      ),
       tooltip: "ID of study",
     },
     {
       icon: Calendar,
-      text: formatDate(submitted_at),
+      content: formatDate(submitted_at),
       tooltip: "Date study was submitted",
     },
     {
       icon: Dna,
-      text: platform?.join(", "),
+      content: platform?.join(", "),
       tooltip: "Platform used in study",
     },
     {
@@ -419,7 +423,7 @@ function Result({
           : classification === "Negative"
             ? Minus
             : CircleSmall,
-      text: classification,
+      content: classification,
       tooltip: "Classification of study in model training",
     },
   ] as const;
@@ -452,12 +456,12 @@ function Result({
 
       {/* details */}
       <div className="flex flex-wrap gap-x-8 gap-y-4">
-        {details.map(({ icon: Icon, text, tooltip }, index) =>
-          text ? (
+        {details.map(({ icon: Icon, content, tooltip }, index) =>
+          content ? (
             <Tooltip key={index} content={tooltip}>
               <div className="flex items-center gap-2 text-stone-500">
                 <Icon />
-                <span>{text}</span>
+                <span>{content}</span>
               </div>
             </Tooltip>
           ) : null,
