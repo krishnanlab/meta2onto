@@ -22,6 +22,7 @@ services:
       - backend_static:/opt/static
     environment:
       - DJANGO_DEBUG=0
+      - WORKER_TIMEOUT=120
 
   frontend:
     command: sh -c "bun install && bun run build --emptyOutDir --outDir /tmp/dist && rm -rf /opt/dist/* && mv /tmp/dist /opt/dist"
