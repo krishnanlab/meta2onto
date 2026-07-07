@@ -5,6 +5,7 @@ from django.conf import settings
 from django.db import models, transaction
 from django.db.models import (
     Case,
+    Prefetch,
     TextField,
     When,
     Value,
@@ -40,6 +41,7 @@ from .models import (
     GEOSeries,
     GEOSeriesToGEOPlatforms,
     GEOSeriesDatabase,
+    SearchSeriesPlatform,
     SearchSeriesTechnology,
     ExternalDbRefs,
     OntologySearchResults,
@@ -289,6 +291,14 @@ class GEOSeriesViewSet(viewsets.ReadOnlyModelViewSet):
             "technologies",
             "databases",
             "external_db_refs",
+        )
+
+        results = results.prefetch_related(
+            Prefetch(
+                "platforms",  # replace with the actual related_name
+                queryset=SearchSeriesPlatform.objects.all(),
+                to_attr="prefetched_platforms",
+            )
         )
 
         # ---------------------------------------------------------------
@@ -646,12 +656,31 @@ def database_statistics(request):
     API endpoint for getting statistics about the database.
     Accessible at /api/stats/
     """
+
+    search_term_series = SearchTerm.objects.filter(
+        series_id=OuterRef("series_id")
+    )
+
+    samples = GEOSample.objects.annotate(
+        has_search_term=Exists(search_term_series)
+    ).filter(
+        has_search_term=True
+    )
+
     serializer = DatabaseStatsSerializer({
         "tissues": _cache_fetch("site-stats:tissues", lambda: SearchTerm.objects.exclude(term__startswith="MONDO:").values("term").distinct().count()),
         "diseases": _cache_fetch("site-stats:diseases", lambda: SearchTerm.objects.filter(term__startswith="MONDO:").values("term").distinct().count()),
-        "studies": _cache_fetch("site-stats:studies", lambda: GEOSeries.objects.count()),
-        "samples": _cache_fetch("site-stats:samples", lambda: GEOSample.objects.count()),
-        "species": _cache_fetch("site-stats:species", lambda: GEOSample.objects.values("organism_ch1").distinct().count()),
+        "studies": _cache_fetch("site-stats:studies", lambda: SearchTerm.objects.values("series_id").distinct().count()),
+        "samples": _cache_fetch(
+            "site-stats:samples",
+            samples.count,
+        ),
+        "species": _cache_fetch(
+            "site-stats:species",
+            lambda: samples.values(
+                "organism_ch1"
+            ).distinct().count(),
+        ),
         "technologies": _cache_fetch("site-stats:technologies", lambda: GEOPlatform.objects.values("technology").distinct().count()),
         "feedback": Feedback.objects.count(),
     }, many=False)
