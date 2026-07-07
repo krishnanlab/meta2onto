@@ -215,6 +215,12 @@ class GEOSeriesSerializer(serializers.ModelSerializer):
             organism.organism
             for organism in obj.organisms.all()
         ]
+    
+    # technologies = serializers.SlugRelatedField(
+    #     many=True,
+    #     read_only=True,
+    #     slug_field="technology",
+    # )
 
     class Meta:
         model = GEOSeries
@@ -248,6 +254,7 @@ class GEOSeriesSerializer(serializers.ModelSerializer):
             "database",
             "platform",
             "organisms",
+            # "technologies",
 
             "keywords",
             "classification",

@@ -352,17 +352,22 @@ class GEOSeriesViewSet(viewsets.ReadOnlyModelViewSet):
 
             results = results.filter(gse__in=Subquery(gse_values))
 
-        # if Technologies is provided, do the following:
-        # 1. find GPLs whose technology is in requested technologies
-        # 2. find GSEs whose platforms array overlaps those GPLs
-        # 3. filter results to those GSEs
-        technologies = request.query_params.getlist("Technologies")
+        # if Technologies is provided, use the api_geoseries_technology
+        # materialized view to find GSEs whose technologies array overlaps the
+        # requested technologies
+        technologies = [
+            technology.strip()
+            for technology in request.query_params.getlist("Technologies")
+            if technology.strip()
+        ]
+
         if technologies:
-            # intersect results, a GEOSeries queryset, with
-            # SearchSeriesTechnology.series, which is a list of GSEs whose platforms have the requested technologies
-            results = results.filter(
-                technologies__technology__in=technologies
-            ).distinct()
+            for technology in set(technologies):
+                results = results.filter(
+                    technologies__technology=technology
+                )
+
+            results = results.distinct()
             
 
         # if Databases is provided, filter results to those GSEs whose database
