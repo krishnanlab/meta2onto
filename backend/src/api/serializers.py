@@ -5,12 +5,9 @@ from .models import (
     Feedback,
     GEOSample,
     GEOSeries,
-    GEOSeriesToGEOPlatforms,
     Organism,
     GEOPlatform,
     SearchTerm,
-    GEOSeries,
-    GEOSample,
     OntologySearchResults,
     OntologySearchDocs,
     OntologySynonyms,
@@ -157,7 +154,27 @@ class GEOSeriesSerializer(serializers.ModelSerializer):
             label = "low"
         return {"name": label, "value": obj.prob}
 
-    database = serializers.DictField(child=serializers.DictField(), read_only=True)
+    database = serializers.SerializerMethodField()
+
+    def get_database(self, obj):
+        series_dbs = {
+            item.database: {
+                "url": item.url.strip() if item.url else item.url,
+            }
+            for item in obj.databases.all()
+        }
+
+        external_refs = {
+            item.database: {
+                "external_id": (
+                    item.external_id.strip()
+                    if item.external_id else item.external_id
+                ),
+            }
+            for item in obj.external_db_refs.all()
+        }
+
+        return {**series_dbs, **external_refs}
 
     # FIXME: renames to support frontend changes; i'm probably going to
     # keep the db layer the same to ease imports and just rename fields at the
@@ -170,10 +187,10 @@ class GEOSeriesSerializer(serializers.ModelSerializer):
 
     platform = serializers.SerializerMethodField()
 
-    def get_platform(self, obj) -> list[str]:
+    def get_platform(self, obj) -> list[str] | None:
         """Get the platform name associated with this series."""
-        gse_obj = GEOSeriesToGEOPlatforms.objects.filter(gse=obj.gse).first()
-        return gse_obj.platforms if gse_obj else []
+        platforms = getattr(obj, "prefetched_platforms", [])
+        return [x.platform for x in platforms] if platforms else []
 
     keywords = serializers.SerializerMethodField()
 

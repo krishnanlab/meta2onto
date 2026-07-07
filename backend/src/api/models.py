@@ -208,18 +208,6 @@ class GEOSeries(models.Model):
     confidence_level: str | None = None
     study_size: str | None = None
 
-    @property
-    def database(self):
-        series_dbs = {k: {"url": v.strip() if v else v} for (k,v) in GEOSeriesDatabase.objects.filter(series_id=self.gse).values_list(
-            "database", "url"
-        )}
-
-        external_refs = {k: {"external_id": v.strip() if v else v} for (k,v) in ExternalDbRefs.objects.filter(series_id=self.gse).values_list(
-            "database", "external_id"
-        )}
-
-        return {**series_dbs, **external_refs}
-    
     class Meta:
         indexes = [
             models.Index(fields=["submission_date"]),
@@ -290,18 +278,6 @@ class GEOSample(models.Model):
         models.CharField(), default=list, blank=True, null=True,
         help_text="List of GSE IDs this sample belongs to"
     )
-
-    # # the platform to which this sample belongs
-    # platform = models.ForeignKey(
-    #     "Platform",
-    #     # to_field="gpl",
-    #     db_column="gpl",
-    #     related_name="samples",
-    #     on_delete=models.DO_NOTHING,
-    #     db_constraint=False,
-    #     null=True,
-    #     blank=True,
-    # )
 
     class Meta:
         indexes = [
