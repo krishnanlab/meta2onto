@@ -212,8 +212,7 @@ function Filters({
         <dd className="text-sm text-stone-500">"{raw}"</dd>
         <dt>Selection</dt>
         <dd>
-          {type && <Pill value={type} color={typeColor} />}
-          {name} {term}
+          {type && <Pill value={type} color={typeColor} />} {name} {term}
         </dd>
         <dt>Performance</dt>
         <dd>
