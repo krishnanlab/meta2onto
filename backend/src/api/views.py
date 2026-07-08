@@ -66,7 +66,7 @@ from .serializers import (
     DatabaseStatsSerializer,
 )
 from .utils.auth import CsrfExemptSessionAuthentication
-from api.utils.query import Array
+from api.utils.query import Array, ArrayAnyEquals
 
 # ===========================================================================
 # === Helpers
@@ -639,15 +639,69 @@ def ontology_search(request):
 # === Database-wide statistics
 # ===========================================================================
 
-def _cache_fetch(key, compute_func, timeout=settings.LONGTERM_CACHE_TIMEOUT):
+def _cache_fetch(key, compute_func, timeout=settings.LONGTERM_CACHE_TIMEOUT, force_write=False):
     """
     Fetch a value from the cache, computing and caching it if not present.
     """
     value = cache.get(key)
-    if value is None:
+    if value is None or force_write:
         value = compute_func()
         cache.set(key, value, timeout=timeout)
     return value
+
+def database_stats(force_write=False, timeout=settings.LONGTERM_CACHE_TIMEOUT):
+    search_term_series = SearchTerm.objects.filter(
+        ArrayAnyEquals(
+            F("series_id"),
+            OuterRef("series_set"),
+        )
+    )
+
+    samples = GEOSample.objects.filter(
+        Exists(search_term_series)
+    )
+
+    return {
+        "tissues": _cache_fetch(
+            "site-stats:tissues",
+            lambda: SearchTerm.objects.exclude(term__startswith="MONDO:").values("term").distinct().count(),
+            force_write=force_write,
+            timeout=timeout
+        ),
+        "diseases": _cache_fetch(
+            "site-stats:diseases",
+            lambda: SearchTerm.objects.filter(term__startswith="MONDO:").values("term").distinct().count(),
+            force_write=force_write,
+            timeout=timeout
+        ),
+        "studies": _cache_fetch(
+            "site-stats:studies",
+            lambda: SearchTerm.objects.values("series_id").distinct().count(),
+            force_write=force_write,
+            timeout=timeout
+        ),
+        "samples": _cache_fetch(
+            "site-stats:samples",
+            samples.count,
+            force_write=force_write,
+            timeout=timeout
+        ),
+        "species": _cache_fetch(
+            "site-stats:species",
+            lambda: samples.values(
+                "organism_ch1"
+            ).distinct().count(),
+            force_write=force_write,
+            timeout=timeout
+        ),
+        "technologies": _cache_fetch(
+            "site-stats:technologies",
+            lambda: GEOPlatform.objects.values("technology").distinct().count(),
+            force_write=force_write,
+            timeout=timeout
+        ),
+        "feedback": Feedback.objects.count(),
+    }
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
@@ -657,33 +711,7 @@ def database_statistics(request):
     Accessible at /api/stats/
     """
 
-    search_term_series = SearchTerm.objects.filter(
-        series_id=OuterRef("series_id")
-    )
-
-    samples = GEOSample.objects.annotate(
-        has_search_term=Exists(search_term_series)
-    ).filter(
-        has_search_term=True
-    )
-
-    serializer = DatabaseStatsSerializer({
-        "tissues": _cache_fetch("site-stats:tissues", lambda: SearchTerm.objects.exclude(term__startswith="MONDO:").values("term").distinct().count()),
-        "diseases": _cache_fetch("site-stats:diseases", lambda: SearchTerm.objects.filter(term__startswith="MONDO:").values("term").distinct().count()),
-        "studies": _cache_fetch("site-stats:studies", lambda: SearchTerm.objects.values("series_id").distinct().count()),
-        "samples": _cache_fetch(
-            "site-stats:samples",
-            samples.count,
-        ),
-        "species": _cache_fetch(
-            "site-stats:species",
-            lambda: samples.values(
-                "organism_ch1"
-            ).distinct().count(),
-        ),
-        "technologies": _cache_fetch("site-stats:technologies", lambda: GEOPlatform.objects.values("technology").distinct().count()),
-        "feedback": Feedback.objects.count(),
-    }, many=False)
+    serializer = DatabaseStatsSerializer(database_stats(), many=False)
     return Response(serializer.data)
 
 
