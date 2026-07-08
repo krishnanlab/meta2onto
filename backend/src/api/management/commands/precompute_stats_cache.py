@@ -10,5 +10,5 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         # cache with force_write=True to ensure that the cache is updated
         # also set the timeout to 0 to make the eviction time infinite
-        pprint(database_stats(force_write=True, timeout=0))
+        pprint(database_stats(force_write=True))
         self.stdout.write(self.style.SUCCESS("Stats cache precomputation completed."))
