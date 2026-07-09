@@ -4,10 +4,11 @@ import { request } from "@/api";
 
 const api = `https://api.refine.bio/v1`;
 
+/** https://api.refine.bio/v1/#tag/v1/operation/v1_dataset_create */
 export const dataset = z.object({
   id: z.string().optional(),
   data: z.unknown().optional(),
-  success: z.boolean().optional(),
+  success: z.boolean().optional().nullable(),
   failure_reason: z.string().optional(),
 });
 
