@@ -138,9 +138,9 @@ export default function Cart() {
   const createdCarts = useAtomValue(createdCartsAtom);
 
   /** filter study ids by ones that are in refine.bio */
-  const refineBioStudyIds = studyDetails
-    .filter((study) => "Refine.bio" in study.database)
-    .map((study) => study.id);
+  const refineBioStudyIds = studyDetails.map(
+    (study) => study.database["Refine.bio"]?.external_id ?? "",
+  );
 
   /** total number of samples in refine.bio studies */
   const refineBioSamples = sum(
