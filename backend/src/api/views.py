@@ -4,26 +4,19 @@ import re
 from django.conf import settings
 from django.db import models, transaction
 from django.db.models import (
-    Case,
     Prefetch,
-    TextField,
-    When,
     Value,
     Count,
     OuterRef,
     Subquery,
-    IntegerField,
     CharField,
     F,
-    Q,
     Func,
     Exists,
 )
 from django.db.models.functions import Cast
 from django.http import HttpResponse
 from django.utils.decorators import method_decorator
-from django.views.decorators.cache import cache_page
-from django.core.cache import cache
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
@@ -42,17 +35,15 @@ from .models import (
     GEOSeriesToGEOPlatforms,
     GEOSeriesDatabase,
     SearchSeriesPlatform,
-    SearchSeriesTechnology,
     ExternalDbRefs,
     OntologySearchResults,
     Organism,
-    GEOPlatform,
     SearchTerm,
     OntologyTerms,
     OntologyTermRating,
-    GEOSeries,
     Feedback,
     Facet,
+    SiteStatistic,
 )
 from .serializers import (
     CartSerializer,
@@ -62,11 +53,9 @@ from .serializers import (
     OrganismSerializer,
     GEOPlatformSerializer,
     SearchTermSerializer,
-    GEOSeriesSerializer,
     DatabaseStatsSerializer,
 )
 from .utils.auth import CsrfExemptSessionAuthentication
-from api.utils.query import Array, ArrayAnyEquals
 
 # ===========================================================================
 # === Helpers
@@ -639,79 +628,26 @@ def ontology_search(request):
 # === Database-wide statistics
 # ===========================================================================
 
-def _cache_fetch(key, compute_func, timeout=settings.LONGTERM_CACHE_TIMEOUT, force_write=False):
-    """
-    Fetch a value from the cache, computing and caching it if not present.
-    """
-    value = cache.get(key)
-    if value is None or force_write:
-        value = compute_func()
-        cache.set(key, value, timeout=timeout)
-    return value
-
-def database_stats(force_write=False, timeout=settings.LONGTERM_CACHE_TIMEOUT):
-    search_term_series = SearchTerm.objects.filter(
-        ArrayAnyEquals(
-            F("series_id"),
-            OuterRef("series_set"),
-        )
-    )
-
-    samples = GEOSample.objects.filter(
-        Exists(search_term_series)
-    )
-
-    return {
-        "tissues": _cache_fetch(
-            "site-stats:tissues",
-            lambda: SearchTerm.objects.exclude(term__startswith="MONDO:").values("term").distinct().count(),
-            force_write=force_write,
-            timeout=timeout
-        ),
-        "diseases": _cache_fetch(
-            "site-stats:diseases",
-            lambda: SearchTerm.objects.filter(term__startswith="MONDO:").values("term").distinct().count(),
-            force_write=force_write,
-            timeout=timeout
-        ),
-        "studies": _cache_fetch(
-            "site-stats:studies",
-            lambda: SearchTerm.objects.values("series_id").distinct().count(),
-            force_write=force_write,
-            timeout=timeout
-        ),
-        "samples": _cache_fetch(
-            "site-stats:samples",
-            samples.count,
-            force_write=force_write,
-            timeout=timeout
-        ),
-        "species": _cache_fetch(
-            "site-stats:species",
-            lambda: samples.values(
-                "organism_ch1"
-            ).distinct().count(),
-            force_write=force_write,
-            timeout=timeout
-        ),
-        "technologies": _cache_fetch(
-            "site-stats:technologies",
-            lambda: GEOPlatform.objects.values("technology").distinct().count(),
-            force_write=force_write,
-            timeout=timeout
-        ),
-        "feedback": Feedback.objects.count(),
-    }
-
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def database_statistics(request):
     """
     API endpoint for getting statistics about the database.
     Accessible at /api/stats/
+
+    This endpoint mostly returns the contents of SiteStatistic, which is
+    populated by the populate_site_statistics management command.
     """
 
-    serializer = DatabaseStatsSerializer(database_stats(), many=False)
+    serializer = DatabaseStatsSerializer({
+        "tissues": SiteStatistic.objects.get(name="tissues").value,
+        "diseases": SiteStatistic.objects.get(name="diseases").value,
+        "studies": SiteStatistic.objects.get(name="studies").value,
+        "samples": SiteStatistic.objects.get(name="samples").value,
+        "species": SiteStatistic.objects.get(name="species").value,
+        "technologies": SiteStatistic.objects.get(name="technologies").value,
+        "feedback": Feedback.objects.count(),
+    }, many=False)
     return Response(serializer.data)
 
 

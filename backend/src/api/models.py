@@ -592,6 +592,17 @@ class Facet(models.Model):
 
     def __str__(self):
         return f"{self.name}: {self.value}"
+
+class SiteStatistic(models.Model):
+    """
+    Global statistics for the entire dataset, used to populate the homepage's summary statistics.
+    """
+
+    name = models.CharField(max_length=256, unique=True)
+    value = models.IntegerField()
+
+    def __str__(self):
+        return f"{self.name}: {self.value}"
     
 # ---------------------------------------------------------------------------
 # --- search-related materialized views

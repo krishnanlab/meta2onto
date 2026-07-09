@@ -18,10 +18,6 @@ DJANGO_SUPERUSER_PASSWORD="${DJANGO_ADMIN_PASSWORD}" \
 echo "* Collecting static files"
 ./manage.py collectstatic --noinput
 
-# warm the cache
-echo "* Precomputing stats cache"
-./manage.py precompute_stats_cache
-
 # launch the server
 if [ "$DJANGO_DEBUG" = "1" ] ; then
     echo "* Serving via django runserver (debug mode)"
