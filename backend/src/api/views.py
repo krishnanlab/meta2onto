@@ -707,7 +707,7 @@ class CartViewSet(viewsets.ModelViewSet):
                 series_id = series_data["id"]
                 added_at = series_data.get("added")
                 try:
-                    series = GEOSeries.objects.get(series_id=series_id)
+                    series = GEOSeries.objects.get(gse=series_id)
                     CartItem.objects.create(series=series, added_at=added_at, cart=cart)
                 except GEOSeries.DoesNotExist:
                     continue  # skip invalid series ids
