@@ -27,6 +27,6 @@ export const makeDataset = async (ids: string[], email = "") => {
   } as const;
   const data = await request(url, dataset, options);
   analytics.event("refine.bio_make_dataset", { ids, data });
-  if (!data.success) throw Error(data.failure_reason ?? "Unknown error");
+  if (data.success !== null && !data.success) throw Error(data.failure_reason ?? "Unknown error");
   return data;
 };
