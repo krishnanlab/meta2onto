@@ -33,7 +33,7 @@ class Command(BaseCommand):
                 "tissues": SearchTerm.objects.exclude(term__startswith="MONDO:").values("term").distinct().count(),
                 "diseases": SearchTerm.objects.filter(term__startswith="MONDO:").values("term").distinct().count(),
                 "studies": SearchTerm.objects.values("series_id").distinct().count(),
-                "samples": samples.count,
+                "samples": samples.count(),
                 "species": samples.values("organism_ch1" ).distinct().count(),
                 "technologies": GEOPlatform.objects.values("technology").distinct().count(),
             }
