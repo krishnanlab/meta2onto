@@ -5,7 +5,7 @@ FROM oven/bun:1 AS base
 WORKDIR /app
 
 # Copy package management files
-COPY package.json bun.lock ./
+COPY package.json ./
 
 # Install dependencies using Bun
 RUN bun install

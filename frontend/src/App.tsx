@@ -15,13 +15,14 @@ import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import About from "@/pages/About";
 import Cart from "@/pages/Cart";
+import Help from "@/pages/Help";
 import Home from "@/pages/Home";
 import NotFound from "@/pages/NotFound";
-import Search from "@/pages/Search";
 import Stats from "@/pages/Stats";
+import Studies from "@/pages/Studies";
+import Terms from "@/pages/Terms";
 import Testbed from "@/pages/Testbed";
 import { scrollTo } from "@/util/dom";
-import { redirectPath, redirectState } from "@/util/url";
 
 /** app entrypoint */
 export default function App() {
@@ -33,7 +34,7 @@ export default function App() {
 }
 
 /** route layout */
-const Layout = () => {
+function Layout() {
   /** current route info */
   const { pathname, search, hash } = useLocation();
 
@@ -60,7 +61,7 @@ const Layout = () => {
       <Footer />
     </>
   );
-};
+}
 
 /** route definitions */
 const routes = [
@@ -72,7 +73,18 @@ const routes = [
         index: true,
         element: <Home />,
         loader: async () => {
-          /** handle 404 redirect */
+          /** handle 404 redirect (see 404.html) */
+
+          /** load redirect storage items */
+          const redirectPath = window.sessionStorage.redirectPath || "";
+          const redirectState = JSON.parse(
+            window.sessionStorage.redirectState || "null",
+          );
+
+          /** remove redirect storage items right after consuming */
+          window.sessionStorage.removeItem("redirectPath");
+          window.sessionStorage.removeItem("redirectState");
+
           if (redirectState !== null)
             window.history.replaceState(redirectState, "");
           if (redirectPath) {
@@ -83,17 +95,26 @@ const routes = [
         },
       },
       {
-        path: "search/:search?",
-        element: <Search />,
+        path: "studies/:search?",
+        element: <Studies />,
       },
       {
         path: "about",
         element: <About />,
       },
       {
+        path: "help",
+        element: <Help />,
+      },
+      {
         path: "cart/:id?",
         element: <Cart />,
       },
+      {
+        path: "terms",
+        element: <Terms />,
+      },
+
       {
         path: "testbed",
         element: <Testbed />,

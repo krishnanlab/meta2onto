@@ -1,4 +1,5 @@
-import type { ReactNode } from "react";
+import type { ComponentProps, ReactNode } from "react";
+import { clsx } from "clsx";
 import {
   ChevronLeft,
   ChevronRight,
@@ -28,7 +29,7 @@ type Props = {
   limit: Limit;
   setLimit: (limit: Limit) => void;
   children?: ReactNode;
-};
+} & ComponentProps<"div">;
 
 /** pagination controls */
 export default function Pagination({
@@ -37,10 +38,9 @@ export default function Pagination({
   setOffset,
   limit,
   setLimit,
+  className,
   children,
 }: Props) {
-  if (!count) return null;
-
   const _limit = Number(limit);
   const pages = Math.ceil(count / _limit);
 
@@ -49,72 +49,88 @@ export default function Pagination({
     sleep().then(() => setOffset(Math.floor(offset / _limit) * _limit));
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-8">
+    <div
+      className={clsx(
+        "flex flex-wrap items-center justify-between gap-8",
+        className,
+      )}
+    >
       {/* pagination */}
       <div className="flex items-center">
-        <Button
-          color="none"
-          onClick={() => setOffset(0)}
-          aria-disabled={offset <= 0}
-          aria-label="First page"
-        >
-          <ChevronsLeft />
-        </Button>
-        <Button
-          color="none"
-          onClick={() => setOffset(offset - _limit)}
-          aria-disabled={offset - _limit < 0}
-          aria-label="Previous page"
-        >
-          <ChevronLeft />
-        </Button>
+        {!!count && (
+          <>
+            <Button
+              color="none"
+              onClick={() => setOffset(0)}
+              aria-disabled={offset <= 0}
+              aria-label="First page"
+            >
+              <ChevronsLeft />
+            </Button>
+            <Button
+              color="none"
+              onClick={() => setOffset(offset - _limit)}
+              aria-disabled={offset - _limit < 0}
+              aria-label="Previous page"
+            >
+              <ChevronLeft />
+            </Button>
 
-        <Tooltip
-          content={
-            <>
-              Items {formatNumber(offset + 1)} to{" "}
-              {formatNumber(Math.min(offset + _limit, count))} of{" "}
-              {formatNumber(count)}
-            </>
-          }
-        >
-          <div className="px-2">
-            Page {formatNumber(offset / _limit + 1)} of {formatNumber(pages)}
-          </div>
-        </Tooltip>
+            <Tooltip
+              content={
+                <>
+                  Items {formatNumber(offset + 1)} to{" "}
+                  {formatNumber(Math.min(offset + _limit, count))} of{" "}
+                  {formatNumber(count)}
+                </>
+              }
+            >
+              <div className="px-2">
+                Page {formatNumber(offset / _limit + 1)} of{" "}
+                {formatNumber(pages)}
+              </div>
+            </Tooltip>
 
-        <Button
-          color="none"
-          onClick={() => setOffset(offset + _limit)}
-          aria-disabled={offset + _limit >= count}
-          aria-label="Next page"
-        >
-          <ChevronRight />
-        </Button>
-        <Button
-          color="none"
-          onClick={() => setOffset((Math.ceil(count / _limit) - 1) * _limit)}
-          aria-disabled={offset + _limit >= count}
-          aria-label="Last page"
-        >
-          <ChevronsRight />
-        </Button>
+            <Button
+              color="none"
+              onClick={() => setOffset(offset + _limit)}
+              aria-disabled={offset + _limit >= count}
+              aria-label="Next page"
+            >
+              <ChevronRight />
+            </Button>
+            <Button
+              color="none"
+              onClick={() =>
+                setOffset((Math.ceil(count / _limit) - 1) * _limit)
+              }
+              aria-disabled={offset + _limit >= count}
+              aria-label="Last page"
+            >
+              <ChevronsRight />
+            </Button>
+          </>
+        )}
       </div>
 
       {children}
 
       {/* filters */}
       <div>
-        {/* per page */}
-        <Select
-          label="Per page"
-          value={
-            limitOptions.find((option) => option.value === limit)?.value ??
-            limitOptions[1].value
-          }
-          options={limitOptions}
-          onChange={(value) => setLimit(value)}
-        />
+        {!!count && (
+          <>
+            {/* per page */}
+            <Select
+              label="Per page"
+              value={
+                limitOptions.find((option) => option.value === limit)?.value ??
+                limitOptions[1].value
+              }
+              options={limitOptions}
+              onChange={(value) => setLimit(value)}
+            />
+          </>
+        )}
       </div>
     </div>
   );

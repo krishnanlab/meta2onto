@@ -1,0 +1,33 @@
+import analytics from "react-ga4";
+import * as z from "zod";
+import { request } from "@/api";
+
+const api = `https://api.refine.bio/v1`;
+
+/** https://api.refine.bio/v1/#tag/v1/operation/v1_dataset_create */
+export const dataset = z.object({
+  id: z.string().optional(),
+  data: z.unknown().optional(),
+  success: z.boolean().optional().nullable(),
+  failure_reason: z.string().optional(),
+});
+
+/** export cart of studies to refine.bio dataset */
+export const makeDataset = async (ids: string[], email = "") => {
+  const url = new URL(`${api}/dataset/`);
+  const options = {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: {
+      data: Object.fromEntries(ids.map((id) => [id, ["ALL"]])),
+      email_address: email,
+      email_ccdl_ok: !!email,
+      notify_me: !!email,
+      start: false,
+    },
+  } as const;
+  const data = await request(url, dataset, options);
+  analytics.event("refine.bio_make_dataset", { ids, data });
+  if (data.success === true || data.success === null) return data;
+  throw Error(data.failure_reason ?? "Unknown error");
+};

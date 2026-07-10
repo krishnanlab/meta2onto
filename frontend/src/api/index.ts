@@ -35,11 +35,12 @@ export async function request<Response>(
   if (body) rawOptions.body = JSON.stringify(body);
   /** set headers */
   rawOptions.headers = new Headers(rawOptions.headers);
-  /** include uuid in all requests */
-  rawOptions.headers.set("x-user-uuid", uuid);
+  /** include uuid in all requests to backend */
+  if (url.hostname === new URL(api).hostname)
+    rawOptions.headers.set("x-user-uuid", uuid);
   /** construct request */
   const request = new Request(url, rawOptions);
-  console.debug(`📞 Request ${url}`, { options, request });
+  console.debug(`📞 Request ${url}`, { rawOptions, request });
   /** make request */
   const response = await fetch(request);
   /** capture error for throwing later */
@@ -59,7 +60,9 @@ export async function request<Response>(
   try {
     schema.parse(parsed);
   } catch (e) {
-    error = `Validation error: ${(e as z.ZodError).message}`;
+    console.groupCollapsed("Validation error");
+    console.error((e as z.ZodError).message);
+    console.groupEnd();
   }
   console.debug(`📣 Response ${url}`, { parsed, response });
   /** throw error after details have been logged */

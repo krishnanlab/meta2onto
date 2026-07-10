@@ -55,9 +55,7 @@ export default function Autocomplete({
             <input
               ref={inputRef}
               placeholder={placeholder}
-              className="
-                w-full rounded-sm border border-current/25 bg-white p-2 pr-8
-              "
+              className="w-full rounded-md border border-current/25 bg-white p-2 pr-8"
             />
           }
         />
@@ -66,12 +64,7 @@ export default function Autocomplete({
 
       <_Autocomplete.Portal>
         <_Autocomplete.Positioner collisionPadding={padding}>
-          <_Autocomplete.Popup
-            className="
-              flex max-h-(--available-height) w-(--anchor-width) grow flex-col
-              overflow-y-auto rounded-sm bg-white shadow-thick
-            "
-          >
+          <_Autocomplete.Popup className="flex max-h-(--available-height) w-(--anchor-width) grow flex-col overflow-y-auto rounded-md bg-white shadow-thick">
             {status && (
               <_Autocomplete.Status className="flex items-center gap-2 p-2">
                 {status}
@@ -83,10 +76,7 @@ export default function Autocomplete({
                   <_Autocomplete.Item
                     key={index}
                     value={tag.value}
-                    className="
-                      flex cursor-pointer items-center gap-2 p-2
-                      data-highlighted:bg-theme/10
-                    "
+                    className="flex cursor-pointer items-center gap-2 p-2 data-highlighted:bg-theme/10"
                     onClick={(event) => {
                       event.preventDefault();
                       /** select option */

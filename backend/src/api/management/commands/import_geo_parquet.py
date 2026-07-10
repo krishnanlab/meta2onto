@@ -181,7 +181,7 @@ def import_ids_level_sample(path: Path, batch_size: int = DEFAULT_BATCH_SIZE):
                 # check if the GEOSeries exists; create if not
                 if row["series"] not in series_set:
                     series_set.add(row["series"])
-                    GEOSeries.objects.get_or_create(series_id=row["series"])
+                    GEOSeries.objects.get_or_create(gse=row["series"])
 
             OrganismForPairing.objects.bulk_create(
                 [

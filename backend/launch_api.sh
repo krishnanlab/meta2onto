@@ -24,5 +24,5 @@ if [ "$DJANGO_DEBUG" = "1" ] ; then
     ./manage.py runserver 0.0.0.0:8000
 else
     echo "* Serving via gunicorn (production mode)"
-    gunicorn meta2onto.wsgi:application --bind 0.0.0.0:8000 --workers 3
+    gunicorn meta2onto.wsgi:application --bind 0.0.0.0:8000 --workers ${WEB_WORKERS:-4} --timeout ${WORKER_TIMEOUT:-60}
 fi

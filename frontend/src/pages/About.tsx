@@ -1,13 +1,9 @@
-import { Trash2 } from "lucide-react";
+import { ArrowUpRight, Mail } from "lucide-react";
 import Button from "@/components/Button";
-import Heading from "@/components/Heading";
+import { H1, H2 } from "@/components/Heading";
+import Link from "@/components/Link";
 import Meta from "@/components/Meta";
-
-const clearWarning = `
-Clear all ${import.meta.env.VITE_TITLE} info saved on this device? No undo.
-
-(Does not affect info already sent to us, such as previously submitted feedback.)
-`;
+import { formatNumber } from "@/util/string";
 
 export default function About() {
   return (
@@ -15,45 +11,91 @@ export default function About() {
       <Meta title="About" />
 
       <section className="bg-theme-light">
-        <Heading level={1}>About</Heading>
+        <H1>About</H1>
       </section>
 
       <section>
-        <Button
-          className="self-center"
-          color="accent"
-          onClick={() => {
-            if (window.confirm(clearWarning)) {
-              window.localStorage.clear();
-              window.location.reload();
-            }
-          }}
-        >
-          <Trash2 />
-          Clear Local Data
+        <p>
+          <strong>Meta2Onto</strong> is a web app to search through over{" "}
+          {formatNumber(280000)} predicted standardized tissue and disease
+          annotations for studies in the{" "}
+          <Link to="https://www.ncbi.nlm.nih.gov/geo/">
+            Gene Expression Omnibus
+          </Link>{" "}
+          (GEO). We predict standardized annotations using our text-based
+          machine learning framework <strong>txt2onto</strong>, which trains
+          simple machine learning classifiers to learn biomedical words that are
+          relevant to a particular tissue or disease.
+        </p>
+
+        <Button to={import.meta.env.VITE_TXT2ONTO} className="self-center">
+          Learn more about txt2onto
+          <ArrowUpRight />
         </Button>
       </section>
 
       <section>
+        <H2>Feedback</H2>
+
         <p>
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
-          eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad
-          minim veniam, quis nostrud exercitation ullamco laboris nisi ut
-          aliquip ex ea commodo consequat. Duis aute irure dolor in
-          reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla
-          pariatur. Excepteur sint occaecat cupidatat non proident, sunt in
-          culpa qui officia deserunt mollit anim id est laborum.
+          Next to each prediction you'll see thumbs-up and thumbs-down buttons.
+          Click the thumbs up to tell us you think the prediction is correct and
+          the thumbs down to tell us you think the prediction is incorrect and
+          elaborate on why. We greatly appreciate any feedback you provide.
         </p>
 
         <p>
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
-          eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad
-          minim veniam, quis nostrud exercitation ullamco laboris nisi ut
-          aliquip ex ea commodo consequat. Duis aute irure dolor in
-          reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla
-          pariatur. Excepteur sint occaecat cupidatat non proident, sunt in
-          culpa qui officia deserunt mollit anim id est laborum.
+          We use this feedback internally to identify strengths and weak points
+          in our prediction models and improve them in future releases. See our{" "}
+          <Link to="#privacy">Privacy Policy</Link> for more info. To give
+          feedback on other aspects of Meta2Onto, please{" "}
+          <Link to="#contact">contact us</Link>.
         </p>
+      </section>
+
+      <section>
+        <H2>Metadata</H2>
+
+        <p>
+          We pull GEO metadata from{" "}
+          <Link to="https://github.com/omicidx">OmicIDX</Link>, a cloud-based
+          platform storing easily queryable and intelligently structured
+          metadata for samples and studies in GEO, SRA, BioSamples, and
+          Bioprojects.
+        </p>
+      </section>
+
+      <section>
+        <H2>Cite</H2>
+
+        <blockquote>
+          title
+          <br />
+          authors
+          <br />
+          other
+        </blockquote>
+      </section>
+
+      <section>
+        <H2>Funding</H2>
+
+        <p>
+          Meta2Onto is funded in part by funds from the National Science
+          Foundation (NSF BIO 2328140).
+        </p>
+      </section>
+
+      <section>
+        <H2>Contact</H2>
+
+        <Button
+          to={`mailto:${import.meta.env.VITE_EMAIL}`}
+          className="self-center"
+        >
+          <Mail />
+          Arjun Krishnan
+        </Button>
       </section>
     </>
   );
