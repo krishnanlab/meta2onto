@@ -6,7 +6,6 @@ import Button from "@/components/Button";
 type Props = {
   children: ReactElement<Record<string, unknown>>;
   title: ReactNode;
-  subtitle?: ReactNode;
   content: ReactNode;
   bottom?: ReactNode;
   onOpen?: () => void;
@@ -16,7 +15,6 @@ type Props = {
 export default function Dialog({
   children,
   title,
-  subtitle,
   content,
   bottom,
   onOpen,
@@ -34,14 +32,12 @@ export default function Dialog({
           <div className="pointer-events-auto flex max-h-full min-h-0 max-w-full min-w-0 flex-col rounded-md bg-white">
             <div className="flex items-start gap-4 p-4 shadow-md">
               <div className="flex grow flex-col justify-start">
-                <_Dialog.Title className="justify-start text-left">
+                <_Dialog.Title className="justify-start text-left normal-case">
                   {title}
                 </_Dialog.Title>
-                {subtitle && (
-                  <_Dialog.Description className="text-stone-500">
-                    {subtitle}
-                  </_Dialog.Description>
-                )}
+                <_Dialog.Description className="sr-only">
+                  {title}
+                </_Dialog.Description>
               </div>
               <_Dialog.Close render={<Button color="none" />}>
                 <X />

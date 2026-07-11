@@ -12,7 +12,7 @@ import { useDebounce } from "@reactuses/core";
 import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
 import clsx from "clsx";
 import { useAtomValue } from "jotai";
-import { isEmpty, size, upperFirst } from "lodash";
+import { isEmpty, size, uniq, upperFirst } from "lodash";
 import {
   Calendar,
   Check,
@@ -57,7 +57,7 @@ import { addToCart, cartAtom, inCart, removeFromCart } from "@/state/cart";
 import { clearFeedback, feedbackAtom, setFeedback } from "@/state/feedback";
 import { fly } from "@/util/dom";
 import { useChanged, useDebouncedParams } from "@/util/hooks";
-import { formatDate, formatNumber } from "@/util/string";
+import { formatDate, formatNumber, likelyDate } from "@/util/string";
 
 /** don't show feedback if confidence below this */
 const feedbackThreshold = 0.75;
@@ -535,10 +535,9 @@ function Result({
           <Dialog
             title={
               <span>
-                Samples for <strong>{id}</strong>
+                Samples for <strong>{id}</strong>, {name}
               </span>
             }
-            subtitle={name}
             content={<SamplesPopup id={id} />}
             onOpen={() => analytics.event("view_samples")}
           >
@@ -737,7 +736,7 @@ function SamplesPopup({ id }: SamplesPopupProps) {
   const search = useDebounce(_search, 500);
   const [ordering, setOrdering] = useState<ColumnSort>({ id: "", desc: true });
   const [offset, setOffset] = useState(0);
-  const [limit, setLimit] = useState<Limit>("10");
+  const [limit, setLimit] = useState<Limit>("5");
 
   const query = useQuery({
     queryKey: ["studySamples", id, search, ordering, offset, limit],
@@ -759,8 +758,10 @@ function SamplesPopup({ id }: SamplesPopupProps) {
   const counts: Record<string, Record<string, number>> = {};
   for (const row of results)
     for (let [key, value] of Object.entries(row)) {
+      if (!value) continue;
       counts[key] ??= {};
-      value = value ? String(value) : "-";
+      value = String(value) || "-";
+      if (typeof value !== "string") continue;
       counts[key][value] = (counts[key][value] || 0) + 1;
     }
 
@@ -774,39 +775,39 @@ function SamplesPopup({ id }: SamplesPopupProps) {
       }),
   );
 
-  /** whether to show extra columns */
-  const [allCols, setAllCols] = useState(false);
-
-  const baseCols: Col<Sample>[] = [
-    { key: "id", name: "ID" },
-    { key: "type", name: "Type" },
-    { key: "description", name: "Description" },
-  ];
-
-  const extraCols: Col<Sample>[] = [
-    {
-      key: "submission_date",
-      name: "Created At",
-      render: (cell) => (cell ? formatDate(cell) : "-"),
-    },
-    {
-      key: "last_update_date",
-      name: "Updated At",
-      render: (cell) => (cell ? formatDate(cell) : "-"),
-    },
-  ];
-
-  const cols = allCols ? [...baseCols, ...extraCols] : baseCols;
+  const cols: Col<Sample>[] = uniq(
+    results.flatMap((result) => Object.keys(result)),
+  ).map((key) => ({
+    key,
+    name: keyToLabel(key),
+    render: (cell: unknown) => (
+      <div className="truncate-lines" tabIndex={0}>
+        {cell === null || cell === undefined
+          ? "-"
+          : typeof cell === "string" && likelyDate(cell)
+            ? formatDate(cell)
+            : String(cell) || "-"}
+      </div>
+    ),
+  }));
 
   return (
     <>
-      <H3 className="justify-start">Common Sample Details</H3>
+      <div className="flex items-baseline gap-4">
+        <H3>Common</H3>
+        <span className="text-stone-500">
+          (details that are same for all samples)
+        </span>
+      </div>
+
       {!isEmpty(common) ? (
         <dl>
           {Object.entries(common).map(([key, value]) => (
             <Fragment key={key}>
-              <dt>{upperFirst(key)}</dt>
-              <dd>{value}</dd>
+              <dt>{keyToLabel(key)}</dt>
+              <dd className="truncate-lines" tabIndex={0}>
+                {value}
+              </dd>
             </Fragment>
           ))}
         </dl>
@@ -814,7 +815,11 @@ function SamplesPopup({ id }: SamplesPopupProps) {
         "-"
       )}
 
-      <H3 className="justify-start">Individual Sample Details</H3>
+      <div className="flex items-baseline gap-4">
+        <H3>All</H3>
+        <span className="text-stone-500">(all samples, all details)</span>
+      </div>
+
       <div className="relative">
         <Status query={query} className="absolute inset-0 opacity-90" />
         <Table
@@ -825,6 +830,7 @@ function SamplesPopup({ id }: SamplesPopupProps) {
           onSort={setOrdering}
           page={offset}
           perPage={Number(limit)}
+          grow
         />
       </div>
 
@@ -836,9 +842,6 @@ function SamplesPopup({ id }: SamplesPopupProps) {
         limit={limit}
         setLimit={setLimit}
       >
-        <Checkbox value={allCols} onChange={setAllCols}>
-          All columns
-        </Checkbox>
         <Textbox
           value={_search}
           onChange={setSearch}
@@ -849,3 +852,13 @@ function SamplesPopup({ id }: SamplesPopupProps) {
     </>
   );
 }
+
+/** make nice label from key */
+const keyToLabel = (key: string) => {
+  key = key.replaceAll("_", " ");
+  key = upperFirst(key);
+  key = key.replaceAll(/\b(gsm|id|gpl|ch\d+)\b/gi, (match) =>
+    match.toUpperCase(),
+  );
+  return key;
+};

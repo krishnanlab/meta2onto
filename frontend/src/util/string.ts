@@ -17,6 +17,9 @@ export const formatNumber = (value: number | undefined, compact = false) => {
   return value.toLocaleString(undefined, options).toLowerCase();
 };
 
+/** is string likely a date */
+export const likelyDate = (value: string) => value.match(/^\d{4}-\d{2}-\d{2}/);
+
 /** parse date string with fallback */
 export const parseDate = (date: string | Date | undefined) => {
   if (!date) return null;

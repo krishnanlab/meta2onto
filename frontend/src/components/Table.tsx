@@ -22,7 +22,7 @@ import clsx from "clsx";
 import { ArrowUpDown, MoveDown, MoveUp } from "lucide-react";
 import Button from "@/components/Button";
 import Tooltip from "@/components/Tooltip";
-import { formatDate, formatNumber } from "@/util/string";
+import { formatDate, formatNumber, likelyDate } from "@/util/string";
 
 type Props<Datum extends object> = {
   cols: readonly _Col<Datum>[];
@@ -34,6 +34,7 @@ type Props<Datum extends object> = {
   perPage?: PaginationState["pageSize"];
   onPerPage?: (perPage: PaginationState["pageSize"]) => void;
   className?: string;
+  grow?: boolean;
 };
 
 export type Col<
@@ -71,6 +72,7 @@ export default function Table<Datum extends object>({
   perPage,
   onPerPage,
   className,
+  grow = false,
 }: Props<Datum>) {
   "use no memo";
 
@@ -146,7 +148,12 @@ export default function Table<Datum extends object>({
                 {headerGroup.headers.map((header, index) => (
                   <th key={header.id} aria-colindex={index + 1}>
                     {header.isPlaceholder ? null : (
-                      <div className="flex items-center gap-2 p-2">
+                      <div
+                        className={clsx(
+                          "flex items-center gap-2 p-2",
+                          grow && "w-max max-w-200",
+                        )}
+                      >
                         {/* header label */}
                         <span>
                           {flexRender(
@@ -209,7 +216,12 @@ export default function Table<Datum extends object>({
                       );
                     return (
                       <td key={cell.id}>
-                        <div className="flex flex-wrap items-center gap-2 p-2">
+                        <div
+                          className={clsx(
+                            "flex flex-wrap items-center gap-2 p-2",
+                            grow && "w-max max-w-200",
+                          )}
+                        >
                           {render}
                         </div>
                       </td>
@@ -238,7 +250,8 @@ const defaultFormat = (cell: unknown) => {
   /** if falsey (except 0 and false) */
   if (!cell) return "-";
   if (Array.isArray(cell)) return cell.length.toLocaleString();
-  if (cell instanceof Date) return formatDate(cell);
+  if (cell instanceof Date || (typeof cell === "string" && likelyDate(cell)))
+    return formatDate(cell);
   if (typeof cell === "object")
     return Object.keys(cell).length.toLocaleString();
   if (typeof cell === "string") return cell;
