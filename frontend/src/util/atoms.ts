@@ -2,6 +2,7 @@ import type { Atom, PrimitiveAtom } from "jotai";
 import type z from "zod";
 import { getDefaultStore } from "jotai";
 import { atomWithStorage } from "jotai/vanilla/utils";
+import { debounce } from "lodash";
 
 /** get atom util func */
 export const getAtom = <Value>(atom: Atom<Value>) =>
@@ -45,7 +46,10 @@ export const storageAtom = <Schema extends z.ZodType>(
           return initial;
         }
       },
-      setItem: (key, value) => localStorage.setItem(key, JSON.stringify(value)),
+      setItem: debounce(
+        (key, value) => localStorage.setItem(key, JSON.stringify(value)),
+        500,
+      ),
       removeItem: localStorage.removeItem,
     },
     { getOnInit: true },

@@ -781,7 +781,7 @@ function SamplesPopup({ id }: SamplesPopupProps) {
     key,
     name: keyToLabel(key),
     render: (cell: unknown) => (
-      <div className="truncate-lines" tabIndex={0}>
+      <div className="truncate-lines [--lines:2]" tabIndex={0}>
         {cell === null || cell === undefined
           ? "-"
           : typeof cell === "string" && likelyDate(cell)
@@ -805,7 +805,7 @@ function SamplesPopup({ id }: SamplesPopupProps) {
           {Object.entries(common).map(([key, value]) => (
             <Fragment key={key}>
               <dt>{keyToLabel(key)}</dt>
-              <dd className="truncate-lines" tabIndex={0}>
+              <dd className="truncate-lines [--lines:2]" tabIndex={0}>
                 {value}
               </dd>
             </Fragment>

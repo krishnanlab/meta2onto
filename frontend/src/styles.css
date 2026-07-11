@@ -198,8 +198,9 @@
 }
 
 @utility truncate-lines {
+  --lines: 3;
   &:not(:focus) {
-    @apply line-clamp-3 max-w-full cursor-zoom-in overflow-hidden;
+    @apply line-clamp-(--lines) max-w-full cursor-zoom-in overflow-hidden;
   }
 
   &:focus {

@@ -32,14 +32,17 @@ export default function Dialog({
           <div className="pointer-events-auto flex max-h-full min-h-0 max-w-full min-w-0 flex-col rounded-md bg-white">
             <div className="flex items-start gap-4 p-4 shadow-md">
               <div className="flex grow flex-col justify-start">
-                <_Dialog.Title className="justify-start text-left normal-case">
+                <_Dialog.Title
+                  className="truncate-lines justify-start text-left normal-case [--lines:1]"
+                  tabIndex={0}
+                >
                   {title}
                 </_Dialog.Title>
                 <_Dialog.Description className="sr-only">
                   {title}
                 </_Dialog.Description>
               </div>
-              <_Dialog.Close render={<Button color="none" />}>
+              <_Dialog.Close render={<Button color="none" />} autoFocus>
                 <X />
               </_Dialog.Close>
             </div>
