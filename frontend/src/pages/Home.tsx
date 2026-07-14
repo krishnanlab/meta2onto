@@ -28,6 +28,7 @@ import { getStats, ontologySearch } from "@/api/api";
 import { performanceColor, typeColor } from "@/api/maps";
 import Autocomplete from "@/components/Autocomplete";
 import { H2 } from "@/components/Heading";
+import Link from "@/components/Link";
 import Pill from "@/components/Pill";
 import Rings from "@/components/Rings";
 import Status, { showStatus } from "@/components/Status";
@@ -35,6 +36,8 @@ import { Highlight } from "@/pages/Studies";
 import { addSearch, getHistory } from "@/state/search";
 import { useChanged } from "@/util/hooks";
 import { formatNumber } from "@/util/string";
+
+const { VITE_REPO: repo } = import.meta.env;
 
 /** example searches */
 const examples: Ontologies = [
@@ -87,6 +90,13 @@ export default function Home() {
         </hgroup>
 
         <SearchBox />
+
+        <p>
+          <span className="mr-2 rounded-full bg-indigo-500 px-2 py-1 tracking-wide text-white">
+            BETA
+          </span>
+          <Link to={`${repo}/issues`}>Please give us feedback</Link>
+        </p>
       </section>
 
       <section>
