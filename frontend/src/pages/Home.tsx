@@ -103,6 +103,49 @@ export default function Home() {
           <Link to={`${repo}/issues`}>Please give us feedback</Link>
         </p>
       </section>
+	  
+      <section>
+        <H2 className="sr-only">Stats</H2>
+
+        <div className="grid grid-cols-6 gap-8 self-center max-lg:grid-cols-3 max-md:grid-cols-3 max-sm:grid-cols-2">
+          <Tile
+            Icon={Brain}
+            title={formatNumber(stats?.tissues)}
+            description="tissues"
+          />
+          <Tile
+            Icon={HeartPulse}
+            title={formatNumber(stats?.diseases)}
+            description="diseases"
+          />
+          <Tile
+            Icon={Microscope}
+            title={formatNumber(stats?.studies)}
+            description="studies"
+          />
+          <Tile
+            Icon={Pipette}
+            title={formatNumber(stats?.samples)}
+            description="samples"
+          />
+          <Tile
+            Icon={Rat}
+            title={formatNumber(stats?.species)}
+            description="species"
+          />
+          <Tile
+            Icon={Wrench}
+            title={formatNumber(stats?.technologies)}
+            description="technologies"
+          />
+          {/* re-enable when we have more to brag about */}
+          {/* <Tile
+            Icon={ThumbsUp}
+            title={formatNumber(stats?.feedback)}
+            description="user feedback"
+          /> */}
+        </div>
+      </section>
 
       <section>
         <H2 className="sr-only">How it works</H2>
@@ -176,49 +219,6 @@ export default function Home() {
             title="Standardized"
             description="We standardize annotations to biomedical ontologies, ensuring consistency and interoperability across studies"
           />
-        </div>
-      </section>
-
-      <section>
-        <H2 className="sr-only">Stats</H2>
-
-        <div className="grid grid-cols-6 gap-8 self-center max-lg:grid-cols-3 max-md:grid-cols-3 max-sm:grid-cols-2">
-          <Tile
-            Icon={Brain}
-            title={formatNumber(stats?.tissues)}
-            description="tissues"
-          />
-          <Tile
-            Icon={HeartPulse}
-            title={formatNumber(stats?.diseases)}
-            description="diseases"
-          />
-          <Tile
-            Icon={Microscope}
-            title={formatNumber(stats?.studies)}
-            description="studies"
-          />
-          <Tile
-            Icon={Pipette}
-            title={formatNumber(stats?.samples)}
-            description="samples"
-          />
-          <Tile
-            Icon={Rat}
-            title={formatNumber(stats?.species)}
-            description="species"
-          />
-          <Tile
-            Icon={Wrench}
-            title={formatNumber(stats?.technologies)}
-            description="technologies"
-          />
-          {/* re-enable when we have more to brag about */}
-          {/* <Tile
-            Icon={ThumbsUp}
-            title={formatNumber(stats?.feedback)}
-            description="user feedback"
-          /> */}
         </div>
       </section>
     </>
