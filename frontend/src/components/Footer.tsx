@@ -9,6 +9,9 @@ export default function Footer() {
       <Link to="/terms" className="text-white">
         Terms and Conditions
       </Link>
+      <Link to="https://www.thekrishnanlab.org" className="text-white">
+        TKrishnanLab Website
+      </Link>
     </footer>
   );
 }
