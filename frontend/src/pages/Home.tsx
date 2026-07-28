@@ -79,6 +79,11 @@ export default function Home() {
         <hgroup className="flex flex-col items-center gap-y-1 width-sm">
           <h1 className="sr-only">Home</h1>
 
+          <p className="text-4xl font-medium tracking-wide text-balance">
+            Meta2Onto
+          </p>
+
+
           <p className="text-2xl font-medium tracking-wide text-balance">
             Discover, Collect, Reuse
           </p>
