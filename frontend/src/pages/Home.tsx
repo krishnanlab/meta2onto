@@ -80,7 +80,7 @@ export default function Home() {
           <h1 className="sr-only">Home</h1>
 
           <p className="text-2xl font-medium tracking-wide text-balance">
-            Discovery, Collect, Reuse
+            Discover, Collect, Reuse
           </p>
 
           <p className="text-balance">
