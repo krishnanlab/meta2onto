@@ -107,7 +107,7 @@ export default function Home() {
       <section>
         <H2 className="sr-only">Stats</H2>
 
-        <div className="grid grid-cols-6 gap-8 self-center max-lg:grid-cols-3 max-md:grid-cols-3 max-sm:grid-cols-2">
+        <div className="grid grid-cols-6 gap-8 self-center max-lg:grid-cols-3 max-md:grid-cols-3 max-sm:grid-cols-2 &>svg]:size-20 [&>svg]:self-center">
           <Tile
             Icon={Brain}
             title={formatNumber(stats?.tissues)}
