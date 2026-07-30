@@ -870,6 +870,12 @@ class CartItem(models.Model):
 
     series = models.ForeignKey(GEOSeries, on_delete=models.CASCADE)
     added_at = models.DateTimeField(null=True, blank=True)
+
+    # the user's query at the time of adding to the cart
+    search = models.CharField(null=True, blank=True)
+    # the ontology term that they selected at the time of adding to the cart
+    term = models.CharField(null=True, blank=True)
+
     cart = models.ForeignKey(
         "Cart", null=True, blank=True, on_delete=models.CASCADE, related_name="items"
     )
