@@ -24,20 +24,20 @@ export const ontologySearch = async (search: string) => {
 
 /** search for studies and get full details */
 export const studySearch = async ({
-  search = "",
+  term = "",
   ordering = "",
   offset = 0,
   limit = 100,
   facets = {} as Record<string, string[]>,
 }) => {
   const url = new URL(`${api}/study/search/`);
-  url.searchParams.set("query", search);
+  url.searchParams.set("query", term);
   url.searchParams.set("ordering", ordering);
   url.searchParams.set("offset", String(offset));
   url.searchParams.set("limit", String(limit));
   for (const [facet, values] of Object.entries(facets))
     for (const value of values) url.searchParams.append(facet, value);
-  analytics.event("study_search", { search, ordering, facets });
+  analytics.event("study_search", { term, ordering, facets });
   const data = await request(url, studies);
   return data;
 };

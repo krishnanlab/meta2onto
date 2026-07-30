@@ -95,7 +95,7 @@ const routes = [
         },
       },
       {
-        path: "studies/:search?",
+        path: "studies/:term?",
         element: <Studies />,
       },
       {
