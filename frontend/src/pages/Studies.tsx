@@ -208,9 +208,9 @@ function Filters({
     <div className="flex w-60 flex-col gap-8 max-md:w-full max-md:flex-row max-md:flex-wrap max-md:items-start">
       {/* overview */}
       <dl className="w-full">
-        <dt className="text-sm text-stone-500">Raw Search</dt>
+        <dt className="text-sm text-stone-500">Search</dt>
         <dd className="text-sm text-stone-500">"{raw}"</dd>
-        <dt>Selection</dt>
+        <dt>Term</dt>
         <dd>
           {type && <Pill value={type} color={typeColor} />} {name} {term}
         </dd>
@@ -223,7 +223,7 @@ function Filters({
             className="w-full"
           />
         </dd>
-        <dt>Results</dt>
+        <dt>Studies</dt>
         <dd>{count ? formatNumber(count) : "-"}</dd>
 
         {!newSearch && (
@@ -359,7 +359,7 @@ function Results({ setParams, offset, limit, query }: ResultsProps) {
 
       {/* results */}
       {results.map((result, index) => (
-        <Result key={index} {...result} />
+        <Result key={index} query={query} {...result} />
       ))}
 
       {/* pagination */}
@@ -378,6 +378,7 @@ function Results({ setParams, offset, limit, query }: ResultsProps) {
 
 /** search result */
 function Result({
+  query,
   id,
   name,
   description,
@@ -389,9 +390,16 @@ function Result({
   classification,
   organisms,
   keywords,
-}: Study) {
+}: Study & { query: UseQueryResult<Studies> }) {
   /** current cart state */
   const cart = useAtomValue(cartAtom);
+
+  /** url search params state */
+  const [params] = useDebouncedParams();
+  const raw = params.get("raw") ?? "";
+
+  /** destructure query */
+  const { meta: { term = "" } = {} } = query.data ?? {};
 
   /** feedback for this study */
   const feedback = useAtomValue(feedbackAtom)[id];
@@ -571,7 +579,7 @@ function Result({
                 analytics.event("remove_from_cart", { id });
                 if (cartRef) fly(cartRef, event.currentTarget);
               } else {
-                addToCart(id);
+                addToCart(id, raw, term);
                 analytics.event("add_to_cart", { id });
                 if (cartRef) fly(event.currentTarget, cartRef);
               }

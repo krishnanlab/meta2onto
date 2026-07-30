@@ -1,5 +1,5 @@
 import type { Feedback } from "@/api/types";
-import type { ShareCart } from "@/state/cart";
+import type { LocalCart, ShareCart } from "@/state/cart";
 import analytics from "react-ga4";
 import z from "zod";
 import { api, request } from "@/api";
@@ -122,7 +122,7 @@ export const shareCart = async (shareCart: ShareCart) => {
 
 /** download cart data */
 export const downloadCart = async (
-  ids: string[],
+  localCart: LocalCart,
   filename: string,
   type: string,
 ) => {
@@ -132,10 +132,10 @@ export const downloadCart = async (
   const options = {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: { ids },
+    body: { localCart },
     parse: "blob",
   } as const;
-  analytics.event("download_cart", { ids, filename, type });
+  analytics.event("download_cart", { localCart, filename, type });
   const data = await request(url, z.instanceof(Blob), options);
   if (type === "csv") downloadBlob(data, filename, "csv");
   if (type === "json") downloadBlob(data, filename, "json");

@@ -264,7 +264,7 @@ export default function Cart() {
                         <>
                           <ActionButton
                             onClick={() =>
-                              downloadCart(studyIds, name || "cart", "csv")
+                              downloadCart(localCart, name || "cart", "csv")
                             }
                           >
                             <Table2 />
@@ -273,7 +273,7 @@ export default function Cart() {
 
                           <ActionButton
                             onClick={() =>
-                              downloadCart(studyIds, name || "cart", "json")
+                              downloadCart(localCart, name || "cart", "json")
                             }
                           >
                             <Braces />
@@ -409,9 +409,16 @@ export default function Cart() {
                       key: "database",
                       name: "Databases",
                       render: (database) =>
-                        Object.keys(database).map((database, index) => (
-                          <Database key={index} database={database} />
-                        )),
+                        Object.entries(database).map(
+                          ([database, { url, external_id }], index) => (
+                            <Database
+                              key={index}
+                              database={database}
+                              link={url || ""}
+                              externalId={external_id || ""}
+                            />
+                          ),
+                        ),
                     },
                     {
                       key: "added",
@@ -487,7 +494,7 @@ export default function Cart() {
               <Button
                 className="self-center"
                 onClick={() =>
-                  window.confirm("Clear created carts? Cannot be undone.") &&
+                  window.confirm("Clear created carts? No undo.") &&
                   clearCreatedCarts()
                 }
               >
@@ -513,7 +520,7 @@ function Clear({ size }: ClearProps) {
       color="accent"
       aria-disabled={!size}
       onClick={() => {
-        if (window.confirm("Clear cart? Cannot be undone.")) clearCart();
+        if (window.confirm("Clear cart? No undo.")) clearCart();
       }}
     >
       <Trash />
