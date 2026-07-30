@@ -41,10 +41,41 @@ const getUrl = (
         data instanceof Blob ? data : new Blob([data], { type }),
       );
 
-/** download blob as file */
-export const downloadBlob = (data: Blob, filename: string, ext: string) =>
-  download(getUrl(data), filename, ext);
+/** download data as json file */
+export const downloadJson = (data: unknown, filename: string) =>
+  download(
+    getUrl(JSON.stringify(data, null, 2), "application/json;charset=utf-8"),
+    filename,
+    "json",
+  );
 
-/** download string as text file */
-export const downloadTxt = (data: string, filename: string) =>
-  download(getUrl(data, "text/plain;charset=utf-8"), filename, "txt");
+type Table = (string | number | boolean | null | undefined)[][];
+
+/** assemble csv/tsv from arrays */
+const stringifyTable = (table: Table, delimiter = "\t") =>
+  table
+    .map((row) =>
+      row
+        .map((col) => (col === null || col === undefined ? "" : String(col)))
+        .join(delimiter),
+    )
+    .join("\n");
+
+/** download data as csv file */
+export const downloadCsv = (data: Table, filename: string) =>
+  download(
+    getUrl(stringifyTable(data, ","), "text/csv;charset=utf-8"),
+    filename,
+    "csv",
+  );
+
+/** download data as tsv file */
+export const downloadTsv = (data: Table, filename: string) =>
+  download(
+    getUrl(
+      stringifyTable(data, "\t"),
+      "text/tab-separated-values;charset=utf-8",
+    ),
+    filename,
+    "tsv",
+  );

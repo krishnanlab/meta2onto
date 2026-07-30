@@ -2,11 +2,12 @@ import type { ColumnSort } from "@tanstack/react-table";
 import type { Cart } from "@/api/types";
 import type { Limit } from "@/components/Pagination";
 import { useEffect, useState } from "react";
+import analytics from "react-ga4";
 import { useParams } from "react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import clsx from "clsx";
 import { useAtomValue } from "jotai";
-import { sum } from "lodash";
+import { omit, sum } from "lodash";
 import {
   ArrowRight,
   Braces,
@@ -20,12 +21,7 @@ import {
   Table2,
   Trash,
 } from "lucide-react";
-import {
-  cartLookup,
-  downloadCart,
-  shareCart,
-  studyBatchLookup,
-} from "@/api/api";
+import { cartLookup, shareCart, studyBatchLookup } from "@/api/api";
 import { makeDataset } from "@/api/refine.bio";
 import ActionButton, { copy } from "@/components/ActionButton";
 import Ago from "@/components/Ago";
@@ -49,6 +45,7 @@ import {
   createdCartsAtom,
   removeFromCart,
 } from "@/state/cart";
+import { downloadCsv, downloadJson, downloadTsv } from "@/util/download";
 import { formatNumber } from "@/util/string";
 
 export default function Cart() {
@@ -109,7 +106,13 @@ export default function Cart() {
   if (!size) queryClient.resetQueries({ queryKey: ["studyBatchLookup"] });
 
   /** full study details */
-  const studyDetails = studyBatchLookupQuery.data?.results || [];
+  const studyDetails = (studyBatchLookupQuery.data?.results || []).map(
+    (study) => ({
+      ...study,
+      /** merge in any details from local cart */
+      ...localCart?.studies.find((s) => !shared && s.id === study.id),
+    }),
+  );
 
   /** page title */
   const title = shared ? `Shared cart "${name}"` : `Data Cart`;
@@ -162,6 +165,50 @@ export default function Cart() {
 
   /** user self-identification */
   const { userEmail, setUserEmail } = useUser();
+
+  /** download cart in particular format */
+  const downloadCart = (type: string) => {
+    analytics.event("download_cart", studyDetails);
+
+    const filename = name || "cart";
+
+    if (type === "json")
+      return downloadJson(
+        studyDetails.map((study) => omit(study, ["feedback"])),
+        filename,
+      );
+
+    const table = [
+      [
+        "ID",
+        "Search",
+        "Term",
+        "Name",
+        "Description",
+        "Sample Count",
+        "Confidence",
+        "Databases",
+        "Platform",
+        "Organisms",
+        "Classification",
+      ],
+      ...studyDetails.map((study) => [
+        study.id,
+        study.search,
+        study.term,
+        study.name,
+        study.description,
+        study.sample_count,
+        study.confidence.name,
+        Object.keys(study.database).join(", "),
+        study.platform.join(", "),
+        study.organisms.join(", "),
+        study.classification,
+      ]),
+    ];
+    if (type === "csv") downloadCsv(table, filename);
+    if (type === "tsv") downloadTsv(table, filename);
+  };
 
   return (
     <>
@@ -262,23 +309,20 @@ export default function Cart() {
                     <Popover
                       content={
                         <>
-                          <ActionButton
-                            onClick={() =>
-                              downloadCart(localCart, name || "cart", "csv")
-                            }
-                          >
+                          <Button onClick={() => downloadCart("csv")}>
                             <Table2 />
                             CSV
-                          </ActionButton>
+                          </Button>
 
-                          <ActionButton
-                            onClick={() =>
-                              downloadCart(localCart, name || "cart", "json")
-                            }
-                          >
+                          <Button onClick={() => downloadCart("tsv")}>
+                            <Table2 />
+                            TSV
+                          </Button>
+
+                          <Button onClick={() => downloadCart("json")}>
                             <Braces />
                             JSON
-                          </ActionButton>
+                          </Button>
                         </>
                       }
                     >
@@ -436,12 +480,7 @@ export default function Cart() {
                       ),
                     },
                   ]}
-                  rows={studyDetails.map((study) => ({
-                    ...study,
-                    added:
-                      localCart?.studies.find((s) => s.id === study.id)
-                        ?.added ?? "2025-01-01T00:00:00.000Z",
-                  }))}
+                  rows={studyDetails}
                   sort={ordering}
                   onSort={setOrdering}
                   page={offset}

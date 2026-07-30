@@ -124,7 +124,6 @@ export default function Studies() {
       debouncedParams.getAll(key),
     ]),
   );
-  console.log(facets);
   /** exclude param keywords */
   delete facets.ordering;
   delete facets.offset;
