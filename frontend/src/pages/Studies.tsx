@@ -39,7 +39,6 @@ import Dialog from "@/components/Dialog";
 import { getCartRef } from "@/components/Header";
 import { H1, H3 } from "@/components/Heading";
 import Link from "@/components/Link";
-// import Link from "@/components/Link";
 import Meta from "@/components/Meta";
 import Meter from "@/components/Meter";
 import Pagination from "@/components/Pagination";
@@ -47,7 +46,7 @@ import Pill from "@/components/Pill";
 import Popover from "@/components/Popover";
 import Select from "@/components/Select";
 import Slider from "@/components/Slider";
-import Status from "@/components/Status";
+import Status, { isLoading } from "@/components/Status";
 import Table from "@/components/Table";
 import Textbox from "@/components/Textbox";
 import Tooltip from "@/components/Tooltip";
@@ -125,6 +124,7 @@ export default function Studies() {
       debouncedParams.getAll(key),
     ]),
   );
+  console.log(facets);
   /** exclude param keywords */
   delete facets.ordering;
   delete facets.offset;
@@ -148,7 +148,7 @@ export default function Studies() {
       <H1 className="sr-only">Search results for "{search}"</H1>
 
       <section className="width-lg">
-        <div className="grid grid-cols-[auto_1fr] gap-12 max-md:grid-cols-1">
+        <div className="grid grid-cols-[auto_1fr] gap-12 *:min-w-0 max-md:grid-cols-1">
           {newSearch && (
             <div className="col-span-full flex flex-wrap items-center justify-center gap-8">
               <SearchBox className="grow" inputRef={searchRef} />
@@ -205,9 +205,9 @@ function Filters({
   } = query.data ?? {};
 
   return (
-    <div className="flex w-60 flex-col gap-8 max-md:w-full max-md:flex-row max-md:flex-wrap">
+    <div className="flex w-60 flex-col gap-8 max-md:w-full max-md:flex-row max-md:flex-wrap max-md:items-start">
       {/* overview */}
-      <dl>
+      <dl className="w-full">
         <dt className="text-sm text-stone-500">Raw Search</dt>
         <dd className="text-sm text-stone-500">"{raw}"</dd>
         <dt>Selection</dt>
@@ -225,14 +225,14 @@ function Filters({
         </dd>
         <dt>Results</dt>
         <dd>{count ? formatNumber(count) : "-"}</dd>
-      </dl>
 
-      {!newSearch && (
-        <Button onClick={() => setNewSearch(true)}>
-          <RefreshCcw />
-          New Search
-        </Button>
-      )}
+        {!newSearch && (
+          <Button className="col-span-full" onClick={() => setNewSearch(true)}>
+            <RefreshCcw />
+            New Search
+          </Button>
+        )}
+      </dl>
 
       {/* sort */}
       <Select
@@ -313,7 +313,7 @@ function Filters({
           );
 
         return (
-          <div key={facetKey} className="flex flex-col gap-2">
+          <div key={facetKey} className="flex flex-col gap-2 max-md:grow">
             <strong>{facetKey}</strong>
             {control}
           </div>
@@ -338,7 +338,12 @@ function Results({ setParams, offset, limit, query }: ResultsProps) {
   const { count = 0, results = [] } = query.data ?? {};
 
   return (
-    <div className="flex flex-col gap-8">
+    <div
+      className={clsx(
+        "flex flex-col gap-8",
+        isLoading(query) && "animate-pulse",
+      )}
+    >
       {anyFeedback && (
         <p>
           We especially appreciate feedback on{" "}
@@ -484,9 +489,17 @@ function Result({
       <div className="flex flex-wrap items-end gap-4">
         {/* databases */}
         <div className="flex flex-wrap gap-4">
-          {Object.keys(database).map((database, index) => (
-            <Database key={index} database={database} study={id} />
-          ))}
+          {Object.entries(database).map(
+            ([database, { url, external_id }], index) => (
+              <Database
+                key={index}
+                database={database}
+                study={id}
+                link={url || ""}
+                externalId={external_id || ""}
+              />
+            ),
+          )}
         </div>
 
         {/* species */}

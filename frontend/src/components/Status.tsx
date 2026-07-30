@@ -30,14 +30,14 @@ function Status({
     className,
   );
 
-  if ("isFetching" in query ? query.isFetching : query.status === "pending")
+  if (isLoading(query))
     return (
       <span className={clsx("bg-stone-100 text-stone-500", className)}>
         <LoaderCircle className="animate-spin" />
         {loading}
       </span>
     );
-  else if (query.status === "error")
+  else if (isError(query))
     return (
       <span className={clsx("bg-red-100 text-red-500", className)}>
         <TriangleAlert />
@@ -48,7 +48,7 @@ function Status({
         </Tooltip>
       </span>
     );
-  else if (query.status === "success" && isEmpty(query.data))
+  else if (isSuccess(query))
     return (
       <span className={clsx("bg-stone-100 text-stone-500", className)}>
         <Info />
@@ -61,3 +61,14 @@ export default Status;
 
 /** is there any status to show */
 export const showStatus = (props: Props) => !!Status(props);
+
+/** is loading */
+export const isLoading = (query: Query) =>
+  "isFetching" in query ? query.isFetching : query.status === "pending";
+
+/** is error */
+export const isError = (query: Query) => query.status === "error";
+
+/** is success */
+export const isSuccess = (query: Query) =>
+  query.status === "success" && isEmpty(query.data);
