@@ -680,16 +680,19 @@ class CartViewSet(viewsets.ModelViewSet):
         {
             "studies": [
                 {
-                "id": "GSE35357",
-                "added": "2025-12-12T11:21:35.895Z"
+                    "search": "Hepatocyte",
+                    "term": "CL:0000182",
+                    "added": "2026-07-30T18:46:33.885000Z"
                 },
                 {
-                "id": "GSE149008",
-                "added": "2025-12-12T11:21:36.627Z"
+                    "search": "Hepatocyte",
+                    "term": "CL:0000182",
+                    "added": "2026-07-30T18:46:34.551000Z"
                 },
                 {
-                "id": "GSE45968",
-                "added": "2025-12-12T11:21:37.293Z"
+                    "search": "Hepatocyte",
+                    "term": "CL:0000182",
+                    "added": "2026-07-30T18:46:35.153000Z"
                 }
             ],
             "name": "yowza"
@@ -705,10 +708,18 @@ class CartViewSet(viewsets.ModelViewSet):
             # create CartItem objects for each series
             for series_data in series_list:
                 series_id = series_data["id"]
+                search = series_data.get("search")
+                term = series_data.get("term")
                 added_at = series_data.get("added")
                 try:
                     series = GEOSeries.objects.get(gse=series_id)
-                    CartItem.objects.create(series=series, added_at=added_at, cart=cart)
+                    CartItem.objects.create(
+                        series=series,
+                        search=search,
+                        term=term,
+                        added_at=added_at,
+                        cart=cart
+                    )
                 except GEOSeries.DoesNotExist:
                     continue  # skip invalid series ids
 
