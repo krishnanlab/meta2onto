@@ -37,7 +37,7 @@ import { addSearch, getHistory } from "@/state/search";
 import { useChanged } from "@/util/hooks";
 import { formatNumber } from "@/util/string";
 
-const { VITE_REPO: repo } = import.meta.env;
+const { VITE_TITLE: title, VITE_REPO: repo } = import.meta.env;
 
 /** example searches */
 const examples: Ontologies = [
@@ -77,7 +77,7 @@ export default function Home() {
         <Rings />
 
         <hgroup className="flex flex-col items-center gap-y-1 width-sm">
-          <h1 className="sr-only">Home</h1>
+          <h1>{title}</h1>
 
           <p className="text-2xl font-medium tracking-wide text-balance">
             Discover, Collect, Reuse
@@ -97,6 +97,49 @@ export default function Home() {
           </span>
           <Link to={`${repo}/issues`}>Please give us feedback</Link>
         </p>
+      </section>
+
+      <section>
+        <H2 className="sr-only">Stats</H2>
+
+        <div className="grid grid-cols-6 gap-8 self-center max-lg:grid-cols-3 max-md:grid-cols-3 max-sm:grid-cols-2">
+          <Tile
+            Icon={Brain}
+            title={formatNumber(stats?.tissues)}
+            description="tissues"
+          />
+          <Tile
+            Icon={HeartPulse}
+            title={formatNumber(stats?.diseases)}
+            description="diseases"
+          />
+          <Tile
+            Icon={Microscope}
+            title={formatNumber(stats?.studies)}
+            description="studies"
+          />
+          <Tile
+            Icon={Pipette}
+            title={formatNumber(stats?.samples)}
+            description="samples"
+          />
+          <Tile
+            Icon={Rat}
+            title={formatNumber(stats?.species)}
+            description="species"
+          />
+          <Tile
+            Icon={Wrench}
+            title={formatNumber(stats?.technologies)}
+            description="technologies"
+          />
+          {/* re-enable when we have more to brag about */}
+          {/* <Tile
+            Icon={ThumbsUp}
+            title={formatNumber(stats?.feedback)}
+            description="user feedback"
+          /> */}
+        </div>
       </section>
 
       <section>
@@ -171,49 +214,6 @@ export default function Home() {
             title="Standardized"
             description="We standardize annotations to biomedical ontologies, ensuring consistency and interoperability across studies"
           />
-        </div>
-      </section>
-
-      <section>
-        <H2 className="sr-only">Stats</H2>
-
-        <div className="grid grid-cols-6 gap-8 self-center max-lg:grid-cols-3 max-md:grid-cols-3 max-sm:grid-cols-2">
-          <Tile
-            Icon={Brain}
-            title={formatNumber(stats?.tissues)}
-            description="tissues"
-          />
-          <Tile
-            Icon={HeartPulse}
-            title={formatNumber(stats?.diseases)}
-            description="diseases"
-          />
-          <Tile
-            Icon={Microscope}
-            title={formatNumber(stats?.studies)}
-            description="studies"
-          />
-          <Tile
-            Icon={Pipette}
-            title={formatNumber(stats?.samples)}
-            description="samples"
-          />
-          <Tile
-            Icon={Rat}
-            title={formatNumber(stats?.species)}
-            description="species"
-          />
-          <Tile
-            Icon={Wrench}
-            title={formatNumber(stats?.technologies)}
-            description="technologies"
-          />
-          {/* re-enable when we have more to brag about */}
-          {/* <Tile
-            Icon={ThumbsUp}
-            title={formatNumber(stats?.feedback)}
-            description="user feedback"
-          /> */}
         </div>
       </section>
     </>
