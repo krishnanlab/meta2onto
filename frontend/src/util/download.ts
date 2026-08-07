@@ -53,6 +53,8 @@ type Table = (string | number | boolean | null | undefined)[][];
 
 /** assemble csv/tsv from arrays */
 const stringifyTable = (table: Table, delimiter = "\t") =>
+  /** byte order mark for excel to display special characters */
+  "\uFEFF" +
   table
     .map((row) =>
       row
