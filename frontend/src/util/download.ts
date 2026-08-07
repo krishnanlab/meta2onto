@@ -1,3 +1,5 @@
+import { BYTE_ORDER_MARK, unparse } from "papaparse";
+
 /** assemble and clean full filename */
 const getFilename = (filename: string) =>
   filename
@@ -53,15 +55,7 @@ type Table = (string | number | boolean | null | undefined)[][];
 
 /** assemble csv/tsv from arrays */
 const stringifyTable = (table: Table, delimiter = "\t") =>
-  /** byte order mark for excel to display special characters */
-  "\uFEFF" +
-  table
-    .map((row) =>
-      row
-        .map((col) => (col === null || col === undefined ? "" : String(col)))
-        .join(delimiter),
-    )
-    .join("\n");
+  BYTE_ORDER_MARK + unparse(table, { delimiter });
 
 /** download data as csv file */
 export const downloadCsv = (data: Table, filename: string) =>
