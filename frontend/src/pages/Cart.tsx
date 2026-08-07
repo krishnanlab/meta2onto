@@ -209,8 +209,13 @@ export default function Cart() {
         study.platform.join(", "),
         study.organisms.join(", "),
         study.classification,
-        ...databases.map(
-          (database) => study.database[database]?.external_id || "",
+        ...databases.map((database) =>
+          [
+            study.database[database] ? "✓" : "✗",
+            study.database[database]?.external_id || "",
+          ]
+            .filter(Boolean)
+            .join(" "),
         ),
       ]),
     ];
