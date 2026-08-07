@@ -88,11 +88,11 @@ const orderingOptions = [
 type OrderingOption = (typeof orderingOptions)[number]["value"];
 
 export default function Studies() {
-  const { search = "" } = useParams<{ search: string }>();
+  const { term = "" } = useParams<{ term: string }>();
 
   /** url search params state */
   const [params, setParams, debouncedParams] = useDebouncedParams();
-  const raw = params.get("raw") ?? "";
+  const search = params.get("search") ?? "";
 
   /** new search button */
   const [newSearch, setNewSearch] = useState(false);
@@ -101,8 +101,8 @@ export default function Studies() {
     if (newSearch) searchRef.current?.focus();
   }, [newSearch]);
 
-  /** reset when search changes */
-  if (useChanged(search)) setNewSearch(false);
+  /** reset when term changes */
+  if (useChanged(term)) setNewSearch(false);
 
   /** ordering state from url params */
   const ordering =
@@ -124,20 +124,19 @@ export default function Studies() {
       debouncedParams.getAll(key),
     ]),
   );
-  console.log(facets);
   /** exclude param keywords */
   delete facets.ordering;
   delete facets.offset;
   delete facets.limit;
 
   /** page title */
-  const title = `${search} "${raw}"`;
+  const title = `${term} "${search}"`;
 
   /** search results */
   const studySearchQuery = useQuery({
-    queryKey: ["studySearch", search, ordering, offset, limit, facets],
+    queryKey: ["studySearch", term, ordering, offset, limit, facets],
     queryFn: () =>
-      studySearch({ search, ordering, offset, limit: Number(limit), facets }),
+      studySearch({ term, ordering, offset, limit: Number(limit), facets }),
     placeholderData: keepPreviousData,
   });
 
@@ -145,7 +144,7 @@ export default function Studies() {
     <>
       <Meta title={title} />
 
-      <H1 className="sr-only">Search results for "{search}"</H1>
+      <H1>Search results for "{term}"</H1>
 
       <section className="width-lg">
         <div className="grid grid-cols-[auto_1fr] gap-12 *:min-w-0 max-md:grid-cols-1">
@@ -156,7 +155,7 @@ export default function Studies() {
           )}
 
           <Filters
-            raw={raw}
+            search={search}
             params={params}
             setParams={setParams}
             newSearch={newSearch}
@@ -178,7 +177,7 @@ export default function Studies() {
 }
 
 type FiltersProps = {
-  raw: string;
+  search: string;
   params: URLSearchParams;
   setParams: ReturnType<typeof useDebouncedParams>[1];
   newSearch: boolean;
@@ -189,7 +188,7 @@ type FiltersProps = {
 
 /** filters panel */
 function Filters({
-  raw,
+  search,
   params,
   setParams,
   newSearch,
@@ -208,9 +207,9 @@ function Filters({
     <div className="flex w-60 flex-col gap-8 max-md:w-full max-md:flex-row max-md:flex-wrap max-md:items-start">
       {/* overview */}
       <dl className="w-full">
-        <dt className="text-sm text-stone-500">Raw Search</dt>
-        <dd className="text-sm text-stone-500">"{raw}"</dd>
-        <dt>Selection</dt>
+        <dt className="text-sm text-stone-500">Search</dt>
+        <dd className="text-sm text-stone-500">"{search}"</dd>
+        <dt>Term</dt>
         <dd>
           {type && <Pill value={type} color={typeColor} />} {name} {term}
         </dd>
@@ -223,7 +222,7 @@ function Filters({
             className="w-full"
           />
         </dd>
-        <dt>Results</dt>
+        <dt>Studies</dt>
         <dd>{count ? formatNumber(count) : "-"}</dd>
 
         {!newSearch && (
@@ -359,7 +358,7 @@ function Results({ setParams, offset, limit, query }: ResultsProps) {
 
       {/* results */}
       {results.map((result, index) => (
-        <Result key={index} {...result} />
+        <Result key={index} query={query} {...result} />
       ))}
 
       {/* pagination */}
@@ -378,6 +377,7 @@ function Results({ setParams, offset, limit, query }: ResultsProps) {
 
 /** search result */
 function Result({
+  query,
   id,
   name,
   description,
@@ -389,9 +389,16 @@ function Result({
   classification,
   organisms,
   keywords,
-}: Study) {
+}: Study & { query: UseQueryResult<Studies> }) {
   /** current cart state */
   const cart = useAtomValue(cartAtom);
+
+  /** url search params state */
+  const [params] = useDebouncedParams();
+  const search = params.get("search") ?? "";
+
+  /** destructure query */
+  const { meta: { term = "" } = {} } = query.data ?? {};
 
   /** feedback for this study */
   const feedback = useAtomValue(feedbackAtom)[id];
@@ -571,7 +578,7 @@ function Result({
                 analytics.event("remove_from_cart", { id });
                 if (cartRef) fly(cartRef, event.currentTarget);
               } else {
-                addToCart(id);
+                addToCart(id, search, term);
                 analytics.event("add_to_cart", { id });
                 if (cartRef) fly(event.currentTarget, cartRef);
               }

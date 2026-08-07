@@ -229,25 +229,25 @@ export function SearchBox({ inputRef, className }: SearchBoxProps) {
   const navigate = useNavigate();
 
   /** search string state (immediate) */
-  const [_search, setSearch] = useState("");
+  const [_query, setQuery] = useState("");
 
-  /** search (debounced) */
-  const search = useDebounce(_search, 300);
+  /** search string state (debounced) */
+  const query = useDebounce(_query, 300);
 
   /** update search from url */
   const [params] = useSearchParams();
-  const raw = params.get("raw") ?? "";
-  const searchChanged = useChanged(raw);
-  if (searchChanged && raw) setSearch(raw);
+  const search = params.get("search") ?? "";
+  const searchChanged = useChanged(search);
+  if (searchChanged && search) setQuery(search);
 
   /** ontology search results */
   const ontologySearchQuery = useQuery({
-    queryKey: ["ontologySearch", search],
-    queryFn: () => ontologySearch(search),
+    queryKey: ["ontologySearch", query],
+    queryFn: () => ontologySearch(query),
   });
 
   /** search results */
-  const results = search.trim()
+  const results = query.trim()
     ? /** actual search results */
       (ontologySearchQuery.data?.map((result) => ({
         ...result,
@@ -271,8 +271,8 @@ export function SearchBox({ inputRef, className }: SearchBoxProps) {
   return (
     <Autocomplete
       inputRef={inputRef}
-      search={_search}
-      setSearch={setSearch}
+      search={_query}
+      setSearch={setQuery}
       placeholder="Search..."
       options={
         results.map(({ id, name, type, icon, performance }) => ({
@@ -305,11 +305,11 @@ export function SearchBox({ inputRef, className }: SearchBoxProps) {
         if (!result) return;
         addSearch(omit(result, "icon"));
         const params = new URLSearchParams();
-        params.set("raw", search || result.name);
+        params.set("search", query || result.name);
         navigate(`/studies/${id}?${params.toString()}`);
       }}
       status={
-        search.trim() &&
+        query.trim() &&
         showStatus({ query: ontologySearchQuery }) && (
           <Status query={ontologySearchQuery} className="contents!" />
         )

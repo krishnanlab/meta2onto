@@ -680,16 +680,19 @@ class CartViewSet(viewsets.ModelViewSet):
         {
             "studies": [
                 {
-                "id": "GSE35357",
-                "added": "2025-12-12T11:21:35.895Z"
+                    "search": "Hepatocyte",
+                    "term": "CL:0000182",
+                    "added": "2026-07-30T18:46:33.885000Z"
                 },
                 {
-                "id": "GSE149008",
-                "added": "2025-12-12T11:21:36.627Z"
+                    "search": "Hepatocyte",
+                    "term": "CL:0000182",
+                    "added": "2026-07-30T18:46:34.551000Z"
                 },
                 {
-                "id": "GSE45968",
-                "added": "2025-12-12T11:21:37.293Z"
+                    "search": "Hepatocyte",
+                    "term": "CL:0000182",
+                    "added": "2026-07-30T18:46:35.153000Z"
                 }
             ],
             "name": "yowza"
@@ -705,79 +708,20 @@ class CartViewSet(viewsets.ModelViewSet):
             # create CartItem objects for each series
             for series_data in series_list:
                 series_id = series_data["id"]
+                search = series_data.get("search")
+                term = series_data.get("term")
                 added_at = series_data.get("added")
                 try:
                     series = GEOSeries.objects.get(gse=series_id)
-                    CartItem.objects.create(series=series, added_at=added_at, cart=cart)
+                    CartItem.objects.create(
+                        series=series,
+                        search=search,
+                        term=term,
+                        added_at=added_at,
+                        cart=cart
+                    )
                 except GEOSeries.DoesNotExist:
                     continue  # skip invalid series ids
 
             serializer = self.get_serializer(cart)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-    # provide a /download action to download cart contents
-    @action(
-        detail=False,
-        methods=["post"],
-        url_path="download",
-        permission_classes=[AllowAny],
-    )
-    def download(self, request):
-        """
-        API endpoint for downloading cart contents.
-
-        Expects a JSON body with the following structure:
-        {
-            "ids": [
-                "GSE35357",
-                "GSE149008",
-                "GSE45968"
-            ]
-        }
-
-        Query parameters:
-        - type (optional): 'json' or 'csv' (default: 'json')
-        - filename (optional): desired filename (default: 'cart_download')
-        """
-        series_ids = request.data.get("ids", [])
-        download_type = request.query_params.get("type", "json")
-        filename = request.query_params.get("filename", "cart_download")
-
-        series_qs = GEOSeries.objects.filter(gse__in=series_ids)
-
-        if download_type == "json":
-            # prepare JSON response
-            data = {
-                "studies": [
-                    {
-                        "id": series.gse,
-                        "title": series.title,
-                        "summary": series.summary,
-                    }
-                    for series in series_qs
-                ]
-            }
-            response = Response(data, content_type="application/json")
-            response["Content-Disposition"] = f'attachment; filename="{filename}.json"'
-            return response
-
-        elif download_type == "csv":
-            # prepare CSV response
-            response = HttpResponse(content_type="text/csv; charset=utf-8")
-            response["Content-Disposition"] = f'attachment; filename="{filename}.csv"'
-
-            # Helps Excel correctly detect UTF-8
-            response.write("\ufeff")
-
-            writer = csv.writer(response)
-            writer.writerow(["GEOSeries ID", "Title", "Summary"])
-            for series in series_qs:
-                writer.writerow([series.gse, series.title, series.summary])
-
-            return response
-
-        else:
-            return Response(
-                {"error": "Unsupported download type"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )

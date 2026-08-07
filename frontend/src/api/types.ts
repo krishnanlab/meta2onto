@@ -101,6 +101,8 @@ export const cart = z.object({
     z.object({
       id: z.string(),
       added: z.string(),
+      search: z.string(),
+      term: z.string(),
     }),
   ),
 });

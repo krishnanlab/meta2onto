@@ -315,12 +315,19 @@ class DatabaseStatsSerializer(serializers.Serializer):
 class CartItemSerializer(serializers.ModelSerializer):
     """Serializer for CartItem model."""
 
-    id = serializers.CharField(source="series.series_id", read_only=True)
+    id = serializers.CharField(source="series.gse", read_only=True)
+    search = serializers.CharField(read_only=True)
+    term = serializers.CharField(read_only=True)
     added = serializers.DateTimeField(source="added_at", read_only=True)
 
     class Meta:
         model = CartItem
-        fields = ["id", "added"]
+        fields = [
+            "id",
+            "search",
+            "term",
+            "added"
+        ]
 
 
 class CartSerializer(serializers.ModelSerializer):

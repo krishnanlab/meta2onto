@@ -24,11 +24,14 @@ export const inCart = (cart: LocalCart, study: string) =>
   cart?.studies.find((s) => s.id === study);
 
 /** add study id to cart */
-export const addToCart = (study: string) =>
+export const addToCart = (study: string, search: string, term: string) =>
   setAtom(cartAtom, (old) => ({
     ...old,
     studies: uniqBy(
-      [...old.studies, { id: study, added: new Date().toISOString() }],
+      [
+        ...old.studies,
+        { id: study, search, term, added: new Date().toISOString() },
+      ],
       "id",
     ),
   }));
