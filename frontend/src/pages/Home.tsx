@@ -37,7 +37,7 @@ import { addSearch, getHistory } from "@/state/search";
 import { useChanged } from "@/util/hooks";
 import { formatNumber } from "@/util/string";
 
-const { VITE_REPO: repo } = import.meta.env;
+const { VITE_TITLE: title, VITE_REPO: repo } = import.meta.env;
 
 /** example searches */
 const examples: Ontologies = [
@@ -77,12 +77,7 @@ export default function Home() {
         <Rings />
 
         <hgroup className="flex flex-col items-center gap-y-1 width-sm">
-          <h1 className="sr-only">Home</h1>
-
-          <p className="text-4xl font-medium tracking-wide text-balance">
-            Meta2Onto
-          </p>
-
+          <h1>{title}</h1>
 
           <p className="text-2xl font-medium tracking-wide text-balance">
             Discover, Collect, Reuse
@@ -103,7 +98,7 @@ export default function Home() {
           <Link to={`${repo}/issues`}>Please give us feedback</Link>
         </p>
       </section>
-	  
+
       <section>
         <H2 className="sr-only">Stats</H2>
 
