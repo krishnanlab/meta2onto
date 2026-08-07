@@ -7,7 +7,7 @@ import { useParams } from "react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import clsx from "clsx";
 import { useAtomValue } from "jotai";
-import { omit, sum } from "lodash";
+import { omit, sum, uniq } from "lodash";
 import {
   ArrowRight,
   Braces,
@@ -178,6 +178,12 @@ export default function Cart() {
         filename,
       );
 
+    /** unique list of databases */
+    const databases = uniq(
+      studyDetails.flatMap((study) => Object.keys(study.database)),
+    );
+
+    /** format data into table */
     const table = [
       [
         "ID",
@@ -187,10 +193,10 @@ export default function Cart() {
         "Description",
         "Sample Count",
         "Confidence",
-        "Databases",
         "Platform",
         "Organisms",
         "Classification",
+        ...databases,
       ],
       ...studyDetails.map((study) => [
         study.id,
@@ -200,12 +206,15 @@ export default function Cart() {
         study.description,
         study.sample_count,
         study.confidence.name,
-        Object.keys(study.database).join(", "),
         study.platform.join(", "),
         study.organisms.join(", "),
         study.classification,
+        ...databases.map(
+          (database) => study.database[database]?.external_id || "",
+        ),
       ]),
     ];
+
     if (type === "csv") downloadCsv(table, filename);
     if (type === "tsv") downloadTsv(table, filename);
   };
