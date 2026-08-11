@@ -73,10 +73,6 @@
     @apply my-12 block h-px shrink-0 border-none bg-stone-300;
   }
 
-  a {
-    @apply transition-all;
-  }
-
   strong,
   b {
     @apply font-bold;
@@ -96,7 +92,7 @@
   }
 
   a {
-    @apply text-accent underline hover:text-current;
+    @apply text-accent underline hover:text-current transition-all;
   }
 
   button {

@@ -90,7 +90,7 @@ export const scrollTo = async (
   element.scrollIntoView(options);
 };
 
-// find index of first element "in view". model behavior off of wikiwand.com.
+/** find index of first element "in view". model behavior off of wikiwand.com. */
 export const firstInView = (elements: Element[]) => {
   const pagePadding = parseInt(
     window.getComputedStyle(document.documentElement).scrollPaddingTop,
