@@ -35,10 +35,7 @@ export default function Link({
   const showArrow = arrow ?? target;
 
   /** combine styles */
-  const _class = clsx(
-    className,
-    "inline-flex items-center gap-1 text-theme hover:text-current",
-  );
+  const _class = clsx("inline-flex items-center gap-1", className);
 
   /** full element to render */
   const element = external ? (

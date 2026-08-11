@@ -92,7 +92,7 @@
   }
 
   a {
-    @apply text-accent underline hover:text-current transition-all;
+    @apply text-theme underline hover:text-current transition-all;
   }
 
   button {
