@@ -3,9 +3,6 @@ import type z from "zod";
 /** base api url */
 export const api = import.meta.env.VITE_API;
 
-/** url parameters */
-type Params = URLSearchParams;
-
 /** parse response mode */
 type Parse = "json" | "text" | "blob";
 
@@ -13,9 +10,8 @@ type Parse = "json" | "text" | "blob";
 type Body = Record<string, unknown>;
 
 type Options = Omit<RequestInit, "body"> & {
-  params?: Params;
-  body?: Body;
   parse?: Parse;
+  body?: Body;
 };
 
 /** general request */
@@ -53,15 +49,15 @@ export async function request<Response>(
     if (parse === "blob") parsed = (await response.clone().blob()) as Response;
     if (parse === "json") parsed = (await response.clone().json()) as Response;
     if (parse === "text") parsed = (await response.clone().text()) as Response;
-  } catch (e) {
+  } catch {
     error = `Couldn't parse response as ${parse}`;
   }
   /** validate response */
   try {
     schema.parse(parsed);
-  } catch (e) {
+  } catch (error) {
     console.groupCollapsed("Validation error");
-    console.error((e as z.ZodError).message);
+    console.error((error as z.ZodError).message);
     console.groupEnd();
   }
   console.debug(`📣 Response ${url}`, { parsed, response });
