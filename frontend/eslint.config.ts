@@ -21,7 +21,7 @@ const tailwindSelectors = [
 ];
 
 export default defineConfig([
-  globalIgnores(["dist", "public"]),
+  globalIgnores(["dist", "public", "src/api/types.ts"]),
 
   {
     name: "TypeScript",

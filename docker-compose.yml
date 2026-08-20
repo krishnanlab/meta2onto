@@ -19,6 +19,10 @@ services:
     build: ./frontend
     depends_on:
       - backend
+    environment:
+    - VITE_SCHEMA_LOCATION=/data/schema.yaml
+    volumes:
+      - ./data/:/data/
 
   memcached:
     command: ["memcached", "-m", "1024", "-I", "5m"]
