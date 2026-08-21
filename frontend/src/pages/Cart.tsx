@@ -196,7 +196,10 @@ export default function Cart() {
         "Platform",
         "Organisms",
         "Classification",
-        ...databases,
+        ...databases.flatMap((database) => [
+          `In ${database}`,
+          `${database} ID`,
+        ]),
       ],
       ...studyDetails.map((study) => [
         study.id,
@@ -209,14 +212,10 @@ export default function Cart() {
         study.platform.join(", "),
         study.organisms.join(", "),
         study.classification,
-        ...databases.map((database) =>
-          [
-            study.database[database] ? "✓" : "✗",
-            study.database[database]?.external_id || "",
-          ]
-            .filter(Boolean)
-            .join(" "),
-        ),
+        ...databases.flatMap((database) => [
+          study.database[database] ? "✓" : "✗",
+          study.database[database]?.external_id || "",
+        ]),
       ]),
     ];
 
