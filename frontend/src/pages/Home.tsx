@@ -8,6 +8,7 @@ import clsx from "clsx";
 import { omit } from "lodash";
 import {
   ArrowLeftRight,
+  BellIcon,
   Brain,
   Glasses,
   HeartPulse,
@@ -27,6 +28,7 @@ import {
 import { getStats, ontologySearch } from "@/api/api";
 import { performanceColor, typeColor } from "@/api/maps";
 import Autocomplete from "@/components/Autocomplete";
+import Button from "@/components/Button";
 import { H2 } from "@/components/Heading";
 import Link from "@/components/Link";
 import Pill from "@/components/Pill";
@@ -91,12 +93,23 @@ export default function Home() {
 
         <SearchBox />
 
-        <p>
-          <span className="mr-2 rounded-full bg-indigo-500 px-2 py-1 tracking-wide text-white">
-            BETA
-          </span>
-          <Link to={`${repo}/issues`}>Please give us feedback</Link>
-        </p>
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <span className="mr-2 rounded-full bg-indigo-500 px-2 py-1 tracking-wide text-white">
+              BETA
+            </span>
+            <Link to={`${repo}/issues`}>Please give us feedback</Link>
+          </div>
+
+          <Button
+            to="https://google.com"
+            color="none"
+            className="hover:bg-transparent"
+          >
+            Newsletter
+            <BellIcon />
+          </Button>
+        </div>
       </section>
 
       <section>
@@ -145,7 +158,7 @@ export default function Home() {
       <section>
         <H2 className="sr-only">How it works</H2>
 
-        <div className="flex justify-center gap-8 max-md:flex-col [&>svg]:size-8 [&>svg]:self-center [&>svg]:text-stone-300">
+        <div className="grid grid-cols-[1fr_--spacing(8)_1fr_--spacing(8)_1fr] place-items-center gap-8 max-md:grid-cols-1 [&>svg]:size-full [&>svg]:text-stone-300">
           <Tile
             big
             className="text-theme"
@@ -186,7 +199,7 @@ export default function Home() {
       <section>
         <H2 className="sr-only">Features</H2>
 
-        <div className="grid grid-cols-3 gap-8 self-center max-md:grid-cols-2 max-sm:grid-cols-1">
+        <div className="grid grid-cols-[1fr_--spacing(8)_1fr_--spacing(8)_1fr] place-items-center gap-8 max-md:grid-cols-1">
           <Tile
             big
             className="text-theme"
@@ -200,6 +213,7 @@ export default function Home() {
               </>
             }
           />
+          <div />
           <Tile
             big
             className="text-theme"
@@ -207,12 +221,13 @@ export default function Home() {
             title="Up-to-date"
             description="We update our predictions semi-annually so results reflect the latest studies available on GEO"
           />
+          <div />
           <Tile
             big
             className="text-theme"
             Icon={ArrowLeftRight}
             title="Standardized"
-            description="We standardize annotations to biomedical ontologies, ensuring consistency and interoperability across studies"
+            description="We standardize annotations to biomedical ontologies, ensuring consistency and interoperability"
           />
         </div>
       </section>
@@ -345,7 +360,7 @@ function Tile({
       <div
         className={clsx(
           "mb-2 grid place-items-center rounded-full",
-          big ? "size-16 bg-current/10" : "size-12 border-2 border-current/10",
+          big ? "size-16 bg-current/10" : "size-14 bg-current/10",
         )}
       >
         <Icon className="size-1/2" />

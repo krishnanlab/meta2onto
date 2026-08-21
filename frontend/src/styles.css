@@ -54,7 +54,7 @@
   }
 
   h1 {
-    @apply justify-center text-center text-3xl tracking-widest uppercase;
+    @apply justify-center text-center text-4xl tracking-widest uppercase;
   }
 
   h2 {
