@@ -1,0 +1,25 @@
+name: Deploy to VM
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "backend/**"
+      - "compose-envs/**"
+      - "frontend/**"
+      - "services/**"
+      - "docker-compose.yml"
+   
+jobs:
+  deploy:
+    runs-on: self-hosted
+  
+    steps:
+      - name: Deploy stack
+        run: |
+          cd /opt/projects/meta2onto
+          git pull
+          ./run_stack.sh
+          echo "Deployed on $( date )" >> auto_deploy.log
