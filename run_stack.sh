@@ -1,4 +1,4 @@
-#!usr/bin/env bash
+#!/usr/bin/env bash
 
 # this script uses the docker-compose.yml file to do the following:
 # - create a .env file from .env.TEMPLATE, but prepopulated with random secrets
@@ -123,6 +123,7 @@ case "$ENV" in
         ;;
     proxied)
         COMPOSE_FILES="-f docker-compose.yml -f compose-envs/docker-compose.proxied.yml"
+	COMPOSE_POST_CMD=":" # suppress tailing logs in proxied, too, since we run this from a GH action
         ;;
     *)
         echo "Error: unknown environment '$ENV'. Supported environments are 'dev', 'prod', 'proxied'."
