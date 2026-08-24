@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!usr/bin/env bash
 
 # this script uses the docker-compose.yml file to do the following:
 # - create a .env file from .env.TEMPLATE, but prepopulated with random secrets
@@ -119,7 +119,7 @@ case "$ENV" in
         ;;
     prod)
         COMPOSE_FILES="-f docker-compose.yml -f compose-envs/docker-compose.prod.yml"
-		COMPOSE_POST_CMD=":" # suppress tailing logs in prod, since we run this from a GH action
+	COMPOSE_POST_CMD=":" # suppress tailing logs in prod, since we run this from a GH action
         ;;
     proxied)
         COMPOSE_FILES="-f docker-compose.yml -f compose-envs/docker-compose.proxied.yml"
