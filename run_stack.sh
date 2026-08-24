@@ -119,6 +119,7 @@ case "$ENV" in
         ;;
     prod)
         COMPOSE_FILES="-f docker-compose.yml -f compose-envs/docker-compose.prod.yml"
+		COMPOSE_POST_CMD=":" # suppress tailing logs in prod, since we run this from a GH action
         ;;
     proxied)
         COMPOSE_FILES="-f docker-compose.yml -f compose-envs/docker-compose.proxied.yml"
