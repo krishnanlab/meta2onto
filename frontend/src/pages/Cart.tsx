@@ -1,5 +1,4 @@
 import type { ColumnSort } from "@tanstack/react-table";
-import type { Cart } from "@/api/types";
 import type { Limit } from "@/components/Pagination";
 import { useEffect, useState } from "react";
 import analytics from "react-ga4";
@@ -21,7 +20,7 @@ import {
   Table2,
   Trash,
 } from "lucide-react";
-import { cartLookup, shareCart, studyBatchLookup } from "@/api/api";
+import { studyLookupCreate, useCartCreate, useCartRetrieve } from "@/api/query";
 import { makeDataset } from "@/api/refine.bio";
 import ActionButton, { copy } from "@/components/ActionButton";
 import Ago from "@/components/Ago";
@@ -59,14 +58,10 @@ export default function Cart() {
   const shared = !!id;
 
   /** look up study ids from cart id */
-  const cartLookupQuery = useQuery({
-    queryKey: ["cartLookup", id],
-    queryFn: () => cartLookup(id),
-    enabled: shared,
-  });
+  const cartLookupQuery = useCartRetrieve(id, { query: { enabled: shared } });
 
   /** remote, shared cart */
-  const sharedCart = cartLookupQuery.data;
+  const sharedCart = cartLookupQuery.data?.data;
 
   /** current cart */
   const cart = localCart || sharedCart;
@@ -78,7 +73,7 @@ export default function Cart() {
   const size = studyIds.length || 0;
 
   /** cart name */
-  const name = cartLookupQuery.data?.name || id;
+  const name = cartLookupQuery.data?.data.name || id;
 
   /** custom cart name for sharing */
   const [shareName, setShareName] = useState(name);
@@ -90,14 +85,9 @@ export default function Cart() {
 
   /** look up study details from study ids */
   const studyBatchLookupQuery = useQuery({
-    queryKey: ["studyBatchLookup", studyIds, ordering, offset, limit],
+    queryKey: ["studyBatchLookup", studyIds, offset, limit],
     queryFn: () =>
-      studyBatchLookup({
-        ids: studyIds,
-        ordering: (ordering.desc ? "-" : "") + ordering.id,
-        offset,
-        limit: Number(limit),
-      }),
+      studyLookupCreate({ ids: studyIds }, { offset, limit: Number(limit) }),
     enabled: !!size,
   });
 
@@ -106,7 +96,7 @@ export default function Cart() {
   if (!size) queryClient.resetQueries({ queryKey: ["studyBatchLookup"] });
 
   /** full study details */
-  const studyDetails = (studyBatchLookupQuery.data?.results || []).map(
+  const studyDetails = (studyBatchLookupQuery.data?.data.results || []).map(
     (study) => ({
       ...study,
       /** merge in any details from local cart */
@@ -118,16 +108,21 @@ export default function Cart() {
   const title = shared ? `Shared cart "${name}"` : `Data Cart`;
 
   /** share cart */
-  const shareMutation = useMutation({
-    mutationKey: ["share-cart", localCart],
-    mutationFn: () => shareCart({ ...localCart, name: shareName }),
-    onSuccess: addCreatedCart,
+  const shareMutation = useCartCreate({
+    mutation: {
+      mutationKey: ["share-cart", localCart],
+      onSuccess: (response) =>
+        addCreatedCart({
+          ...response.data,
+          studies: [...response.data.studies],
+        }),
+    },
   });
 
   /** share cart result link */
   const shareLink =
     !shared && shareMutation.data
-      ? new URL(`${window.location.origin}/cart/${shareMutation.data.id}`)
+      ? new URL(`${window.location.origin}/cart/${shareMutation.data.data.id}`)
       : "";
 
   /** reset share query state when cart changes */
@@ -209,7 +204,7 @@ export default function Cart() {
         study.description,
         study.sample_count,
         study.confidence.name,
-        study.platform.join(", "),
+        study.platform?.join(", ") ?? "",
         study.organisms.join(", "),
         study.classification,
         ...databases.flatMap((database) => [
@@ -298,7 +293,19 @@ export default function Cart() {
                               value={shareName}
                               onChange={setShareName}
                             />
-                            <Button onClick={() => shareMutation.mutate()}>
+                            <Button
+                              onClick={() => {
+                                analytics.event("share_cart", {
+                                  name: shareName,
+                                });
+                                shareMutation.mutate({
+                                  data: {
+                                    name: shareName,
+                                    studies: localCart?.studies ?? [],
+                                  },
+                                });
+                              }}
+                            >
                               <LinkIcon />
                               Generate
                             </Button>

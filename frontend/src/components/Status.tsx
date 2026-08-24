@@ -6,8 +6,11 @@ import { Info, LoaderCircle, TriangleAlert } from "lucide-react";
 import Tooltip from "@/components/Tooltip";
 
 type Query =
-  | Pick<UseQueryResult, "data" | "status" | "error" | "isFetching">
-  | Pick<UseMutationResult, "data" | "status" | "error">;
+  | Pick<
+      UseQueryResult<unknown, unknown>,
+      "data" | "status" | "error" | "isFetching"
+    >
+  | Pick<UseMutationResult<unknown, unknown>, "data" | "status" | "error">;
 
 type Props = {
   loading?: ReactNode;
@@ -41,7 +44,7 @@ function Status({
     return (
       <span className={clsx("bg-red-100 text-red-500", className)}>
         <TriangleAlert />
-        <Tooltip content={query.error?.message}>
+        <Tooltip content={getErrorMessage(query.error)}>
           <span className="underline decoration-dashed underline-offset-2">
             {error}
           </span>
@@ -72,3 +75,7 @@ export const isError = (query: Query) => query.status === "error";
 /** is success */
 export const isSuccess = (query: Query) =>
   query.status === "success" && isEmpty(query.data);
+
+/** safely extract a message from an unknown error value */
+const getErrorMessage = (error: unknown) =>
+  error instanceof Error ? error.message : undefined;

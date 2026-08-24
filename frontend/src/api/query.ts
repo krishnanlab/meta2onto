@@ -58,6 +58,22 @@ export interface Cart {
   readonly studies: readonly CartItem[];
 }
 
+/** A single study entry provided when creating a shared cart. */
+export interface CartItemCreateRequest {
+  /** GSE id of the study */
+  id: string;
+  search?: string;
+  term?: string;
+  /** @nullable */
+  added?: string | null;
+}
+
+/** Request body for POST /api/cart/. */
+export interface CartCreateRequest {
+  name: string;
+  studies?: CartItemCreateRequest[];
+}
+
 /** Serializer for database statistics returned from /api/stats/ endpoint. */
 export interface DatabaseStats {
   tissues: number;
@@ -201,13 +217,43 @@ export interface GEOSample {
   series?: string | null;
 }
 
+/** Response shape for GET /api/study/{gse}/samples/. */
+export interface GEOSampleSearchResponse {
+  count: number;
+  /** @nullable */
+  next: string | null;
+  /** @nullable */
+  previous: string | null;
+  results: GEOSample[];
+}
+
+/** Compute confidence level based on prob. */
+export type GEOSeriesConfidence = {
+  readonly name: string;
+  /** @nullable */
+  readonly value: number | null;
+};
+
+export type GEOSeriesDatabase = {
+  [key: string]: {
+    /** @nullable */
+    url?: string | null;
+    /** @nullable */
+    external_id?: string | null;
+  };
+};
+
 /**
  * Returns aggregate rating and number of votes for this series.
  *
  * In the Feedback model, "likes" have a rating of 1 and "dislikes" have a
  * rating of -1.
  */
-export type GEOSeriesFeedback = { [key: string]: number };
+export type GEOSeriesFeedback = {
+  readonly vote_count: number;
+  readonly likes: number;
+  readonly dislikes: number;
+};
 
 /** Serializer for GEOSeries model. */
 export interface GEOSeries {
@@ -247,9 +293,11 @@ export interface GEOSeries {
   contact?: string | null;
   /** @nullable */
   supplementary_file?: string | null;
-  readonly confidence: string;
-  readonly sample_count: string;
-  readonly database: string;
+  /** Compute confidence level based on prob. */
+  readonly confidence: GEOSeriesConfidence;
+  /** Get the number of samples associated with this series. */
+  readonly sample_count: number;
+  readonly database: GEOSeriesDatabase;
   /**
    * Get the platform name associated with this series.
    *
@@ -257,7 +305,8 @@ export interface GEOSeries {
    */
   readonly platform: readonly string[] | null;
   readonly organisms: readonly string[];
-  readonly keywords: string;
+  /** Extract keywords from the series summary. */
+  readonly keywords: readonly string[];
   readonly classification: string;
   /**
    * Returns aggregate rating and number of votes for this series.
@@ -266,6 +315,40 @@ export interface GEOSeries {
    * rating of -1.
    */
   readonly feedback: GEOSeriesFeedback;
+}
+
+export type GEOSeriesSearchResponseFacets = {
+  [key: string]:
+    | { [key: string]: number }
+    | {
+        label: string;
+        min: number;
+        max: number;
+      };
+};
+
+/** Metadata about the ontology term a study search was performed for. */
+export type GEOSeriesSearchResponseMeta = {
+  readonly term: string;
+  readonly name: string;
+  readonly type: string;
+  readonly performance: string;
+};
+
+/**
+ * Response shape produced by GEOSeriesSearchPagination, used by
+ * GEOSeriesViewSet's list/search/lookup actions.
+ */
+export interface GEOSeriesSearchResponse {
+  count: number;
+  /** @nullable */
+  next: string | null;
+  /** @nullable */
+  previous: string | null;
+  results: GEOSeries[];
+  readonly facets: GEOSeriesSearchResponseFacets;
+  /** Metadata about the ontology term a study search was performed for. */
+  readonly meta: GEOSeriesSearchResponseMeta;
 }
 
 /** Serializer for OntologySearchResults model. */
@@ -371,6 +454,42 @@ export interface PatchedCart {
   readonly studies?: readonly CartItem[];
 }
 
+/** Simple status response, e.g. from POST /api/study/feedback/. */
+export interface StatusResponse {
+  status: string;
+  message?: string;
+}
+
+export type StudyFeedbackRequestKeywords = { [key: string]: string };
+
+/** Optional self-identification info submitted alongside study feedback. */
+export interface StudyFeedbackUser {
+  name?: string;
+  email?: string;
+}
+
+/** Request body for POST /api/study/feedback/. */
+export interface StudyFeedbackRequest {
+  /** GSE id of the study being rated */
+  id: string;
+  user?: StudyFeedbackUser;
+  /**
+   * @minimum -1
+   * @maximum 1
+   * @nullable
+   */
+  rating?: number | null;
+  qualities?: string[];
+  keywords?: StudyFeedbackRequestKeywords;
+  elaborate?: string;
+}
+
+/** Request body for POST /api/study/lookup/. */
+export interface StudyLookupRequest {
+  /** GSE ids to look up */
+  ids: string[];
+}
+
 export type CartListParams = {
   /** Number of results to return per page. */
   limit?: number;
@@ -443,6 +562,62 @@ export type StudyListParams = {
   /** A search term. */
   search?: string;
 };
+
+export type StudySamplesRetrieveParams = {
+  /** Number of results to return per page */
+  limit?: number;
+  /** The initial index from which to return the results */
+  offset?: number;
+  /** Search within this study's samples */
+  query?: string;
+};
+
+export type StudyLookupCreateParams = {
+  /** Number of results to return per page */
+  limit?: number;
+  /** The initial index from which to return the results */
+  offset?: number;
+};
+
+export type StudySearchRetrieveParams = {
+  /** Filter by one or more training classifications */
+  Classification?: string[];
+  /**
+   * Filter by confidence bucket (high, medium, low, unknown) or a range like
+   * '70-90'
+   */
+  Confidence?: string;
+  /** Filter by one or more source databases */
+  Databases?: string[];
+  /** Filter by one or more organisms */
+  Organisms?: string[];
+  /** Filter by one or more platform (GPL) ids */
+  Platforms?: string[];
+  /** Filter by study size bucket (small, medium, large) or a range like '10-50' */
+  "Study Size"?: string;
+  /** Filter by one or more technologies */
+  Technologies?: string[];
+  /** Number of results to return per page */
+  limit?: number;
+  /** The initial index from which to return the results */
+  offset?: number;
+  /** Field to order results by */
+  ordering?: StudySearchRetrieveOrdering;
+  /** Ontology term ID to search studies for, e.g. MONDO:0007254 */
+  query: string;
+};
+
+export type StudySearchRetrieveOrdering =
+  (typeof StudySearchRetrieveOrdering)[keyof typeof StudySearchRetrieveOrdering];
+
+export const StudySearchRetrieveOrdering = {
+  "-date": "-date",
+  "-relevance": "-relevance",
+  "-samples": "-samples",
+  date: "date",
+  relevance: "relevance",
+  samples: "samples",
+} as const;
 
 const withQueryKey = <T extends object, K>(
   query: T,
@@ -654,7 +829,7 @@ export const getCartCreateUrl = () => {
  * "CL:0000182", "added": "2026-07-30T18:46:35.153000Z" } ], "name": "yowza" }
  */
 export const cartCreate = async (
-  cart: NonReadonly<Cart>,
+  cartCreateRequest: CartCreateRequest,
   options?: RequestInit,
 ): Promise<cartCreateResponse> => {
   const getHeaders = (
@@ -672,7 +847,7 @@ export const cartCreate = async (
       "Content-Type": "application/json",
       ...getHeaders(options?.headers),
     },
-    body: JSON.stringify(cart),
+    body: JSON.stringify(cartCreateRequest),
   });
 
   const body = [204, 205, 304].includes(res.status) ? null : await res.text();
@@ -726,9 +901,9 @@ export const getCartCreateMutationOptions = <
 export type CartCreateMutationResult = NonNullable<
   Awaited<ReturnType<typeof cartCreate>>
 >;
-export type CartCreateMutationBody = NonReadonly<Cart>;
+export type CartCreateMutationBody = CartCreateRequest;
 export type CartCreateMutationError = unknown;
-export type CartCreateMutationVariables = { data: NonReadonly<Cart> };
+export type CartCreateMutationVariables = { data: CartCreateRequest };
 
 export const useCartCreate = <TError = unknown, TContext = unknown>(
   options?: {
@@ -3384,7 +3559,7 @@ export function useStudyRetrieve<
 }
 
 export type studySamplesRetrieveResponse200 = {
-  data: GEOSeries;
+  data: GEOSampleSearchResponse;
   status: 200;
 };
 
@@ -3394,16 +3569,32 @@ export type studySamplesRetrieveResponseSuccess =
   };
 export type studySamplesRetrieveResponse = studySamplesRetrieveResponseSuccess;
 
-export const getStudySamplesRetrieveUrl = (gse: string) => {
-  return `http://localhost:8050/api/study/${gse}/samples/`;
+export const getStudySamplesRetrieveUrl = (
+  gse: string,
+  params?: StudySamplesRetrieveParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `http://localhost:8050/api/study/${gse}/samples/?${stringifiedParams}`
+    : `http://localhost:8050/api/study/${gse}/samples/`;
 };
 
 /** ReadOnly API endpoint for viewing GEOSeries. Accessible at /api/series/ */
 export const studySamplesRetrieve = async (
   gse: string,
+  params?: StudySamplesRetrieveParams,
   options?: RequestInit,
 ): Promise<studySamplesRetrieveResponse> => {
-  const res = await fetch(getStudySamplesRetrieveUrl(gse), {
+  const res = await fetch(getStudySamplesRetrieveUrl(gse, params), {
     ...options,
     method: "GET",
   });
@@ -3420,8 +3611,14 @@ export const studySamplesRetrieve = async (
   } as studySamplesRetrieveResponse;
 };
 
-export const getStudySamplesRetrieveQueryKey = (gse: string) => {
-  return [`http://localhost:8050/api/study/${gse}/samples/`] as const;
+export const getStudySamplesRetrieveQueryKey = (
+  gse: string,
+  params?: StudySamplesRetrieveParams,
+) => {
+  return [
+    `http://localhost:8050/api/study/${gse}/samples/`,
+    ...(params ? [params] : []),
+  ] as const;
 };
 
 export const getStudySamplesRetrieveQueryOptions = <
@@ -3429,6 +3626,7 @@ export const getStudySamplesRetrieveQueryOptions = <
   TError = unknown,
 >(
   gse: string,
+  params?: StudySamplesRetrieveParams,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -3443,11 +3641,12 @@ export const getStudySamplesRetrieveQueryOptions = <
   const { query: queryOptions, fetch: fetchOptions } = options ?? {};
 
   const queryKey =
-    queryOptions?.queryKey ?? getStudySamplesRetrieveQueryKey(gse);
+    queryOptions?.queryKey ?? getStudySamplesRetrieveQueryKey(gse, params);
 
   const queryFn: QueryFunction<
     Awaited<ReturnType<typeof studySamplesRetrieve>>
-  > = ({ signal }) => studySamplesRetrieve(gse, { signal, ...fetchOptions });
+  > = ({ signal }) =>
+    studySamplesRetrieve(gse, params, { signal, ...fetchOptions });
 
   return {
     queryKey,
@@ -3471,6 +3670,7 @@ export function useStudySamplesRetrieve<
   TError = unknown,
 >(
   gse: string,
+  params: undefined | StudySamplesRetrieveParams,
   options: {
     query: Partial<
       UseQueryOptions<
@@ -3498,6 +3698,7 @@ export function useStudySamplesRetrieve<
   TError = unknown,
 >(
   gse: string,
+  params?: StudySamplesRetrieveParams,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -3525,6 +3726,7 @@ export function useStudySamplesRetrieve<
   TError = unknown,
 >(
   gse: string,
+  params?: StudySamplesRetrieveParams,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -3545,6 +3747,7 @@ export function useStudySamplesRetrieve<
   TError = unknown,
 >(
   gse: string,
+  params?: StudySamplesRetrieveParams,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -3559,7 +3762,11 @@ export function useStudySamplesRetrieve<
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 } {
-  const queryOptions = getStudySamplesRetrieveQueryOptions(gse, options);
+  const queryOptions = getStudySamplesRetrieveQueryOptions(
+    gse,
+    params,
+    options,
+  );
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<
     TData,
@@ -3570,14 +3777,21 @@ export function useStudySamplesRetrieve<
 }
 
 export type studyFeedbackCreateResponse200 = {
-  data: GEOSeries;
+  data: StatusResponse;
   status: 200;
 };
 
-export type studyFeedbackCreateResponseSuccess =
-  studyFeedbackCreateResponse200 & {
-    headers: Headers;
-  };
+export type studyFeedbackCreateResponse201 = {
+  data: StatusResponse;
+  status: 201;
+};
+
+export type studyFeedbackCreateResponseSuccess = (
+  | studyFeedbackCreateResponse200
+  | studyFeedbackCreateResponse201
+) & {
+  headers: Headers;
+};
 export type studyFeedbackCreateResponse = studyFeedbackCreateResponseSuccess;
 
 export const getStudyFeedbackCreateUrl = () => {
@@ -3586,7 +3800,7 @@ export const getStudyFeedbackCreateUrl = () => {
 
 /** ReadOnly API endpoint for viewing GEOSeries. Accessible at /api/series/ */
 export const studyFeedbackCreate = async (
-  gEOSeries?: NonReadonly<GEOSeries>,
+  studyFeedbackRequest: StudyFeedbackRequest,
   options?: RequestInit,
 ): Promise<studyFeedbackCreateResponse> => {
   const getHeaders = (
@@ -3604,7 +3818,7 @@ export const studyFeedbackCreate = async (
       "Content-Type": "application/json",
       ...getHeaders(options?.headers),
     },
-    body: JSON.stringify(gEOSeries),
+    body: JSON.stringify(studyFeedbackRequest),
   });
 
   const body = [204, 205, 304].includes(res.status) ? null : await res.text();
@@ -3660,12 +3874,10 @@ export const getStudyFeedbackCreateMutationOptions = <
 export type StudyFeedbackCreateMutationResult = NonNullable<
   Awaited<ReturnType<typeof studyFeedbackCreate>>
 >;
-export type StudyFeedbackCreateMutationBody =
-  | NonReadonly<GEOSeries>
-  | undefined;
+export type StudyFeedbackCreateMutationBody = StudyFeedbackRequest;
 export type StudyFeedbackCreateMutationError = unknown;
 export type StudyFeedbackCreateMutationVariables = {
-  data?: NonReadonly<GEOSeries>;
+  data: StudyFeedbackRequest;
 };
 
 export const useStudyFeedbackCreate = <TError = unknown, TContext = unknown>(
@@ -3692,7 +3904,7 @@ export const useStudyFeedbackCreate = <TError = unknown, TContext = unknown>(
 };
 
 export type studyLookupCreateResponse200 = {
-  data: GEOSeries;
+  data: GEOSeriesSearchResponse;
   status: 200;
 };
 
@@ -3701,13 +3913,26 @@ export type studyLookupCreateResponseSuccess = studyLookupCreateResponse200 & {
 };
 export type studyLookupCreateResponse = studyLookupCreateResponseSuccess;
 
-export const getStudyLookupCreateUrl = () => {
-  return `http://localhost:8050/api/study/lookup/`;
+export const getStudyLookupCreateUrl = (params?: StudyLookupCreateParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `http://localhost:8050/api/study/lookup/?${stringifiedParams}`
+    : `http://localhost:8050/api/study/lookup/`;
 };
 
 /** ReadOnly API endpoint for viewing GEOSeries. Accessible at /api/series/ */
 export const studyLookupCreate = async (
-  gEOSeries?: NonReadonly<GEOSeries>,
+  studyLookupRequest: StudyLookupRequest,
+  params?: StudyLookupCreateParams,
   options?: RequestInit,
 ): Promise<studyLookupCreateResponse> => {
   const getHeaders = (
@@ -3718,14 +3943,14 @@ export const studyLookupCreate = async (
     if (Array.isArray(h)) return Object.fromEntries(h);
     return h;
   };
-  const res = await fetch(getStudyLookupCreateUrl(), {
+  const res = await fetch(getStudyLookupCreateUrl(params), {
     ...options,
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       ...getHeaders(options?.headers),
     },
-    body: JSON.stringify(gEOSeries),
+    body: JSON.stringify(studyLookupRequest),
   });
 
   const body = [204, 205, 304].includes(res.status) ? null : await res.text();
@@ -3768,9 +3993,9 @@ export const getStudyLookupCreateMutationOptions = <
     Awaited<ReturnType<typeof studyLookupCreate>>,
     StudyLookupCreateMutationVariables
   > = (props) => {
-    const { data } = props ?? {};
+    const { data, params } = props ?? {};
 
-    return studyLookupCreate(data, fetchOptions);
+    return studyLookupCreate(data, params, fetchOptions);
   };
 
   return { mutationFn, ...mutationOptions };
@@ -3779,10 +4004,11 @@ export const getStudyLookupCreateMutationOptions = <
 export type StudyLookupCreateMutationResult = NonNullable<
   Awaited<ReturnType<typeof studyLookupCreate>>
 >;
-export type StudyLookupCreateMutationBody = NonReadonly<GEOSeries> | undefined;
+export type StudyLookupCreateMutationBody = StudyLookupRequest;
 export type StudyLookupCreateMutationError = unknown;
 export type StudyLookupCreateMutationVariables = {
-  data?: NonReadonly<GEOSeries>;
+  data: StudyLookupRequest;
+  params?: StudyLookupCreateParams;
 };
 
 export const useStudyLookupCreate = <TError = unknown, TContext = unknown>(
@@ -3806,7 +4032,7 @@ export const useStudyLookupCreate = <TError = unknown, TContext = unknown>(
 };
 
 export type studySearchRetrieveResponse200 = {
-  data: GEOSeries;
+  data: GEOSeriesSearchResponse;
   status: 200;
 };
 
@@ -3816,15 +4042,45 @@ export type studySearchRetrieveResponseSuccess =
   };
 export type studySearchRetrieveResponse = studySearchRetrieveResponseSuccess;
 
-export const getStudySearchRetrieveUrl = () => {
-  return `http://localhost:8050/api/study/search/`;
+export const getStudySearchRetrieveUrl = (
+  params: StudySearchRetrieveParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    const explodeParameters = [
+      "Classification",
+      "Databases",
+      "Organisms",
+      "Platforms",
+      "Technologies",
+    ];
+
+    if (Array.isArray(value) && explodeParameters.includes(key)) {
+      value.forEach((v) => {
+        normalizedParams.append(key, v === null ? "null" : String(v));
+      });
+      return;
+    }
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `http://localhost:8050/api/study/search/?${stringifiedParams}`
+    : `http://localhost:8050/api/study/search/`;
 };
 
 /** ReadOnly API endpoint for viewing GEOSeries. Accessible at /api/series/ */
 export const studySearchRetrieve = async (
+  params: StudySearchRetrieveParams,
   options?: RequestInit,
 ): Promise<studySearchRetrieveResponse> => {
-  const res = await fetch(getStudySearchRetrieveUrl(), {
+  const res = await fetch(getStudySearchRetrieveUrl(params), {
     ...options,
     method: "GET",
   });
@@ -3841,30 +4097,39 @@ export const studySearchRetrieve = async (
   } as studySearchRetrieveResponse;
 };
 
-export const getStudySearchRetrieveQueryKey = () => {
-  return [`http://localhost:8050/api/study/search/`] as const;
+export const getStudySearchRetrieveQueryKey = (
+  params?: StudySearchRetrieveParams,
+) => {
+  return [
+    `http://localhost:8050/api/study/search/`,
+    ...(params ? [params] : []),
+  ] as const;
 };
 
 export const getStudySearchRetrieveQueryOptions = <
   TData = Awaited<ReturnType<typeof studySearchRetrieve>>,
   TError = unknown,
->(options?: {
-  query?: Partial<
-    UseQueryOptions<
-      Awaited<ReturnType<typeof studySearchRetrieve>>,
-      TError,
-      TData
-    >
-  >;
-  fetch?: RequestInit;
-}) => {
+>(
+  params: StudySearchRetrieveParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof studySearchRetrieve>>,
+        TError,
+        TData
+      >
+    >;
+    fetch?: RequestInit;
+  },
+) => {
   const { query: queryOptions, fetch: fetchOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getStudySearchRetrieveQueryKey();
+  const queryKey =
+    queryOptions?.queryKey ?? getStudySearchRetrieveQueryKey(params);
 
   const queryFn: QueryFunction<
     Awaited<ReturnType<typeof studySearchRetrieve>>
-  > = ({ signal }) => studySearchRetrieve({ signal, ...fetchOptions });
+  > = ({ signal }) => studySearchRetrieve(params, { signal, ...fetchOptions });
 
   return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
     Awaited<ReturnType<typeof studySearchRetrieve>>,
@@ -3882,6 +4147,7 @@ export function useStudySearchRetrieve<
   TData = Awaited<ReturnType<typeof studySearchRetrieve>>,
   TError = unknown,
 >(
+  params: StudySearchRetrieveParams,
   options: {
     query: Partial<
       UseQueryOptions<
@@ -3908,6 +4174,7 @@ export function useStudySearchRetrieve<
   TData = Awaited<ReturnType<typeof studySearchRetrieve>>,
   TError = unknown,
 >(
+  params: StudySearchRetrieveParams,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -3934,6 +4201,7 @@ export function useStudySearchRetrieve<
   TData = Awaited<ReturnType<typeof studySearchRetrieve>>,
   TError = unknown,
 >(
+  params: StudySearchRetrieveParams,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -3953,6 +4221,7 @@ export function useStudySearchRetrieve<
   TData = Awaited<ReturnType<typeof studySearchRetrieve>>,
   TError = unknown,
 >(
+  params: StudySearchRetrieveParams,
   options?: {
     query?: Partial<
       UseQueryOptions<
@@ -3967,7 +4236,7 @@ export function useStudySearchRetrieve<
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>;
 } {
-  const queryOptions = getStudySearchRetrieveQueryOptions(options);
+  const queryOptions = getStudySearchRetrieveQueryOptions(params, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<
     TData,

@@ -78,13 +78,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Cart'
+              $ref: '#/components/schemas/CartCreateRequest'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/Cart'
+              $ref: '#/components/schemas/CartCreateRequest'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/Cart'
+              $ref: '#/components/schemas/CartCreateRequest'
         required: true
       security:
       - csrfExemptCookieAuth: []
@@ -629,6 +629,21 @@ paths:
           type: string
         description: A unique value identifying this geo series.
         required: true
+      - in: query
+        name: limit
+        schema:
+          type: integer
+        description: Number of results to return per page
+      - in: query
+        name: offset
+        schema:
+          type: integer
+        description: The initial index from which to return the results
+      - in: query
+        name: query
+        schema:
+          type: string
+        description: Search within this study's samples
       tags:
       - study
       security:
@@ -640,7 +655,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GEOSeries'
+                $ref: '#/components/schemas/GEOSampleSearchResponse'
           description: ''
   /api/study/feedback/:
     post:
@@ -654,23 +669,30 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/GEOSeries'
+              $ref: '#/components/schemas/StudyFeedbackRequest'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/GEOSeries'
+              $ref: '#/components/schemas/StudyFeedbackRequest'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/GEOSeries'
+              $ref: '#/components/schemas/StudyFeedbackRequest'
+        required: true
       security:
       - cookieAuth: []
       - basicAuth: []
       - {}
       responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusResponse'
+          description: ''
         '200':
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GEOSeries'
+                $ref: '#/components/schemas/StatusResponse'
           description: ''
   /api/study/lookup/:
     post:
@@ -678,19 +700,31 @@ paths:
       description: |-
         ReadOnly API endpoint for viewing GEOSeries.
         Accessible at /api/series/
+      parameters:
+      - in: query
+        name: limit
+        schema:
+          type: integer
+        description: Number of results to return per page
+      - in: query
+        name: offset
+        schema:
+          type: integer
+        description: The initial index from which to return the results
       tags:
       - study
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/GEOSeries'
+              $ref: '#/components/schemas/StudyLookupRequest'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/GEOSeries'
+              $ref: '#/components/schemas/StudyLookupRequest'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/GEOSeries'
+              $ref: '#/components/schemas/StudyLookupRequest'
+        required: true
       security:
       - cookieAuth: []
       - basicAuth: []
@@ -700,7 +734,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GEOSeries'
+                $ref: '#/components/schemas/GEOSeriesSearchResponse'
           description: ''
   /api/study/search/:
     get:
@@ -708,6 +742,82 @@ paths:
       description: |-
         ReadOnly API endpoint for viewing GEOSeries.
         Accessible at /api/series/
+      parameters:
+      - in: query
+        name: Classification
+        schema:
+          type: array
+          items:
+            type: string
+        description: Filter by one or more training classifications
+      - in: query
+        name: Confidence
+        schema:
+          type: string
+        description: Filter by confidence bucket (high, medium, low, unknown) or a
+          range like '70-90'
+      - in: query
+        name: Databases
+        schema:
+          type: array
+          items:
+            type: string
+        description: Filter by one or more source databases
+      - in: query
+        name: Organisms
+        schema:
+          type: array
+          items:
+            type: string
+        description: Filter by one or more organisms
+      - in: query
+        name: Platforms
+        schema:
+          type: array
+          items:
+            type: string
+        description: Filter by one or more platform (GPL) ids
+      - in: query
+        name: Study Size
+        schema:
+          type: string
+        description: Filter by study size bucket (small, medium, large) or a range
+          like '10-50'
+      - in: query
+        name: Technologies
+        schema:
+          type: array
+          items:
+            type: string
+        description: Filter by one or more technologies
+      - in: query
+        name: limit
+        schema:
+          type: integer
+        description: Number of results to return per page
+      - in: query
+        name: offset
+        schema:
+          type: integer
+        description: The initial index from which to return the results
+      - in: query
+        name: ordering
+        schema:
+          type: string
+          enum:
+          - -date
+          - -relevance
+          - -samples
+          - date
+          - relevance
+          - samples
+        description: Field to order results by
+      - in: query
+        name: query
+        schema:
+          type: string
+        description: Ontology term ID to search studies for, e.g. MONDO:0007254
+        required: true
       tags:
       - study
       security:
@@ -719,7 +829,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GEOSeries'
+                $ref: '#/components/schemas/GEOSeriesSearchResponse'
           description: ''
 components:
   schemas:
@@ -742,6 +852,18 @@ components:
       - id
       - name
       - studies
+    CartCreateRequest:
+      type: object
+      description: Request body for POST /api/cart/.
+      properties:
+        name:
+          type: string
+        studies:
+          type: array
+          items:
+            $ref: '#/components/schemas/CartItemCreateRequest'
+      required:
+      - name
     CartItem:
       type: object
       description: Serializer for CartItem model.
@@ -764,6 +886,23 @@ components:
       - id
       - search
       - term
+    CartItemCreateRequest:
+      type: object
+      description: A single study entry provided when creating a shared cart.
+      properties:
+        id:
+          type: string
+          description: GSE id of the study
+        search:
+          type: string
+        term:
+          type: string
+        added:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+      - id
     DatabaseStats:
       type: object
       description: Serializer for database statistics returned from /api/stats/ endpoint.
@@ -971,6 +1110,27 @@ components:
       required:
       - gsm
       - id
+    GEOSampleSearchResponse:
+      type: object
+      description: Response shape for GET /api/study/{gse}/samples/.
+      properties:
+        count:
+          type: integer
+        next:
+          type: string
+          nullable: true
+        previous:
+          type: string
+          nullable: true
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/GEOSample'
+      required:
+      - count
+      - next
+      - previous
+      - results
     GEOSeries:
       type: object
       description: Serializer for GEOSeries model.
@@ -1034,13 +1194,36 @@ components:
           type: string
           nullable: true
         confidence:
-          type: string
+          type: object
+          description: Compute confidence level based on prob.
+          properties:
+            name:
+              type: string
+            value:
+              type: number
+              format: double
+              nullable: true
+          required:
+          - name
+          - value
           readOnly: true
         sample_count:
-          type: string
+          type: integer
+          description: Get the number of samples associated with this series.
           readOnly: true
         database:
-          type: string
+          type: object
+          additionalProperties:
+            type: object
+            description: Info about where a study is hosted in a particular external
+              database.
+            properties:
+              url:
+                type: string
+                nullable: true
+              external_id:
+                type: string
+                nullable: true
           readOnly: true
         platform:
           type: array
@@ -1055,22 +1238,31 @@ components:
             type: string
           readOnly: true
         keywords:
-          type: string
+          type: array
+          items:
+            type: string
+          description: Extract keywords from the series summary.
           readOnly: true
         classification:
           type: string
           readOnly: true
         feedback:
           type: object
-          additionalProperties:
-            oneOf:
-            - type: integer
-            - type: number
-              format: double
           description: |-
             Returns aggregate rating and number of votes for this series.
 
             In the Feedback model, "likes" have a rating of 1 and "dislikes" have a rating of -1.
+          properties:
+            vote_count:
+              type: integer
+            likes:
+              type: integer
+            dislikes:
+              type: integer
+          required:
+          - dislikes
+          - likes
+          - vote_count
           readOnly: true
       required:
       - classification
@@ -1085,6 +1277,72 @@ components:
       - platform
       - sample_count
       - submitted_at
+    GEOSeriesSearchResponse:
+      type: object
+      description: |-
+        Response shape produced by GEOSeriesSearchPagination, used by
+        GEOSeriesViewSet's list/search/lookup actions.
+      properties:
+        count:
+          type: integer
+        next:
+          type: string
+          nullable: true
+        previous:
+          type: string
+          nullable: true
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/GEOSeries'
+        facets:
+          type: object
+          additionalProperties:
+            oneOf:
+            - type: object
+              additionalProperties:
+                type: integer
+            - type: object
+              description: A facet whose values form a continuous numeric range (e.g.
+                a slider).
+              properties:
+                label:
+                  type: string
+                min:
+                  type: integer
+                max:
+                  type: integer
+              required:
+              - label
+              - max
+              - min
+          readOnly: true
+        meta:
+          type: object
+          description: Metadata about the ontology term a study search was performed
+            for.
+          properties:
+            term:
+              type: string
+            name:
+              type: string
+            type:
+              type: string
+            performance:
+              type: string
+          required:
+          - name
+          - performance
+          - term
+          - type
+          readOnly: true
+      required:
+      - count
+      - facets
+      - meta
+      - next
+      - previous
+      - results
     OntologySearchResults:
       type: object
       description: Serializer for OntologySearchResults model.
@@ -1329,6 +1587,61 @@ components:
       - id
       - series_id
       - term
+    StatusResponse:
+      type: object
+      description: Simple status response, e.g. from POST /api/study/feedback/.
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+      required:
+      - status
+    StudyFeedbackRequest:
+      type: object
+      description: Request body for POST /api/study/feedback/.
+      properties:
+        id:
+          type: string
+          description: GSE id of the study being rated
+        user:
+          $ref: '#/components/schemas/StudyFeedbackUser'
+        rating:
+          type: integer
+          maximum: 1
+          minimum: -1
+          nullable: true
+        qualities:
+          type: array
+          items:
+            type: string
+        keywords:
+          type: object
+          additionalProperties:
+            type: string
+        elaborate:
+          type: string
+      required:
+      - id
+    StudyFeedbackUser:
+      type: object
+      description: Optional self-identification info submitted alongside study feedback.
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+    StudyLookupRequest:
+      type: object
+      description: Request body for POST /api/study/lookup/.
+      properties:
+        ids:
+          type: array
+          items:
+            type: string
+          description: GSE ids to look up
+      required:
+      - ids
   securitySchemes:
     basicAuth:
       type: http

@@ -1,7 +1,11 @@
 import type { ReactNode } from "react";
 import type { UseQueryResult } from "@tanstack/react-query";
 import type { ColumnSort } from "@tanstack/table-core";
-import type { Sample, Studies, Study } from "@/api/types";
+import type {
+  GEOSample,
+  GEOSeries,
+  StudySearchRetrieveQueryResult,
+} from "@/api/query";
 import type { Limit } from "@/components/Pagination";
 import type { Col } from "@/components/Table";
 import { Fragment, useEffect, useRef, useState } from "react";
@@ -9,7 +13,7 @@ import analytics from "react-ga4";
 import Highlighter from "react-highlight-words";
 import { useParams } from "react-router";
 import { useDebounce } from "@reactuses/core";
-import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
+import { keepPreviousData } from "@tanstack/react-query";
 import clsx from "clsx";
 import { useAtomValue } from "jotai";
 import { isEmpty, size, uniq, upperFirst } from "lodash";
@@ -30,8 +34,12 @@ import {
   Trash2,
   TriangleAlert,
 } from "lucide-react";
-import { studyFeedback, studySamples, studySearch } from "@/api/api";
 import { performanceColor, performanceTooltip, typeColor } from "@/api/maps";
+import {
+  useStudyFeedbackCreate,
+  useStudySamplesRetrieve,
+  useStudySearchRetrieve,
+} from "@/api/query";
 import Button from "@/components/Button";
 import Checkbox from "@/components/Checkbox";
 import Combobox from "@/components/Combobox";
@@ -133,13 +141,29 @@ export default function Studies() {
   /** page title */
   const title = `${term} "${search}"`;
 
+  /** track searches */
+  useEffect(() => {
+    analytics.event("study_search", { term, ordering, facets });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [term, ordering, offset, limit, JSON.stringify(facets)]);
+
   /** search results */
-  const studySearchQuery = useQuery({
-    queryKey: ["studySearch", term, ordering, offset, limit, facets],
-    queryFn: () =>
-      studySearch({ term, ordering, offset, limit: Number(limit), facets }),
-    placeholderData: keepPreviousData,
-  });
+  const studySearchQuery = useStudySearchRetrieve(
+    {
+      query: term,
+      ordering,
+      offset,
+      limit: Number(limit),
+      Classification: facets.Classification,
+      Confidence: facets.Confidence?.[0],
+      Databases: facets.Databases,
+      Organisms: facets.Organisms,
+      Platforms: facets.Platforms,
+      "Study Size": facets["Study Size"]?.[0],
+      Technologies: facets.Technologies,
+    },
+    { query: { placeholderData: keepPreviousData } },
+  );
 
   return (
     <>
@@ -184,7 +208,7 @@ type FiltersProps = {
   newSearch: boolean;
   setNewSearch: (value: boolean) => void;
   ordering: OrderingOption;
-  query: UseQueryResult<Studies>;
+  query: UseQueryResult<StudySearchRetrieveQueryResult, unknown>;
 };
 
 /** filters panel */
@@ -202,7 +226,7 @@ function Filters({
     count = 0,
     meta: { term = "", name = "", type = "", performance = "" } = {},
     facets = {},
-  } = query.data ?? {};
+  } = query.data?.data ?? {};
 
   return (
     <div className="flex w-60 flex-col gap-8 max-md:w-full max-md:flex-row max-md:flex-wrap max-md:items-start">
@@ -333,14 +357,14 @@ type ResultsProps = {
   setParams: ReturnType<typeof useDebouncedParams>[1];
   offset: number;
   limit: LimitOption;
-  query: UseQueryResult<Studies>;
+  query: UseQueryResult<StudySearchRetrieveQueryResult, unknown>;
 };
 
 function Results({ setParams, offset, limit, query }: ResultsProps) {
   const anyFeedback = !!Object.values(useAtomValue(feedbackAtom)).length;
 
   /** destructure query */
-  const { count = 0, results = [] } = query.data ?? {};
+  const { count = 0, results = [] } = query.data?.data ?? {};
 
   return (
     <div
@@ -395,7 +419,9 @@ function Result({
   classification,
   organisms,
   keywords,
-}: Study & { query: UseQueryResult<Studies> }) {
+}: GEOSeries & {
+  query: UseQueryResult<StudySearchRetrieveQueryResult, unknown>;
+}) {
   /** current cart state */
   const cart = useAtomValue(cartAtom);
 
@@ -404,7 +430,7 @@ function Result({
   const search = params.get("search") ?? "";
 
   /** destructure query */
-  const { meta: { term = "" } = {} } = query.data ?? {};
+  const { meta: { term = "" } = {} } = query.data?.data ?? {};
 
   /** feedback for this study */
   const feedback = useAtomValue(feedbackAtom)[id];
@@ -446,14 +472,17 @@ function Result({
   ] as const;
 
   /** feedback mutation */
-  const mutation = useMutation({
-    mutationFn: async () =>
-      await studyFeedback(
+  const mutation = useStudyFeedbackCreate();
+  const submitFeedback = () => {
+    analytics.event("study_feedback", { id, ...feedback });
+    mutation.mutate({
+      data: {
         id,
-        { name: userName ?? "", email: userEmail ?? "" },
-        feedback,
-      ),
-  });
+        user: { name: userName ?? "", email: userEmail ?? "" },
+        ...feedback,
+      },
+    });
+  };
 
   /** feedback mutation status */
   const status =
@@ -469,7 +498,7 @@ function Result({
       <div className="flex items-start justify-between gap-8">
         <strong>{name}</strong>
         <Tooltip content="Our model's confidence that this study should be annotated to your search term.">
-          <Meter value={confidence.value} />
+          <Meter value={confidence.value ?? 0} />
         </Tooltip>
       </div>
 
@@ -495,7 +524,7 @@ function Result({
             <Highlight keywords={keywords}>{children}</Highlight>
           )}
           caseSensitive
-          searchWords={keywords}
+          searchWords={[...keywords]}
           textToHighlight={description}
         />
       </p>
@@ -532,13 +561,13 @@ function Result({
         {/* actions */}
         <div className="ml-auto flex flex-wrap items-center justify-center gap-4">
           {/* feedback */}
-          {confidence.value > feedbackThreshold && (
+          {(confidence.value ?? 0) > feedbackThreshold && (
             <>
               <Button
                 color={feedback?.rating === 1 ? "theme" : "none"}
                 onClick={() => {
                   setFeedback(id, "rating", (old) => (old === 1 ? 0 : 1));
-                  mutation.mutate();
+                  submitFeedback();
                 }}
                 title="Everything looks good (study prediction is accurate and keywords are relevant)"
                 aria-disabled={!!status}
@@ -547,7 +576,7 @@ function Result({
               </Button>
               <Popover
                 content={<ThumbsDownPopup id={id} keywords={keywords} />}
-                onClose={mutation.mutate}
+                onClose={submitFeedback}
               >
                 <Button
                   color={feedback?.rating === -1 ? "theme" : "none"}
@@ -603,7 +632,7 @@ function Result({
 }
 
 type HighlightProps = {
-  keywords: string[];
+  keywords: readonly string[];
   children: ReactNode;
 };
 
@@ -629,7 +658,7 @@ const qualities = ["Incorrect prediction", "Irrelevant/incorrect keywords"];
 /** study negative feedback popup */
 type ThumbsDownPopupProps = {
   id: string;
-  keywords: string[];
+  keywords: readonly string[];
 };
 
 function ThumbsDownPopup({ id, keywords }: ThumbsDownPopupProps) {
@@ -767,21 +796,19 @@ function SamplesPopup({ id }: SamplesPopupProps) {
   const [offset, setOffset] = useState(0);
   const [limit, setLimit] = useState<Limit>("5");
 
-  const query = useQuery({
-    queryKey: ["studySamples", id, search, ordering, offset, limit],
-    queryFn: () =>
-      studySamples({
-        id,
-        search,
-        ordering: (ordering.desc ? "-" : "") + ordering.id,
-        offset,
-        limit: Number(limit),
-      }),
-    placeholderData: keepPreviousData,
-  });
+  const query = useStudySamplesRetrieve(
+    id,
+    { query: search, offset, limit: Number(limit) },
+    { query: { placeholderData: keepPreviousData } },
+  );
+
+  /** track sample views */
+  useEffect(() => {
+    analytics.event("study_samples", { id });
+  }, [id]);
 
   /** destructure query */
-  const { count = 0, results = [] } = query.data ?? {};
+  const { count = 0, results = [] } = query.data?.data ?? {};
 
   /** count unique values in each column */
   const counts: Record<string, Record<string, number>> = {};
@@ -804,21 +831,21 @@ function SamplesPopup({ id }: SamplesPopupProps) {
       }),
   );
 
-  const cols: Col<Sample>[] = uniq(
-    results.flatMap((result) => Object.keys(result)),
-  ).map((key) => ({
-    key,
-    name: keyToLabel(key),
-    render: (cell: unknown) => (
-      <div className="truncate-lines [--lines:2]" tabIndex={0}>
-        {cell === null || cell === undefined
-          ? "-"
-          : typeof cell === "string" && likelyDate(cell)
-            ? formatDate(cell)
-            : String(cell) || "-"}
-      </div>
-    ),
-  }));
+  const cols = uniq(results.flatMap((result) => Object.keys(result))).map(
+    (key) => ({
+      key,
+      name: keyToLabel(key),
+      render: (cell: unknown) => (
+        <div className="truncate-lines [--lines:2]" tabIndex={0}>
+          {cell === null || cell === undefined
+            ? "-"
+            : typeof cell === "string" && likelyDate(cell)
+              ? formatDate(cell)
+              : String(cell) || "-"}
+        </div>
+      ),
+    }),
+  ) as unknown as Col<GEOSample>[];
 
   return (
     <>
@@ -853,7 +880,7 @@ function SamplesPopup({ id }: SamplesPopupProps) {
         <Status query={query} className="absolute inset-0 opacity-90" />
         <Table
           className="w-full"
-          cols={cols}
+          cols={cols as never}
           rows={results}
           sort={ordering}
           onSort={setOrdering}

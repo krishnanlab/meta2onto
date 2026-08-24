@@ -1,9 +1,9 @@
 import type { FunctionComponent, ReactNode, RefObject } from "react";
 import type { Ontologies } from "@/api/types";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import analytics from "react-ga4";
 import { useNavigate, useSearchParams } from "react-router";
 import { useDebounce } from "@reactuses/core";
-import { useQuery } from "@tanstack/react-query";
 import clsx from "clsx";
 import { omit } from "lodash";
 import {
@@ -25,9 +25,8 @@ import {
   ShoppingCart,
   Wrench,
 } from "lucide-react";
-import { ontologySearch } from "@/api/api";
 import { performanceColor, typeColor } from "@/api/maps";
-import { useStatsRetrieve } from "@/api/query";
+import { useOntologySearchList, useStatsRetrieve } from "@/api/query";
 import Autocomplete from "@/components/Autocomplete";
 import Button from "@/components/Button";
 import { H2 } from "@/components/Heading";
@@ -72,8 +71,7 @@ const examples: Ontologies = [
 
 export default function Home() {
   /** get project stats */
-  const query = useStatsRetrieve();
-  const stats = query.data?.data;
+  const { data: { data: stats } = {} } = useStatsRetrieve();
 
   return (
     <>
@@ -258,16 +256,19 @@ export function SearchBox({ inputRef, className }: SearchBoxProps) {
   if (searchChanged && search) setQuery(search);
 
   /** ontology search results */
-  const ontologySearchQuery = useQuery({
-    queryKey: ["ontologySearch", query],
-    queryFn: () => ontologySearch(query),
-  });
+  const ontologySearchQuery = useOntologySearchList({ query });
+
+  /** track searches */
+  useEffect(() => {
+    if (query.trim()) analytics.event("ontology_search", { search: query });
+  }, [query]);
 
   /** search results */
   const results = query.trim()
     ? /** actual search results */
-      (ontologySearchQuery.data?.map((result) => ({
+      (ontologySearchQuery.data?.data.map((result) => ({
         ...result,
+        performance: result.performance ?? "",
         icon: <></>,
       })) ?? [])
     : /** if nothing typed in search box... */

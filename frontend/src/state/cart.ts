@@ -5,9 +5,9 @@ import { cart } from "@/api/types";
 import { setAtom, storageAtom } from "@/util/atoms";
 
 /** cart object, before user selects name or submits */
-export const localCart = cart.omit({ id: true, name: true, created_at: true });
+export const localCart = cart.omit({ id: true, name: true });
 /** cart object, after user selects name but before they submit */
-export const shareCart = cart.omit({ id: true, created_at: true });
+export const shareCart = cart.omit({ id: true });
 
 /** cart object, before user selects name or submits */
 export type LocalCart = z.infer<typeof localCart>;
