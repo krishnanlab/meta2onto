@@ -25,8 +25,9 @@ import {
   ShoppingCart,
   Wrench,
 } from "lucide-react";
-import { getStats, ontologySearch } from "@/api/api";
+import { ontologySearch } from "@/api/api";
 import { performanceColor, typeColor } from "@/api/maps";
+import { useStatsRetrieve } from "@/api/query";
 import Autocomplete from "@/components/Autocomplete";
 import Button from "@/components/Button";
 import { H2 } from "@/components/Heading";
@@ -71,7 +72,8 @@ const examples: Ontologies = [
 
 export default function Home() {
   /** get project stats */
-  const { data: stats } = useQuery({ queryKey: ["stats"], queryFn: getStats });
+  const query = useStatsRetrieve();
+  const stats = query.data?.data;
 
   return (
     <>

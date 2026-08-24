@@ -653,6 +653,7 @@ def ontology_search(request):
 # === Database-wide statistics
 # ===========================================================================
 
+@extend_schema(responses={200: DatabaseStatsSerializer})
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def database_statistics(request):

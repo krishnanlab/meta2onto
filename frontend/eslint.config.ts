@@ -21,7 +21,7 @@ const tailwindSelectors = [
 ];
 
 export default defineConfig([
-  globalIgnores(["dist", "public", "src/api/types.ts"]),
+  globalIgnores(["dist", "public", "src/api/query.ts"]),
 
   {
     name: "TypeScript",

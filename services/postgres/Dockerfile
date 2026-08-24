@@ -7,7 +7,7 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # install duckdb, add to the path
-RUN curl https://install.duckdb.org | sh
+RUN curl https://install.duckdb.org | bash
 ENV PATH="/root/.duckdb/cli/latest:${PATH}"
 
 # copy "loader" config(s) enabled via environment variable PGCONFIG_LOADING=1
