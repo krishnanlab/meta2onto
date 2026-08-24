@@ -96,7 +96,6 @@ export type Samples = z.infer<typeof samples>;
 export const cart = z.object({
   id: z.string(),
   name: z.string(),
-  created_at: z.string(),
   studies: z.array(
     z.object({
       id: z.string(),
