@@ -1,17 +1,17 @@
 /** type to color map */
 export const typeColor: Record<string, string> = {
-  tissue: "bg-pink-500/25",
-  disease: "bg-lime-500/25",
-  celltype: "bg-cyan-500/25",
-  default: "bg-stone-500/25",
+  tissue: "text-pink-500/25",
+  disease: "text-lime-500/25",
+  celltype: "text-cyan-500/25",
+  default: "text-stone-500/25",
 };
 
 /** performance to color map */
 export const performanceColor: Record<string, string> = {
-  high: "bg-green-500/25",
-  medium: "bg-yellow-500/25",
-  low: "bg-red-500/25",
-  default: "bg-stone-500/25",
+  high: "text-green-500/25",
+  medium: "text-yellow-500/25",
+  low: "text-red-500/25",
+  default: "text-stone-500/25",
 };
 
 /** performance to tooltip map */

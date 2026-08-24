@@ -39,7 +39,7 @@ export default function Database({
     >
       <Pill
         value={database}
-        color={{ default: "bg-blue-500/25" }}
+        color={{ default: "text-blue-500/25" }}
         tooltip={{
           default: (
             <div className="flex flex-col items-start gap-2">
@@ -49,6 +49,7 @@ export default function Database({
             </div>
           ),
         }}
+        hollow
       />
     </Link>
   );

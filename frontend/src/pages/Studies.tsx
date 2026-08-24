@@ -19,6 +19,7 @@ import {
   CircleSmall,
   Dna,
   Hash,
+  HelpCircle,
   LoaderCircle,
   Logs,
   Minus,
@@ -144,7 +145,7 @@ export default function Studies() {
     <>
       <Meta title={title} />
 
-      <H1>Search results for "{term}"</H1>
+      <H1 className="sr-only">Search results for "{term}"</H1>
 
       <section className="width-lg">
         <div className="grid grid-cols-[auto_1fr] gap-12 *:min-w-0 max-md:grid-cols-1">
@@ -213,7 +214,12 @@ function Filters({
         <dd>
           {type && <Pill value={type} color={typeColor} />} {name} {term}
         </dd>
-        <dt>Performance</dt>
+        <dt className="flex items-center gap-2">
+          Performance
+          <Tooltip content="Our overall confidence in predicted annotations for this search.">
+            <HelpCircle className="text-stone-500" />
+          </Tooltip>
+        </dt>
         <dd>
           <Pill
             value={performance}
@@ -462,7 +468,9 @@ function Result({
       {/* top row */}
       <div className="flex items-start justify-between gap-8">
         <strong>{name}</strong>
-        <Meter value={confidence.value}>{confidence.name}</Meter>
+        <Tooltip content="Our model's confidence that this study should be annotated to your search term.">
+          <Meter value={confidence.value} />
+        </Tooltip>
       </div>
 
       {/* details */}
@@ -515,7 +523,8 @@ function Result({
             <Pill
               key={index}
               value={organism}
-              color={{ default: "bg-purple-500/25" }}
+              color={{ default: "text-purple-500/25" }}
+              hollow
             />
           ))}
         </div>
