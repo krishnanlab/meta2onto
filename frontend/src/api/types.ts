@@ -1,17 +1,5 @@
 import z from "zod";
 
-export const stats = z.object({
-  tissues: z.number(),
-  diseases: z.number(),
-  studies: z.number(),
-  samples: z.number(),
-  species: z.number(),
-  technologies: z.number(),
-  feedback: z.number(),
-});
-
-export type Stats = z.infer<typeof stats>;
-
 export const ontology = z.object({
   id: z.string(),
   type: z.string(),
@@ -26,72 +14,6 @@ export type Ontology = z.infer<typeof ontology>;
 export const ontologies = z.array(ontology);
 
 export type Ontologies = z.infer<typeof ontologies>;
-
-export const study = z.object({
-  id: z.string(),
-  name: z.string(),
-  description: z.string(),
-  confidence: z.object({
-    name: z.string(),
-    value: z.number(),
-  }),
-  submitted_at: z.iso.date(),
-  platform: z.array(z.string()),
-  database: z.record(
-    z.string(),
-    z.object({
-      url: z.string().trim().url().nullable().optional(),
-      external_id: z.string().nullable().optional(),
-    }),
-  ),
-  classification: z.string(),
-  organisms: z.array(z.string()),
-  sample_count: z.number(),
-  keywords: z.array(z.string()),
-  feedback: z.object({
-    vote_count: z.number(),
-    likes: z.number(),
-    dislikes: z.number(),
-  }),
-});
-
-export type Study = z.infer<typeof study>;
-
-export const studies = z.object({
-  count: z.number(),
-  results: z.array(study),
-  facets: z.record(
-    z.string(),
-    z.record(z.string(), z.union([z.number(), z.string()])),
-  ),
-  meta: z.object({
-    type: z.string(),
-    term: z.string(),
-    name: z.string(),
-    performance: z.string(),
-  }),
-});
-
-export type Studies = z.infer<typeof studies>;
-
-export const sample = z
-  .object({
-    id: z.string(),
-    type: z.string(),
-    description: z.nullable(z.string()),
-    submission_date: z.iso.date(),
-    last_update_date: z.iso.date(),
-  })
-  .and(z.record(z.string(), z.unknown()));
-
-export type Sample = z.infer<typeof sample>;
-
-export const samples = z.object({
-  count: z.number(),
-  results: z.array(sample),
-});
-
-export type Samples = z.infer<typeof samples>;
 
 export const cart = z.object({
   id: z.string(),

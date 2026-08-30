@@ -16,9 +16,13 @@ services:
       - ./data/:/data/
 
   frontend:
-    build: ./frontend
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
     depends_on:
       - backend
+    volumes:
+      - ./data/:/data/
 
   memcached:
     command: ["memcached", "-m", "1024", "-I", "5m"]

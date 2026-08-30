@@ -5,10 +5,19 @@ FROM oven/bun:1 AS base
 WORKDIR /app
 
 # Copy package management files
-COPY package.json ./
+COPY frontend/package.json ./
 
 # Install dependencies using Bun
 RUN bun install
 
 # Copy the rest of the application
-COPY . .
+COPY frontend/. .
+
+# Copy the Open API schema file
+COPY data/schema.yaml .
+
+# Generate frontend types from the schema
+RUN bun run schema
+
+# Format the generated types
+RUN bun run format

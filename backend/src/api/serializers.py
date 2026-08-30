@@ -1,3 +1,5 @@
+from typing import TypedDict
+
 from rest_framework import serializers
 from django.db.models import Avg, Count, Sum, Q
 
@@ -131,18 +133,44 @@ class GEOPlatformSerializer(serializers.ModelSerializer):
         model = GEOPlatform
         fields = "__all__"
 
+
+class ConfidenceInfo(TypedDict):
+    """Confidence bucket label and the underlying probability score it's derived from."""
+
+    name: str
+    value: float | None
+
+
+class DatabaseInfo(TypedDict, total=False):
+    """Info about where a study is hosted in a particular external database."""
+
+    url: str | None
+    external_id: str | None
+
+
+class FeedbackStats(TypedDict):
+    """Aggregate user feedback counts for a study."""
+
+    vote_count: int
+    likes: int
+    dislikes: int
+
+
 class GEOSeriesSerializer(serializers.ModelSerializer):
     """Serializer for GEOSeries model."""
 
+    # populated via GEOSeriesManager.search_gse_with_prob(); not a real model field
+    classification = serializers.CharField(read_only=True)
+
     sample_count = serializers.SerializerMethodField(read_only=True)
 
-    def get_sample_count(self, obj):
+    def get_sample_count(self, obj) -> int:
         """Get the number of samples associated with this series."""
         return obj.samples_ct if obj.samples_ct is not None else 0
 
     confidence = serializers.SerializerMethodField()
 
-    def get_confidence(self, obj):
+    def get_confidence(self, obj) -> ConfidenceInfo:
         """Compute confidence level based on prob."""
         if obj.prob is None:
             label = "unknown"
@@ -156,7 +184,7 @@ class GEOSeriesSerializer(serializers.ModelSerializer):
 
     database = serializers.SerializerMethodField()
 
-    def get_database(self, obj):
+    def get_database(self, obj) -> dict[str, DatabaseInfo]:
         series_dbs = {
             item.database: {
                 "url": item.url.strip() if item.url else item.url,
@@ -194,7 +222,7 @@ class GEOSeriesSerializer(serializers.ModelSerializer):
 
     keywords = serializers.SerializerMethodField()
 
-    def get_keywords(self, obj):
+    def get_keywords(self, obj) -> list[str]:
         """Extract keywords from the series summary."""
         if obj.keywords:
             return [kw.strip() for kw in obj.keywords.split(",")]
@@ -202,7 +230,7 @@ class GEOSeriesSerializer(serializers.ModelSerializer):
     
     feedback = serializers.SerializerMethodField()
 
-    def get_feedback(self, obj) -> dict[str, int | float]:
+    def get_feedback(self, obj) -> FeedbackStats:
         """Returns aggregate rating and number of votes for this series.
         
         In the Feedback model, "likes" have a rating of 1 and "dislikes" have a rating of -1.
@@ -217,7 +245,7 @@ class GEOSeriesSerializer(serializers.ModelSerializer):
                 )
         )
         
-        return feedback if feedback else {"avg_rating": 0, "vote_count": 0, "sum_rating": 0, "likes": 0, "dislikes": 0}
+        return feedback if feedback else {"vote_count": 0, "likes": 0, "dislikes": 0}
     
     organisms = serializers.SerializerMethodField()
 
@@ -342,3 +370,105 @@ class CartSerializer(serializers.ModelSerializer):
             "name",
             "studies",
         ]
+
+
+class CartItemCreateRequestSerializer(serializers.Serializer):
+    """A single study entry provided when creating a shared cart."""
+
+    id = serializers.CharField(help_text="GSE id of the study")
+    search = serializers.CharField(required=False, allow_blank=True)
+    term = serializers.CharField(required=False, allow_blank=True)
+    added = serializers.DateTimeField(required=False, allow_null=True)
+
+
+class CartCreateRequestSerializer(serializers.Serializer):
+    """Request body for POST /api/cart/."""
+
+    name = serializers.CharField()
+    studies = CartItemCreateRequestSerializer(many=True, required=False)
+
+
+# ===========================================================================
+# === Study search/lookup/samples/feedback request & response shapes
+# ===========================================================================
+
+
+class NumericFacet(TypedDict):
+    """A facet whose values form a continuous numeric range (e.g. a slider)."""
+
+    label: str
+    min: int
+    max: int
+
+
+class SearchMeta(TypedDict):
+    """Metadata about the ontology term a study search was performed for."""
+
+    term: str
+    name: str
+    type: str
+    performance: str
+
+
+class GEOSeriesSearchResponseSerializer(serializers.Serializer):
+    """
+    Response shape produced by GEOSeriesSearchPagination, used by
+    GEOSeriesViewSet's list/search/lookup actions.
+    """
+
+    count = serializers.IntegerField()
+    next = serializers.CharField(allow_null=True)
+    previous = serializers.CharField(allow_null=True)
+    results = GEOSeriesSerializer(many=True)
+    facets = serializers.SerializerMethodField()
+    meta = serializers.SerializerMethodField()
+
+    def get_facets(self, obj) -> dict[str, dict[str, int] | NumericFacet]:
+        return obj.get("facets", {})
+
+    def get_meta(self, obj) -> SearchMeta:
+        return obj.get("meta", {})
+
+
+class GEOSampleSearchResponseSerializer(serializers.Serializer):
+    """Response shape for GET /api/study/{gse}/samples/."""
+
+    count = serializers.IntegerField()
+    next = serializers.CharField(allow_null=True)
+    previous = serializers.CharField(allow_null=True)
+    results = GEOSampleSerializer(many=True)
+
+
+class StudyLookupRequestSerializer(serializers.Serializer):
+    """Request body for POST /api/study/lookup/."""
+
+    ids = serializers.ListField(
+        child=serializers.CharField(), help_text="GSE ids to look up"
+    )
+
+
+class StudyFeedbackUserSerializer(serializers.Serializer):
+    """Optional self-identification info submitted alongside study feedback."""
+
+    name = serializers.CharField(required=False, allow_blank=True)
+    email = serializers.CharField(required=False, allow_blank=True)
+
+
+class StudyFeedbackRequestSerializer(serializers.Serializer):
+    """Request body for POST /api/study/feedback/."""
+
+    id = serializers.CharField(help_text="GSE id of the study being rated")
+    user = StudyFeedbackUserSerializer(required=False)
+    rating = serializers.IntegerField(
+        min_value=-1, max_value=1, required=False, allow_null=True
+    )
+    qualities = serializers.ListField(child=serializers.CharField(), required=False)
+    keywords = serializers.DictField(child=serializers.CharField(), required=False)
+    elaborate = serializers.CharField(required=False, allow_blank=True)
+
+
+class StatusResponseSerializer(serializers.Serializer):
+    """Simple status response, e.g. from POST /api/study/feedback/."""
+
+    status = serializers.CharField()
+    message = serializers.CharField(required=False)

@@ -25,6 +25,9 @@ from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
+from drf_spectacular.utils import extend_schema, OpenApiParameter
+from drf_spectacular.types import OpenApiTypes
+
 from .models import (
     ORGANISM_ARRAY_FIELD,
     Cart,
@@ -47,13 +50,19 @@ from .models import (
 )
 from .serializers import (
     CartSerializer,
+    CartCreateRequestSerializer,
     GEOSampleSerializer,
     GEOSeriesSerializer,
+    GEOSeriesSearchResponseSerializer,
+    GEOSampleSearchResponseSerializer,
     OntologySearchResultsSerializer,
     OrganismSerializer,
     GEOPlatformSerializer,
     SearchTermSerializer,
     DatabaseStatsSerializer,
+    StatusResponseSerializer,
+    StudyFeedbackRequestSerializer,
+    StudyLookupRequestSerializer,
 )
 from .utils.auth import CsrfExemptSessionAuthentication
 
@@ -239,6 +248,94 @@ class GEOSeriesViewSet(viewsets.ReadOnlyModelViewSet):
     # search by ontology ID (e.g., MONDO:0000270), which consults SearchTerm for
     # series matching the term
     # @method_decorator(cache_page(settings.LONGTERM_CACHE_TIMEOUT))
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="query",
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.QUERY,
+                required=True,
+                description="Ontology term ID to search studies for, e.g. MONDO:0007254",
+            ),
+            OpenApiParameter(
+                name="ordering",
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.QUERY,
+                required=False,
+                enum=["relevance", "-relevance", "date", "-date", "samples", "-samples"],
+                description="Field to order results by",
+            ),
+            OpenApiParameter(
+                name="offset",
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                required=False,
+                description="The initial index from which to return the results",
+            ),
+            OpenApiParameter(
+                name="limit",
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                required=False,
+                description="Number of results to return per page",
+            ),
+            OpenApiParameter(
+                name="Confidence",
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.QUERY,
+                required=False,
+                description="Filter by confidence bucket (high, medium, low, unknown) or a range like '70-90'",
+            ),
+            OpenApiParameter(
+                name="Study Size",
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.QUERY,
+                required=False,
+                description="Filter by study size bucket (small, medium, large) or a range like '10-50'",
+            ),
+            OpenApiParameter(
+                name="Platforms",
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.QUERY,
+                required=False,
+                many=True,
+                description="Filter by one or more platform (GPL) ids",
+            ),
+            OpenApiParameter(
+                name="Technologies",
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.QUERY,
+                required=False,
+                many=True,
+                description="Filter by one or more technologies",
+            ),
+            OpenApiParameter(
+                name="Organisms",
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.QUERY,
+                required=False,
+                many=True,
+                description="Filter by one or more organisms",
+            ),
+            OpenApiParameter(
+                name="Databases",
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.QUERY,
+                required=False,
+                many=True,
+                description="Filter by one or more source databases",
+            ),
+            OpenApiParameter(
+                name="Classification",
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.QUERY,
+                required=False,
+                many=True,
+                description="Filter by one or more training classifications",
+            ),
+        ],
+        responses={200: GEOSeriesSearchResponseSerializer},
+    )
     @action(
         detail=False, methods=["get"], url_path="search", permission_classes=[AllowAny]
     )
@@ -489,6 +586,26 @@ class GEOSeriesViewSet(viewsets.ReadOnlyModelViewSet):
         )
 
     # provide a /lookup action to get series by a list of ids
+    @extend_schema(
+        request=StudyLookupRequestSerializer,
+        parameters=[
+            OpenApiParameter(
+                name="offset",
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                required=False,
+                description="The initial index from which to return the results",
+            ),
+            OpenApiParameter(
+                name="limit",
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                required=False,
+                description="Number of results to return per page",
+            ),
+        ],
+        responses={200: GEOSeriesSearchResponseSerializer},
+    )
     @method_decorator(csrf_exempt)
     @action(
         detail=False, methods=["post"], url_path="lookup", permission_classes=[AllowAny]
@@ -505,6 +622,32 @@ class GEOSeriesViewSet(viewsets.ReadOnlyModelViewSet):
         return Response(serializer.data)
 
     # nest /samples to find related samples for a series
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="query",
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.QUERY,
+                required=False,
+                description="Search within this study's samples",
+            ),
+            OpenApiParameter(
+                name="offset",
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                required=False,
+                description="The initial index from which to return the results",
+            ),
+            OpenApiParameter(
+                name="limit",
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                required=False,
+                description="Number of results to return per page",
+            ),
+        ],
+        responses={200: GEOSampleSearchResponseSerializer},
+    )
     @action(
         detail=True, methods=["get"], url_path="samples", permission_classes=[AllowAny]
     )
@@ -530,6 +673,10 @@ class GEOSeriesViewSet(viewsets.ReadOnlyModelViewSet):
         return Response(serializer.data)
 
     # allow users to post feedback to a study
+    @extend_schema(
+        request=StudyFeedbackRequestSerializer,
+        responses={201: StatusResponseSerializer, 200: StatusResponseSerializer},
+    )
     @method_decorator(csrf_exempt)
     @action(
         detail=False, methods=["post"], url_path="feedback", permission_classes=[AllowAny]
@@ -594,6 +741,28 @@ class SearchTermViewSet(viewsets.ReadOnlyModelViewSet):
 # ===========================================================================
 
 
+@extend_schema(
+    parameters=[
+        OpenApiParameter(
+            name="query",
+            type=OpenApiTypes.STR,
+            location=OpenApiParameter.QUERY,
+            required=True,
+            description="Search query string",
+        ),
+        OpenApiParameter(
+            name="max_results",
+            type=OpenApiTypes.INT,
+            location=OpenApiParameter.QUERY,
+            required=False,
+            description="Maximum number of results to return",
+            default=50,
+        ),
+    ],
+    responses={200: OntologySearchResultsSerializer(many=True)},
+)
+
+
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def ontology_search(request):
@@ -628,6 +797,7 @@ def ontology_search(request):
 # === Database-wide statistics
 # ===========================================================================
 
+@extend_schema(responses={200: DatabaseStatsSerializer})
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def database_statistics(request):
@@ -672,6 +842,10 @@ class CartViewSet(viewsets.ModelViewSet):
     permission_classes = [AllowAny]
 
     # allow user to POST to create a new cart
+    @extend_schema(
+        request=CartCreateRequestSerializer,
+        responses={201: CartSerializer},
+    )
     def create(self, request, *args, **kwargs):
         """
         Create a new cart with the given name.
