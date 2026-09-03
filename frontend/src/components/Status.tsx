@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import type { UseMutationResult, UseQueryResult } from "@tanstack/react-query";
 import clsx from "clsx";
-import { isEmpty } from "lodash";
+import { isEmpty as _isEmpty } from "lodash";
 import { Info, LoaderCircle, TriangleAlert } from "lucide-react";
 import Tooltip from "@/components/Tooltip";
 
@@ -18,7 +18,7 @@ type Props = {
 };
 
 /** status block for query */
-function Status({
+export default function Status({
   loading = "Loading",
   error = "Error",
   empty = "No results",
@@ -37,7 +37,8 @@ function Status({
         {loading}
       </span>
     );
-  else if (isError(query))
+
+  if (isError(query))
     return (
       <span className={clsx("bg-red-100 text-red-500", className)}>
         <TriangleAlert />
@@ -48,7 +49,8 @@ function Status({
         </Tooltip>
       </span>
     );
-  else if (isSuccess(query))
+
+  if (isEmpty(query))
     return (
       <span className={clsx("bg-stone-100 text-stone-500", className)}>
         <Info />
@@ -56,8 +58,6 @@ function Status({
       </span>
     );
 }
-
-export default Status;
 
 /** is there any status to show */
 export const showStatus = (props: Props) => !!Status(props);
@@ -69,6 +69,6 @@ export const isLoading = (query: Query) =>
 /** is error */
 export const isError = (query: Query) => query.status === "error";
 
-/** is success */
-export const isSuccess = (query: Query) =>
-  query.status === "success" && isEmpty(query.data);
+/** is empty */
+export const isEmpty = (query: Query) =>
+  query.status === "success" && _isEmpty(query.data);
