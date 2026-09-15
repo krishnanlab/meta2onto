@@ -47,10 +47,7 @@ export type Col<
   name: string;
   /** is sortable (default true) */
   sortable?: boolean;
-  /**
-   * custom render function for cell. return undefined or null to fallback to
-   * default formatting.
-   */
+  /** custom render function for cell */
   render?: (cell: NoInfer<Datum[Key]>, row: Datum) => ReactNode;
 };
 

@@ -263,10 +263,10 @@ function Filters({
         )
           control = (
             <Slider
-              label={(values) =>
+              valueLabel={(values) =>
                 values.map((value) => formatNumber(value, true)).join(" – ")
               }
-              thumbLabel={[`${facetKey} minimum`, `${facetKey} maximum`]}
+              valueLabels={[`${facetKey} minimum`, `${facetKey} maximum`]}
               value={(() => {
                 const [minValue, maxValue] =
                   params.get(facetKey)?.split("-").map(Number) ?? [];
@@ -318,10 +318,10 @@ function Filters({
           );
 
         return (
-          <div key={facetKey} className="flex flex-col gap-2 max-md:grow">
+          <label key={facetKey} className="flex flex-col gap-2 max-md:grow">
             <strong>{facetKey}</strong>
             {control}
-          </div>
+          </label>
         );
       })}
     </div>

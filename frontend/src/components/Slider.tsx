@@ -9,8 +9,8 @@ type Props = {
   value: number[];
   onInput?: (values: number[]) => void;
   onChange?: (values: number[]) => void;
-  label: (values: readonly number[]) => ReactNode;
-  thumbLabel: string[];
+  valueLabel?: (values: readonly number[]) => ReactNode;
+  valueLabels?: string[];
   className?: string;
 } & Omit<SliderRootProps, "value" | "onChange" | "className">;
 
@@ -21,8 +21,8 @@ export default function Slider({
   min = 0,
   max = 100,
   step = 1,
-  label,
-  thumbLabel,
+  valueLabel,
+  valueLabels,
   className,
   ...props
 }: Props) {
@@ -48,7 +48,9 @@ export default function Slider({
       className={clsx("flex flex-col gap-2", className)}
       {...props}
     >
-      <_Slider.Value>{(_, values) => label(values)}</_Slider.Value>
+      <_Slider.Value>
+        {(_, values) => valueLabel?.(values) || values.join(" - ")}
+      </_Slider.Value>
       <_Slider.Control className="flex cursor-pointer touch-none items-center p-2 text-theme transition-colors select-none hover:text-stone-800">
         <_Slider.Track className="h-1 w-full rounded-full bg-stone-300">
           <_Slider.Indicator className="rounded-full bg-current" />
@@ -57,7 +59,7 @@ export default function Slider({
               key={index}
               index={index}
               className="size-4 rounded-full bg-current"
-              aria-label={[thumbLabel].flat()[index]}
+              aria-label={valueLabels?.[index] || `Value ${index + 1}`}
             />
           ))}
         </_Slider.Track>
