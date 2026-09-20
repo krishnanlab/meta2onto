@@ -81,7 +81,7 @@ export default function Home() {
         <hgroup className="flex flex-col items-center gap-y-1 width-sm">
           <h1>{title}</h1>
 
-          <p className="text-2xl font-medium tracking-wide text-balance">
+          <p className="text-2xl tracking-wide text-balance">
             Discover, Collect, Reuse
           </p>
 
@@ -365,7 +365,7 @@ function Tile({
       >
         <Icon className="size-1/2" />
       </div>
-      <div className="flex items-center gap-2 text-xl font-medium">{title}</div>
+      <div className="flex items-center gap-2 text-xl font-bold">{title}</div>
       <p className="text-center text-balance text-stone-700">{description}</p>
     </div>
   );

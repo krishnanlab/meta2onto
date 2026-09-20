@@ -241,7 +241,7 @@ export default function Cart() {
             <div className="flex flex-wrap items-center justify-between gap-8">
               {/* cart details */}
               <div className="flex flex-wrap gap-8">
-                <span className="font-medium">
+                <span className="font-bold">
                   {size ? formatNumber(size) : 0} items
                 </span>
               </div>

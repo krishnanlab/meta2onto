@@ -207,13 +207,19 @@ function Filters({
   return (
     <div className="flex w-60 flex-col gap-8 max-md:w-full max-md:flex-row max-md:flex-wrap max-md:items-start">
       {/* overview */}
-      <dl className="w-full">
-        <dt className="text-sm text-stone-500">Search</dt>
-        <dd className="text-sm text-stone-500">"{search}"</dd>
+      <dl className="gap-2 [&_dd]:justify-self-end">
         <dt>Term</dt>
+        <dd>{name}</dd>
+        <dt>ID</dt>
+        <dd>{term}</dd>
+        <dt>Type</dt>
         <dd>
-          {type && <Pill value={type} color={typeColor} />} {name} {term}
+          <Pill value={type} color={typeColor} />
         </dd>
+        <dt>Search</dt>
+        <dd>"{search}"</dd>
+      </dl>
+      <dl className="gap-2 [&_dd]:justify-self-end">
         <dt className="flex items-center gap-2">
           Performance
           <Tooltip content="Our overall confidence in predicted annotations for this search.">
@@ -230,14 +236,14 @@ function Filters({
         </dd>
         <dt>Studies</dt>
         <dd>{count ? formatNumber(count) : "-"}</dd>
-
-        {!newSearch && (
-          <Button className="col-span-full" onClick={() => setNewSearch(true)}>
-            <RefreshCcw />
-            New Search
-          </Button>
-        )}
       </dl>
+
+      {!newSearch && (
+        <Button onClick={() => setNewSearch(true)}>
+          <RefreshCcw />
+          New Search
+        </Button>
+      )}
 
       {/* sort */}
       <Select

@@ -21,7 +21,7 @@ export default function Select<O extends Option>({
   ...props
 }: Props<O>) {
   return (
-    <label>
+    <label className="items-center">
       {label}
       <select
         className="grow rounded-md border border-current/25 bg-white px-2 py-1"
