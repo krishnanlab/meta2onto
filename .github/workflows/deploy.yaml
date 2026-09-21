@@ -30,4 +30,5 @@ jobs:
           sudo find . -type d -exec chmod g+s {} \;
 
           ./run_stack.sh
+          
           echo "Deployed on $( date )" >> auto_deploy.log
