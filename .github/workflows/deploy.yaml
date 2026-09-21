@@ -20,6 +20,14 @@ jobs:
       - name: Deploy stack
         run: |
           cd /opt/projects/meta2onto
-          git pull
+          
+          GIT_SSH_COMMAND="ssh -i /home/faisal_alquaddoomi_cuanschutz_ed/.ssh/id_ed25519 -o IdentitiesOnly=yes"  \
+            git pull
+          
+          # fix perms so anyone in devs still has access
+          sudo chgrp -R devs .
+          sudo chmod -R g+rw .
+          sudo find . -type d -exec chmod g+s {} \;
+
           ./run_stack.sh
           echo "Deployed on $( date )" >> auto_deploy.log
