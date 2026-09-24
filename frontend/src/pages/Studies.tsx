@@ -3,7 +3,7 @@ import type { UseQueryResult } from "@tanstack/react-query";
 import type { ColumnSort } from "@tanstack/table-core";
 import type { Sample, Studies, Study } from "@/api/types";
 import type { Limit } from "@/components/Pagination";
-import type { Col } from "@/components/Table";
+import type { Column } from "@/components/Table";
 import { Fragment, useEffect, useRef, useState } from "react";
 import analytics from "react-ga4";
 import Highlighter from "react-highlight-words";
@@ -800,7 +800,7 @@ function SamplesPopup({ id }: SamplesPopupProps) {
       counts[key][value] = (counts[key][value] || 0) + 1;
     }
 
-  /** cols with all same value */
+  /** columns with all same value */
   const common = Object.fromEntries(
     Object.entries(counts)
       .filter(([, value]) => size(Object.values(value)) === 1)
@@ -810,7 +810,7 @@ function SamplesPopup({ id }: SamplesPopupProps) {
       }),
   );
 
-  const cols: Col<Sample>[] = uniq(
+  const columns: Column<Sample>[] = uniq(
     results.flatMap((result) => Object.keys(result)),
   ).map((key) => ({
     key,
@@ -859,7 +859,7 @@ function SamplesPopup({ id }: SamplesPopupProps) {
         <Status query={query} className="absolute inset-0 opacity-90" />
         <Table
           className="w-full"
-          cols={cols}
+          columns={columns}
           rows={results}
           sort={ordering}
           onSort={setOrdering}

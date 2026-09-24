@@ -444,7 +444,7 @@ export default function Cart() {
             {!!studyDetails.length && (
               <>
                 <Table
-                  cols={[
+                  columns={[
                     {
                       key: "id",
                       name: "ID",

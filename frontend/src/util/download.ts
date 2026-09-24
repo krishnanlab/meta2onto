@@ -9,18 +9,18 @@ const getFilename = (filename: string) =>
     .replace(/(^-+)|(-+$)/g, "");
 
 /** download url as file */
-const download = (
+const downloadFile = (
   /** url to download */
   url: string,
-  /** single filename string or filename "parts" */
+  /** single filename string */
   filename: string,
-  /** extension, without dot */
+  /** extension, with dot */
   ext: string,
 ) => {
   let download = getFilename(filename);
 
   /** add extension */
-  if (!download.endsWith("." + ext)) download += "." + ext;
+  if (!download.endsWith(ext)) download += ext;
 
   /** trigger download */
   const link = document.createElement("a");
@@ -45,33 +45,33 @@ const getUrl = (
 
 /** download data as json file */
 export const downloadJson = (data: unknown, filename: string) =>
-  download(
+  downloadFile(
     getUrl(JSON.stringify(data, null, 2), "application/json;charset=utf-8"),
     filename,
-    "json",
+    ".json",
   );
 
-type Table = (string | number | boolean | null | undefined)[][];
+type Tabular = (string | number | boolean | null | undefined)[][];
 
 /** assemble csv/tsv from arrays */
-const stringifyTable = (table: Table, delimiter = "\t") =>
+const stringifyTable = (table: Tabular, delimiter = "\t") =>
   BYTE_ORDER_MARK + unparse(table, { delimiter });
 
 /** download data as csv file */
-export const downloadCsv = (data: Table, filename: string) =>
-  download(
+export const downloadCsv = (data: Tabular, filename: string) =>
+  downloadFile(
     getUrl(stringifyTable(data, ","), "text/csv;charset=utf-8"),
     filename,
-    "csv",
+    ".csv",
   );
 
 /** download data as tsv file */
-export const downloadTsv = (data: Table, filename: string) =>
-  download(
+export const downloadTsv = (data: Tabular, filename: string) =>
+  downloadFile(
     getUrl(
       stringifyTable(data, "\t"),
       "text/tab-separated-values;charset=utf-8",
     ),
     filename,
-    "tsv",
+    ".tsv",
   );

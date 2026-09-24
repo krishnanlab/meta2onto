@@ -6,17 +6,20 @@ import type {
   SortingState,
 } from "@tanstack/react-table";
 import {
+  columnFacetingFeature,
+  columnFilteringFeature,
   createColumnHelper,
-  flexRender,
+  createFacetedMinMaxValues,
+  createFacetedRowModel,
+  createFacetedUniqueValues,
+  createFilteredRowModel,
+  createPaginatedRowModel,
+  createSortedRowModel,
   functionalUpdate,
-  getCoreRowModel,
-  getFacetedMinMaxValues,
-  getFacetedRowModel,
-  getFacetedUniqueValues,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  useReactTable,
+  rowPaginationFeature,
+  rowSortingFeature,
+  tableFeatures,
+  useTable,
 } from "@tanstack/react-table";
 import clsx from "clsx";
 import { ArrowUpDown, MoveDown, MoveUp } from "lucide-react";
@@ -24,8 +27,21 @@ import Button from "@/components/Button";
 import Tooltip from "@/components/Tooltip";
 import { formatDate, formatNumber, likelyDate } from "@/util/string";
 
+const features = tableFeatures({
+  columnFilteringFeature,
+  columnFacetingFeature,
+  rowSortingFeature,
+  rowPaginationFeature,
+  filteredRowModel: createFilteredRowModel(),
+  facetedRowModel: createFacetedRowModel(),
+  facetedUniqueValues: createFacetedUniqueValues(),
+  facetedMinMaxValues: createFacetedMinMaxValues(),
+  sortedRowModel: createSortedRowModel(),
+  paginatedRowModel: createPaginatedRowModel(),
+});
+
 type Props<Datum extends object> = {
-  cols: readonly _Col<Datum>[];
+  columns: _Columns<Datum>[];
   rows: Datum[];
   sort?: SortingState[number];
   onSort?: (sort: SortingState[number]) => void;
@@ -37,7 +53,7 @@ type Props<Datum extends object> = {
   grow?: boolean;
 };
 
-export type Col<
+export type Column<
   Datum extends object = object,
   Key extends keyof Datum = keyof Datum,
 > = {
@@ -55,12 +71,12 @@ export type Col<
  * https://stackoverflow.com/questions/68274805/typescript-reference-type-of-property-by-other-property-of-same-object
  * https://github.com/vuejs/core/discussions/8851
  */
-type _Col<Datum extends object> = {
-  [Key in keyof Datum]: Col<Datum, Key extends string ? Key : never>;
+type _Columns<Datum extends object> = {
+  [Key in keyof Datum]: Column<Datum, Key extends keyof Datum ? Key : never>;
 }[keyof Datum];
 
 export default function Table<Datum extends object>({
-  cols,
+  columns,
   rows,
   sort,
   onSort,
@@ -73,25 +89,27 @@ export default function Table<Datum extends object>({
 }: Props<Datum>) {
   "use no memo";
 
-  const columnHelper = createColumnHelper<Datum>();
-  /** column definitions */
-  const columns = cols.map((col, index) =>
-    columnHelper.accessor((row: Datum) => row[col.key], {
-      /** unique column id */
-      id: `${col.key}_${index}`,
-      /** name */
-      header: col.name,
-      /** sortable */
-      enableSorting: col.sortable ?? true,
-      /** render func for cell */
-      cell: ({ cell, row }) => {
-        const raw = cell.getValue();
-        const rendered = col.render?.(raw, row.original);
-        return rendered === undefined || rendered === null
-          ? defaultFormat(raw)
-          : rendered;
-      },
-    }),
+  const columnHelper = createColumnHelper<typeof features, Datum>();
+
+  const columnDefinitions = columnHelper.columns(
+    columns.map((column, index) =>
+      columnHelper.accessor((row: Datum) => row[column.key], {
+        /** unique column id */
+        id: String(index),
+        /** name */
+        header: column.name,
+        /** sortable */
+        enableSorting: column.sortable ?? true,
+        /** render func for cell */
+        cell: ({ cell, row }) => {
+          const raw = cell.getValue();
+          const rendered = column.render?.(raw, row.original);
+          return rendered === undefined || rendered === null
+            ? defaultFormat(raw)
+            : rendered;
+        },
+      }),
+    ),
   );
 
   /** current sorting state */
@@ -100,22 +118,12 @@ export default function Table<Datum extends object>({
   /** current pagination state */
   const pagination = { pageIndex: page ?? 0, pageSize: perPage ?? 10 };
 
-  /** tanstack table api */
-  /** https://github.com/facebook/react/issues/33057 */
-  // eslint-disable-next-line react-hooks/incompatible-library
-  const table = useReactTable({
+  /** table api */
+  const table = useTable({
+    features,
     data: rows,
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFacetedRowModel: getFacetedRowModel(),
-    getFacetedUniqueValues: getFacetedUniqueValues(),
-    getFacetedMinMaxValues: getFacetedMinMaxValues(),
-    getColumnCanGlobalFilter: () => true,
+    columns: columnDefinitions,
     autoResetPageIndex: true,
-    columnResizeMode: "onChange",
     manualPagination: true,
     state: { sorting, pagination },
     onSortingChange: (updater) => {
@@ -135,8 +143,8 @@ export default function Table<Datum extends object>({
     <div className="flex flex-col gap-4">
       <div className="overflow-x-auto">
         <table
-          aria-rowcount={table.getPrePaginationRowModel().rows.length}
-          aria-colcount={cols.length}
+          aria-rowcount={table.getPrePaginatedRowModel().rows.length}
+          aria-colcount={columns.length}
           className={clsx("border-collapse", className)}
         >
           <thead>
@@ -153,10 +161,7 @@ export default function Table<Datum extends object>({
                       >
                         {/* header label */}
                         <span>
-                          {flexRender(
-                            header.column.columnDef.header,
-                            header.getContext(),
-                          )}
+                          <table.FlexRender header={header} />
                         </span>
 
                         {/* sort control */}
@@ -191,13 +196,10 @@ export default function Table<Datum extends object>({
                   key={row.id}
                   className="odd:bg-white even:bg-stone-50"
                   aria-rowindex={
-                    table.getState().pagination.pageIndex *
-                      table.getState().pagination.pageSize +
-                    index +
-                    1
+                    pagination.pageIndex * pagination.pageSize + index + 1
                   }
                 >
-                  {row.getVisibleCells().map((cell) => {
+                  {row.getAllCells().map((cell) => {
                     const render =
                       index > 0 && getCellAbove(cell) ? (
                         /** repeat cell above */
@@ -206,10 +208,7 @@ export default function Table<Datum extends object>({
                         </Tooltip>
                       ) : (
                         /** render as normal */
-                        flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext(),
-                        )
+                        <table.FlexRender cell={cell} />
                       );
                     return (
                       <td key={cell.id}>
@@ -228,7 +227,7 @@ export default function Table<Datum extends object>({
               ))
             ) : (
               <tr>
-                <td className="p-2 text-stone-500" colSpan={cols.length}>
+                <td className="p-2 text-stone-500" colSpan={columns.length}>
                   No rows
                 </td>
               </tr>
@@ -256,7 +255,9 @@ const defaultFormat = (cell: unknown) => {
 };
 
 /** get cell above current cell */
-const getCellAbove = <Datum, Value>(cell: Cell<Datum, Value>) =>
+const getCellAbove = <Datum extends object, Value>(
+  cell: Cell<typeof features, Datum, Value>,
+) =>
   cell.column
     .getFacetedRowModel()
     .flatRows[cell.row.index - 1]?.getAllCells()
