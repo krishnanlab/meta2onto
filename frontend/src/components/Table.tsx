@@ -40,6 +40,8 @@ const features = tableFeatures({
   paginatedRowModel: createPaginatedRowModel(),
 });
 
+type Features = typeof features;
+
 type Props<Datum extends object> = {
   columns: _Columns<Datum>[];
   rows: Datum[];
@@ -87,13 +89,11 @@ export default function Table<Datum extends object>({
   className,
   grow = false,
 }: Props<Datum>) {
-  "use no memo";
-
-  const columnHelper = createColumnHelper<typeof features, Datum>();
+  const columnHelper = createColumnHelper<Features, Datum>();
 
   const columnDefinitions = columnHelper.columns(
     columns.map((column, index) =>
-      columnHelper.accessor((row: Datum) => row[column.key], {
+      columnHelper.accessor((row) => row[column.key], {
         /** unique column id */
         id: String(index),
         /** name */
@@ -256,7 +256,7 @@ const defaultFormat = (cell: unknown) => {
 
 /** get cell above current cell */
 const getCellAbove = <Datum extends object, Value>(
-  cell: Cell<typeof features, Datum, Value>,
+  cell: Cell<Features, Datum, Value>,
 ) =>
   cell.column
     .getFacetedRowModel()
