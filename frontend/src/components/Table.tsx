@@ -3,6 +3,7 @@ import type {
   Cell,
   NoInfer,
   PaginationState,
+  RowData,
   SortingState,
 } from "@tanstack/react-table";
 import {
@@ -27,22 +28,7 @@ import Button from "@/components/Button";
 import Tooltip from "@/components/Tooltip";
 import { formatDate, formatNumber, likelyDate } from "@/util/string";
 
-const features = tableFeatures({
-  columnFilteringFeature,
-  columnFacetingFeature,
-  rowSortingFeature,
-  rowPaginationFeature,
-  filteredRowModel: createFilteredRowModel(),
-  facetedRowModel: createFacetedRowModel(),
-  facetedUniqueValues: createFacetedUniqueValues(),
-  facetedMinMaxValues: createFacetedMinMaxValues(),
-  sortedRowModel: createSortedRowModel(),
-  paginatedRowModel: createPaginatedRowModel(),
-});
-
-type Features = typeof features;
-
-type Props<Datum extends object> = {
+type Props<Datum extends RowData> = {
   columns: _Columns<Datum>[];
   rows: Datum[];
   sort?: SortingState[number];
@@ -56,7 +42,7 @@ type Props<Datum extends object> = {
 };
 
 export type Column<
-  Datum extends object = object,
+  Datum extends RowData = RowData,
   Key extends keyof Datum = keyof Datum,
 > = {
   /** key of row object to access as cell value */
@@ -73,11 +59,26 @@ export type Column<
  * https://stackoverflow.com/questions/68274805/typescript-reference-type-of-property-by-other-property-of-same-object
  * https://github.com/vuejs/core/discussions/8851
  */
-type _Columns<Datum extends object> = {
+type _Columns<Datum extends RowData> = {
   [Key in keyof Datum]: Column<Datum, Key extends keyof Datum ? Key : never>;
 }[keyof Datum];
 
-export default function Table<Datum extends object>({
+const features = tableFeatures({
+  columnFilteringFeature,
+  columnFacetingFeature,
+  rowSortingFeature,
+  rowPaginationFeature,
+  filteredRowModel: createFilteredRowModel(),
+  facetedRowModel: createFacetedRowModel(),
+  facetedUniqueValues: createFacetedUniqueValues(),
+  facetedMinMaxValues: createFacetedMinMaxValues(),
+  sortedRowModel: createSortedRowModel(),
+  paginatedRowModel: createPaginatedRowModel(),
+});
+
+type Features = typeof features;
+
+export default function Table<Datum extends RowData>({
   columns,
   rows,
   sort,
@@ -255,7 +256,7 @@ const defaultFormat = (cell: unknown) => {
 };
 
 /** get cell above current cell */
-const getCellAbove = <Datum extends object, Value>(
+const getCellAbove = <Datum extends RowData, Value>(
   cell: Cell<Features, Datum, Value>,
 ) =>
   cell.column
