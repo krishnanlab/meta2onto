@@ -30,8 +30,7 @@
           "^./",
           "^../"
         ],
-        "importOrderParserPlugins": ["typescript", "jsx", "importAssertions"],
-        "jsdocCapitalizeDescription": false
+        "importOrderParserPlugins": ["typescript", "jsx", "importAssertions"]
       }
     }
   ]
