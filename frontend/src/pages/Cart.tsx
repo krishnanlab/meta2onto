@@ -12,17 +12,17 @@ import {
   ArrowRight,
   Braces,
   Clipboard,
+  DatabaseArrowDown,
   Download,
   LinkIcon,
   Mail,
   Search,
   Share2,
-  SquareArrowRightEnter,
   Table2,
   Trash,
 } from "lucide-react";
 import { cartLookup, shareCart, studyBatchLookup } from "@/api/api";
-import { makeDataset } from "@/api/refine.bio";
+import { downloadStudies, getDownloadScript } from "@/api/recount";
 import ActionButton, { copy } from "@/components/ActionButton";
 import Ago from "@/components/Ago";
 import Button from "@/components/Button";
@@ -36,7 +36,6 @@ import Popover from "@/components/Popover";
 import Status, { showStatus } from "@/components/Status";
 import Table from "@/components/Table";
 import Textbox from "@/components/Textbox";
-import { useUser } from "@/pages/user";
 import {
   addCreatedCart,
   cartAtom,
@@ -140,31 +139,23 @@ export default function Cart() {
   /** created carts */
   const createdCarts = useAtomValue(createdCartsAtom);
 
-  /** filter study ids by ones that are in refine.bio */
-  const refineBioStudyIds = studyDetails.map(
-    (study) => study.database["Refine.bio"]?.external_id ?? "",
-  );
+  /** filter studies by ones that are in recount */
+  const recountStudies = studyDetails
+    .map((study) => ({
+      id: study.database["Recount3"]?.external_id ?? "",
+      species: study.organisms[0] ?? "",
+      samples: study.sample_count,
+    }))
+    .filter((study) => study.id && study.species);
 
-  /** total number of samples in refine.bio studies */
-  const refineBioSamples = sum(
-    studyDetails
-      .filter((study) => "Refine.bio" in study.database)
-      .map((study) => study.sample_count),
-  );
+  /** total number of samples in recount studies */
+  const recountSamples = sum(recountStudies.map((study) => study.samples));
 
-  /** export to refine.bio */
-  const refineBioMutation = useMutation({
-    mutationKey: ["refine-bio", refineBioStudyIds],
-    mutationFn: () => makeDataset(refineBioStudyIds),
+  /** download from recount */
+  const recountMutation = useMutation({
+    mutationKey: ["recount", recountStudies],
+    mutationFn: () => downloadStudies(recountStudies, "cart"),
   });
-
-  /** export refio.bio result link */
-  const refineBioLink = refineBioMutation.data
-    ? new URL(`https://www.refine.bio/dataset/${refineBioMutation.data.id}`)
-    : "";
-
-  /** user self-identification */
-  const { userEmail, setUserEmail } = useUser();
 
   /** download cart in particular format */
   const downloadCart = (type: string) => {
@@ -346,76 +337,63 @@ export default function Cart() {
                     </Popover>
 
                     <Dialog
-                      title="Cart to Refine.bio"
+                      title="Download from Recount3"
+                      onOpen={recountMutation.reset}
                       content={
                         <>
-                          {showStatus({ query: refineBioMutation }) ? (
-                            <Status query={refineBioMutation} />
-                          ) : refineBioLink ? (
-                            <>
-                              <p>Cart exported to</p>
-                              <Textbox
-                                readOnly
-                                value={String(refineBioLink)}
-                                onFocus={(event) => event.target.select()}
-                              />
-                              <div className="flex flex-wrap items-center gap-4">
-                                <ActionButton
-                                  onClick={() => copy(String(refineBioLink))}
-                                >
-                                  <Clipboard />
-                                  Copy
-                                </ActionButton>
-                                <Button
-                                  to={`mailto:?body=${encodeURIComponent(String(refineBioLink))}`}
-                                >
-                                  <Mail />
-                                  Email
-                                </Button>
-                                <Button to={String(refineBioLink)}>
-                                  <ArrowRight />
-                                  View
-                                </Button>
-                              </div>
-                            </>
+                          <p>
+                            <strong>
+                              {formatNumber(recountStudies.length)}
+                            </strong>{" "}
+                            supported studies, {formatNumber(recountSamples)}{" "}
+                            samples.
+                            <br />
+                            {!recountSamples && <i>Nothing to download</i>}
+                          </p>
+
+                          {showStatus({
+                            showSuccess: true,
+                            query: recountMutation,
+                          }) ? (
+                            <Status showSuccess query={recountMutation} />
                           ) : (
                             <>
-                              <p>
-                                Export this cart to a Refine.bio dataset.
-                                <br />
-                                <strong>
-                                  {formatNumber(refineBioStudyIds.length)}
-                                </strong>{" "}
-                                supported studies
-                                <br />
-                                <strong>
-                                  {formatNumber(refineBioSamples)}
-                                </strong>{" "}
-                                supported samples
-                              </p>
-
-                              <Textbox
-                                placeholder="Email (optional)"
-                                value={userEmail}
-                                onChange={setUserEmail}
-                              />
-
-                              {!refineBioSamples && <i>Nothing to export</i>}
                               <Button
-                                onClick={() => refineBioMutation.mutate()}
-                                aria-disabled={!refineBioSamples}
+                                onClick={() => recountMutation.mutate()}
+                                aria-disabled={!recountSamples}
                               >
-                                <SquareArrowRightEnter />
-                                Export
+                                <DatabaseArrowDown />
+                                Download Raw
                               </Button>
                             </>
                           )}
+
+                          <p>
+                            Or use this cart's studies with the{" "}
+                            <Link to="https://bioconductor.org/packages/release/bioc/html/recount3.html">
+                              recount3 R package
+                            </Link>
+                            :
+                          </p>
+
+                          <pre className="max-h-80 max-w-100">
+                            {getDownloadScript(recountStudies)}
+                          </pre>
+
+                          <ActionButton
+                            onClick={() =>
+                              copy(getDownloadScript(recountStudies))
+                            }
+                          >
+                            <Clipboard />
+                            Copy Script
+                          </ActionButton>
                         </>
                       }
                     >
                       <Button aria-disabled={!size}>
-                        <SquareArrowRightEnter />
-                        Refine.bio
+                        <DatabaseArrowDown />
+                        Recount3
                       </Button>
                     </Dialog>
                   </>

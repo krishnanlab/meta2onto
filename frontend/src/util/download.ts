@@ -40,13 +40,19 @@ const getUrl = (
   typeof data === "string" && data.startsWith("data:")
     ? data
     : window.URL.createObjectURL(
-        data instanceof Blob ? data : new Blob([data], { type }),
+        data instanceof Blob
+          ? data
+          : new Blob([data], { type: `${type};charset=utf-8` }),
       );
+
+/** download a blob as a file */
+export const downloadBlob = (data: Blob, filename: string, ext: string) =>
+  downloadFile(getUrl(data), filename, ext);
 
 /** download data as json file */
 export const downloadJson = (data: unknown, filename: string) =>
   downloadFile(
-    getUrl(JSON.stringify(data, null, 2), "application/json;charset=utf-8"),
+    getUrl(JSON.stringify(data, null, 2), "application/json"),
     filename,
     ".json",
   );
@@ -59,19 +65,12 @@ const stringifyTable = (table: Tabular, delimiter = "\t") =>
 
 /** download data as csv file */
 export const downloadCsv = (data: Tabular, filename: string) =>
-  downloadFile(
-    getUrl(stringifyTable(data, ","), "text/csv;charset=utf-8"),
-    filename,
-    ".csv",
-  );
+  downloadFile(getUrl(stringifyTable(data, ","), "text/csv"), filename, ".csv");
 
 /** download data as tsv file */
 export const downloadTsv = (data: Tabular, filename: string) =>
   downloadFile(
-    getUrl(
-      stringifyTable(data, "\t"),
-      "text/tab-separated-values;charset=utf-8",
-    ),
+    getUrl(stringifyTable(data, "\t"), "text/tab-separated-values"),
     filename,
     ".tsv",
   );
