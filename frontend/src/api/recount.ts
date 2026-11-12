@@ -14,7 +14,7 @@ export const getStudyDownload = (id: string, species: string) => {
   const extension = { human: "G029", mouse: "M023" }[species];
   if (!extension) return "";
   /** full url of study on public recount bucket */
-  return `https://recoun-opendata.s3.amazonaws.com/recount3/release/${species}/data_sources/sra/gene_sums/${subfolder}/${id}/sra.gene_sums.${id}.${extension}.gz`;
+  return `https://recount-opendata.s3.amazonaws.com/recount3/release/${species}/data_sources/sra/gene_sums/${subfolder}/${id}/sra.gene_sums.${id}.${extension}.gz`;
 };
 
 /** trigger download of list of studies */
