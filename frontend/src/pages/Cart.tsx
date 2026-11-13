@@ -23,7 +23,7 @@ import {
   Table2,
   Trash,
 } from "lucide-react";
-import { cartLookup, shareCart, studyBatchLookup } from "@/api/api";
+import { cartLookup, shareCart, studyLookup } from "@/api/api";
 import { downloadStudies, getDownloadScript } from "@/api/recount";
 import ActionButton, { copy } from "@/components/ActionButton";
 import Ago from "@/components/Ago";
@@ -95,30 +95,27 @@ export default function Cart() {
   const [limit, setLimit] = useState<Limit>("10");
 
   /** look up study details from study ids */
-  const studyBatchLookupQuery = useQuery({
-    queryKey: ["studyBatchLookup", studyIds, ordering, offset, limit],
+  const studyLookupQuery = useQuery({
+    queryKey: ["studyLookup", studyIds, ordering, offset, limit],
     queryFn: () =>
-      studyBatchLookup({
+      studyLookup({
         ids: studyIds,
         ordering: (ordering.desc ? "-" : "") + ordering.id,
-        offset,
-        limit: Number(limit),
+        /** no pagination (no offset/limit), get all studies */
       }),
     enabled: !!size,
   });
 
   /** reset query state */
   const queryClient = useQueryClient();
-  if (!size) queryClient.resetQueries({ queryKey: ["studyBatchLookup"] });
+  if (!size) queryClient.resetQueries({ queryKey: ["studyLookup"] });
 
   /** full study details */
-  const studyDetails = (studyBatchLookupQuery.data?.results || []).map(
-    (study) => ({
-      ...study,
-      /** merge in any details from local cart */
-      ...localCart?.studies.find((s) => !shared && s.id === study.id),
-    }),
-  );
+  const studyDetails = (studyLookupQuery.data?.results || []).map((study) => ({
+    ...study,
+    /** merge in any details from local cart */
+    ...localCart?.studies.find((s) => !shared && s.id === study.id),
+  }));
 
   /** page title */
   const title = shared ? `Shared cart "${name}"` : `Data Cart`;
@@ -435,7 +432,7 @@ export default function Cart() {
             )}
 
             <Status
-              query={studyBatchLookupQuery}
+              query={studyLookupQuery}
               loading={`Loading ${formatNumber(studyIds.length)} studies`}
             />
 
@@ -491,7 +488,8 @@ export default function Cart() {
                       ),
                     },
                   ]}
-                  rows={studyDetails}
+                  /** manually paginate */
+                  rows={studyDetails.slice(offset, offset + Number(limit))}
                   sort={ordering}
                   onSort={setOrdering}
                   page={offset}

@@ -41,7 +41,7 @@ export default function Help() {
             <strong>Share</strong> a generated link to your cart.
           </li>
           <li>
-            <strong>Save</strong> your cart from recount.
+            <strong>Save</strong> your cart from recount3.
           </li>
         </ol>
       </section>

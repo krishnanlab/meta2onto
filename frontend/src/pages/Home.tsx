@@ -71,7 +71,10 @@ const examples: Ontologies = [
 
 export default function Home() {
   /** get project stats */
-  const { data: stats } = useQuery({ queryKey: ["stats"], queryFn: getStats });
+  const { data: stats } = useQuery({
+    queryKey: ["getStats"],
+    queryFn: getStats,
+  });
 
   return (
     <>
