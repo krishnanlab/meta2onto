@@ -14,6 +14,8 @@ import {
   Clipboard,
   DatabaseArrowDown,
   Download,
+  FileArchive,
+  FileStack,
   LinkIcon,
   Mail,
   Search,
@@ -44,7 +46,12 @@ import {
   createdCartsAtom,
   removeFromCart,
 } from "@/state/cart";
-import { downloadCsv, downloadJson, downloadTsv } from "@/util/download";
+import {
+  downloadCsv,
+  downloadFile,
+  downloadJson,
+  downloadTsv,
+} from "@/util/download";
 import { formatNumber } from "@/util/string";
 
 export default function Cart() {
@@ -154,7 +161,7 @@ export default function Cart() {
   /** download from recount */
   const recountMutation = useMutation({
     mutationKey: ["recount", recountStudies],
-    mutationFn: () => downloadStudies(recountStudies, "cart"),
+    mutationFn: (zip: boolean) => downloadStudies(recountStudies, "cart", zip),
   });
 
   /** download cart in particular format */
@@ -164,9 +171,11 @@ export default function Cart() {
     const filename = name || "cart";
 
     if (type === "json")
-      return downloadJson(
-        studyDetails.map((study) => omit(study, ["feedback"])),
-        filename,
+      return downloadFile(
+        downloadJson(
+          studyDetails.map((study) => omit(study, ["feedback"])),
+          filename,
+        ),
       );
 
     /** unique list of databases */
@@ -210,8 +219,8 @@ export default function Cart() {
       ]),
     ];
 
-    if (type === "csv") downloadCsv(table, filename);
-    if (type === "tsv") downloadTsv(table, filename);
+    if (type === "csv") downloadFile(downloadCsv(table, filename));
+    if (type === "tsv") downloadFile(downloadTsv(table, filename));
   };
 
   return (
@@ -351,21 +360,30 @@ export default function Cart() {
                             {!recountSamples && <i>Nothing to download</i>}
                           </p>
 
+                          <p>Download raw files directly:</p>
+
                           {showStatus({
                             showSuccess: true,
                             query: recountMutation,
                           }) ? (
                             <Status showSuccess query={recountMutation} />
                           ) : (
-                            <>
+                            <div className="flex flex-wrap gap-2 *:flex-1">
                               <Button
-                                onClick={() => recountMutation.mutate()}
+                                onClick={() => recountMutation.mutate(true)}
                                 aria-disabled={!recountSamples}
                               >
-                                <DatabaseArrowDown />
-                                Download Raw
+                                <FileArchive />
+                                ZIP
                               </Button>
-                            </>
+                              <Button
+                                onClick={() => recountMutation.mutate(false)}
+                                aria-disabled={!recountSamples}
+                              >
+                                <FileStack />
+                                Individual
+                              </Button>
+                            </div>
                           )}
 
                           <p>

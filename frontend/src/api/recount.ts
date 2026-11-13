@@ -1,12 +1,22 @@
 import analytics from "react-ga4";
-import { BlobWriter, ZipWriter } from "@zip.js/zip.js/lib/zip-core-custom.js";
 import { groupBy } from "lodash";
-import { downloadBlob } from "@/util/download";
+import {
+  downloadFile,
+  downloadFileAs,
+  downloadFilesAs,
+  downloadZip,
+} from "@/util/download";
+
+/** map of our species names to recount */
+const speciesMap: Record<string, string> = {
+  "Homo sapiens": "human",
+  "Mus musculus": "mouse",
+};
 
 /** get static url of study */
 export const getStudyDownload = (id: string, species: string) => {
   /** map our species name to recount */
-  species = { "Homo sapiens": "human", "Mus musculus": "mouse" }[species] ?? "";
+  species = speciesMap[species] ?? "";
   if (!species) return "";
   /** sub-folder */
   const subfolder = id.slice(-2);
@@ -21,71 +31,88 @@ export const getStudyDownload = (id: string, species: string) => {
 export const downloadStudies = async (
   studies: { id: string; species: string }[],
   filename: string,
+  zip: boolean,
 ) => {
-  analytics.event("recount_download_studies", { studies });
+  analytics.event("recount_download_studies", { studies, zip });
 
-  /** errors to throw at end */
-  const errors: { id: string; species: string }[] = [];
-
-  /** archive blobs to download */
-  const archives: { blob: Blob; filename: string }[] = [];
-
-  /** group downloads by species */
-  const grouped = groupBy(studies, (s) => s.species);
-
-  for (const [species, studies] of Object.entries(grouped)) {
-    const writer = new ZipWriter(new BlobWriter("application/zip"));
-    let filesAdded = false;
-
-    for (const { id } of studies) {
+  /** download each raw study file */
+  const downloads = await Promise.allSettled(
+    studies.map(async ({ id, species }) => {
       /** get study download url */
       const url = getStudyDownload(id, species);
-      try {
-        /** check url */
-        if (!url) throw Error("Invalid URL");
-        /** get filename from url */
-        const filename = new URL(url).pathname.split("/").pop();
-        if (!filename) throw Error("No filename");
-        /** download file */
-        const response = await window.fetch(url);
-        if (!response.ok) throw Error("Response not OK");
-        if (!response.body) throw Error("Response empty");
-        /** add file to archive */
-        await writer.add(filename, response.body);
-        filesAdded = true;
-      } catch (error) {
-        console.warn(error);
-        /** mark as error */
-        errors.push({ id, species });
-      }
+      /** check url */
+      if (!url) throw Error(`${id} Invalid URL`);
+      /** get filename from url */
+      const filename = new URL(url).pathname.split("/").pop();
+      if (!filename) throw Error(`${id} No filename`);
+      /** download file */
+      const response = await window.fetch(url);
+      if (!response.ok) throw Error(`${id} Response not OK`);
+      if (!response.body) throw Error(`${id} Response empty`);
+      return { id, species, url, filename, response };
+    }),
+  );
+
+  /** separate successful and failed downloads */
+  const successes = downloads
+    .filter((settled) => settled.status === "fulfilled")
+    .map((settled) => settled.value);
+  const errors = downloads
+    .filter((settled) => settled.status === "rejected")
+    .map((settled) => settled.reason);
+
+  if (zip) {
+    /** download zipped archive */
+    const download = await downloadZip(
+      successes.map(({ response, species, filename }) => ({
+        response,
+        path: `${species}/${filename}`,
+      })),
+      filename,
+    );
+    try {
+      /** try with save-as-file picker */
+      await downloadFileAs(download);
+    } catch (error) {
+      console.warn(error);
+      /** fall back to typical download */
+      downloadFile(download);
     }
-
-    /** don't make archive if no files added */
-    if (filesAdded)
-      /** make archive */
-      archives.push({
-        blob: await writer.close(),
-        filename: `${filename}-${species}`,
-      });
+  } else {
+    /** download individual files */
+    const downloads = await Promise.all(
+      successes.map(async ({ response, species, filename }) => ({
+        data: await response.clone().blob(),
+        subfolder: species,
+        filename,
+      })),
+    );
+    try {
+      /** try with save-to-directory picker */
+      await downloadFilesAs(downloads);
+    } catch (error) {
+      console.warn(error);
+      /** fall back to typical download */
+      for (const download of downloads) downloadFile(download);
+    }
   }
-
-  /** download all archives, after assembly finished, before errors */
-  for (const { blob, filename } of archives)
-    downloadBlob(blob, filename, ".zip");
 
   /** throw errors if any */
   if (errors.length)
     throw new Error(
-      `Failed to download studies: ${errors.map(({ id, species }) => `${id} (${species})`).join(", ")}`,
+      `Failed to download studies: ${errors.map((reason) => reason?.message ?? "Unknown error").join(", ")}`,
     );
 
   /** return successes */
-  return archives.map(({ filename }) => filename);
+  return successes;
 };
 
 /** return code to download recount studies manually */
-export const getDownloadScript = (studies: { id: string }[]) =>
-  `
+export const getDownloadScript = (
+  studies: { id: string; species: string }[],
+) => {
+  /** main script body */
+  let body = `
 if (!requireNamespace("BiocManager", quietly = TRUE)) {
     install.packages("BiocManager")
 }
@@ -95,16 +122,35 @@ BiocManager::install("recount3")
 library(recount3)
 
 cache_dir <- recount3_cache()
+`;
 
-studies <- c(${studies.map((study) => `"${study.id}"`).join(", ")})
-for (study in studies) {
-    url <- locate_url(
-        study,
-        "data_sources/sra",
-        type="gene",
-    )
-    data = file_retrieve(
-        url=url, bfc=cache_dir
-    )
+  /** group studies by species */
+  const grouped = groupBy(studies, (study) => study.species);
+
+  /** for each species */
+  for (const [species, studies] of Object.entries(grouped)) {
+    /** nice species name */
+    const name = speciesMap[species] ?? species;
+
+    /** study ids */
+    const ids = studies.map((study) => `"${study.id}"`).join(", ");
+
+    /** add species-specific loop */
+    body += `
+studies_${name} <- c(${ids})
+for (study in studies_${name}) {
+  url <- locate_url(
+    study,
+    "data_sources/sra",
+    type="gene",
+    organism = "${name}"
+  )
+  data = file_retrieve(
+    url=url, bfc=cache_dir
+  )
 }
-`.trim();
+`;
+  }
+
+  return body.trim();
+};
