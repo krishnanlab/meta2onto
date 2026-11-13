@@ -8,6 +8,7 @@ import {
   getDirectory,
   getFile,
 } from "@/util/download";
+import { sleep } from "@/util/misc";
 
 /** map of our species names to recount */
 const speciesMap: Record<string, string> = {
@@ -106,7 +107,11 @@ export const downloadStudies = async (
     } catch (error) {
       console.warn(error);
       /** fall back to typical download */
-      for (const download of downloads) downloadFile(download);
+      for (const download of downloads) {
+        /** for safari https://stackoverflow.com/a/64479351/2180570 */
+        await sleep(50);
+        downloadFile(download);
+      }
     }
   }
 

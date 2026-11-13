@@ -125,9 +125,7 @@ export const downloadFilesAs = async (
       filename = cleanFilename(filename);
       const fileHandle = await subdirectory.getFileHandle(
         `${filename}${ext ?? ""}`,
-        {
-          create: true,
-        },
+        { create: true },
       );
       const writable = await fileHandle.createWritable();
       await writable.write(data);
