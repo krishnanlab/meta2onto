@@ -15,7 +15,7 @@ type Download = {
 const cleanFilename = (filename: string) =>
   filename
     /** make path safe */
-    .replace(/[^A-Za-z0-9]+/g, "-")
+    .replace(/[^A-Za-z0-9.]+/g, "-")
     /** remove leading/trailing dashes */
     .replace(/(^-+)|(-+$)/g, "");
 
@@ -58,26 +58,45 @@ export const downloadFile = ({ data, filename, ext, mimeType }: Download) => {
   a.href = url;
   a.download = `${filename}${ext ?? ""}`;
   a.click();
-  window.URL.revokeObjectURL(url);
+  // window.URL.revokeObjectURL(url);
 };
 
-/** download file as */
-export const downloadFileAs = async ({
-  data,
+/** get user-picked file */
+export const getFile = async ({
   filename,
   ext,
   mimeType,
-}: Download) => {
-  filename = cleanFilename(filename);
+}: Omit<Download, "data">) => {
   try {
-    /** get user-picked file */
-    const handle = await window.showSaveFilePicker({
+    return await window.showSaveFilePicker({
       suggestedName: `${filename}${ext ?? ""}`,
       types:
         ext && mimeType
           ? [{ description: mimeType, accept: { [mimeType]: [ext] } }]
           : undefined,
     });
+  } catch (error) {
+    if (canceled(error)) console.info("User cancelled picker");
+    else console.warn(error);
+  }
+};
+
+/** get user-picked directory */
+export const getDirectory = async () => {
+  try {
+    return await window.showDirectoryPicker({ mode: "readwrite" });
+  } catch (error) {
+    if (canceled(error)) console.info("User cancelled picker");
+    else console.warn(error);
+  }
+};
+
+/** download file as */
+export const downloadFileAs = async (
+  handle: FileSystemFileHandle,
+  { data }: Download,
+) => {
+  try {
     /** create file */
     const writable = await handle.createWritable();
     await writable.write(data);
@@ -89,15 +108,16 @@ export const downloadFileAs = async ({
 };
 
 /** download multiple files as */
-export const downloadFilesAs = async (downloads: Download[]) => {
+export const downloadFilesAs = async (
+  handle: FileSystemDirectoryHandle,
+  downloads: Download[],
+) => {
   try {
-    /** get user-picked folder */
-    const directory = await window.showDirectoryPicker({ mode: "readwrite" });
     for (let { data, subfolder, filename, ext = "" } of downloads) {
       /** create sub-folder within picked folder */
-      let subdirectory = directory;
+      let subdirectory = handle;
       if (subfolder)
-        subdirectory = await directory.getDirectoryHandle(
+        subdirectory = await handle.getDirectoryHandle(
           cleanFilename(subfolder),
           { create: true },
         );

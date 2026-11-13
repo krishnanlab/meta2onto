@@ -349,64 +349,66 @@ export default function Cart() {
                       title="Download from Recount3"
                       onOpen={recountMutation.reset}
                       content={
-                        <>
-                          <p>
-                            <strong>
-                              {formatNumber(recountStudies.length)}
-                            </strong>{" "}
-                            supported studies, {formatNumber(recountSamples)}{" "}
-                            samples.
-                            <br />
-                            {!recountSamples && <i>Nothing to download</i>}
-                          </p>
+                        !recountStudies?.length ? (
+                          <strong>No supported studies in cart</strong>
+                        ) : (
+                          <>
+                            <p>
+                              <strong>
+                                {formatNumber(recountStudies.length)} supported
+                                studies
+                              </strong>{" "}
+                              ({formatNumber(recountSamples)} samples) in cart
+                            </p>
 
-                          <p>Download raw files directly:</p>
+                            <p>Download raw files directly:</p>
 
-                          {showStatus({
-                            showSuccess: true,
-                            query: recountMutation,
-                          }) ? (
-                            <Status showSuccess query={recountMutation} />
-                          ) : (
-                            <div className="flex flex-wrap gap-2 *:flex-1">
-                              <Button
-                                onClick={() => recountMutation.mutate(true)}
-                                aria-disabled={!recountSamples}
-                              >
-                                <FileArchive />
-                                ZIP
-                              </Button>
-                              <Button
-                                onClick={() => recountMutation.mutate(false)}
-                                aria-disabled={!recountSamples}
-                              >
-                                <FileStack />
-                                Individual
-                              </Button>
-                            </div>
-                          )}
+                            {showStatus({
+                              showSuccess: true,
+                              query: recountMutation,
+                            }) ? (
+                              <Status showSuccess query={recountMutation} />
+                            ) : (
+                              <div className="flex flex-wrap gap-2 *:flex-1">
+                                <Button
+                                  onClick={() => recountMutation.mutate(true)}
+                                  aria-disabled={!recountSamples}
+                                >
+                                  <FileArchive />
+                                  ZIP
+                                </Button>
+                                <Button
+                                  onClick={() => recountMutation.mutate(false)}
+                                  aria-disabled={!recountSamples}
+                                >
+                                  <FileStack />
+                                  Individual
+                                </Button>
+                              </div>
+                            )}
 
-                          <p>
-                            Or use this cart's studies with the{" "}
-                            <Link to="https://bioconductor.org/packages/release/bioc/html/recount3.html">
-                              recount3 R package
-                            </Link>
-                            :
-                          </p>
+                            <p>
+                              Or use this cart's studies with the{" "}
+                              <Link to="https://bioconductor.org/packages/release/bioc/html/recount3.html">
+                                recount3 R package
+                              </Link>
+                              :
+                            </p>
 
-                          <pre className="max-h-80 max-w-100">
-                            {getDownloadScript(recountStudies)}
-                          </pre>
+                            <pre className="max-h-80 max-w-100">
+                              {getDownloadScript(recountStudies)}
+                            </pre>
 
-                          <ActionButton
-                            onClick={() =>
-                              copy(getDownloadScript(recountStudies))
-                            }
-                          >
-                            <Clipboard />
-                            Copy Script
-                          </ActionButton>
-                        </>
+                            <ActionButton
+                              onClick={() =>
+                                copy(getDownloadScript(recountStudies))
+                              }
+                            >
+                              <Clipboard />
+                              Copy Script
+                            </ActionButton>
+                          </>
+                        )
                       }
                     >
                       <Button aria-disabled={!size}>

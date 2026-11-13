@@ -5,6 +5,8 @@ import {
   downloadFileAs,
   downloadFilesAs,
   downloadZip,
+  getDirectory,
+  getFile,
 } from "@/util/download";
 
 /** map of our species names to recount */
@@ -34,6 +36,11 @@ export const downloadStudies = async (
   zip: boolean,
 ) => {
   analytics.event("recount_download_studies", { studies, zip });
+
+  /** try to use file/directory picker */
+  const handle = zip
+    ? await getFile({ filename, ext: ".zip", mimeType: "application/zip" })
+    : await getDirectory();
 
   /** download each raw study file */
   const downloads = await Promise.allSettled(
@@ -71,14 +78,18 @@ export const downloadStudies = async (
       filename,
     );
     try {
+      if (!(handle instanceof FileSystemFileHandle))
+        throw Error("Invalid file handle");
       /** try with save-as-file picker */
-      await downloadFileAs(download);
+      await downloadFileAs(handle, download);
     } catch (error) {
       console.warn(error);
       /** fall back to typical download */
       downloadFile(download);
     }
-  } else {
+  }
+
+  if (!zip) {
     /** download individual files */
     const downloads = await Promise.all(
       successes.map(async ({ response, species, filename }) => ({
@@ -88,8 +99,10 @@ export const downloadStudies = async (
       })),
     );
     try {
+      if (!(handle instanceof FileSystemDirectoryHandle))
+        throw Error("Invalid file handle");
       /** try with save-to-directory picker */
-      await downloadFilesAs(downloads);
+      await downloadFilesAs(handle, downloads);
     } catch (error) {
       console.warn(error);
       /** fall back to typical download */
@@ -125,10 +138,15 @@ cache_dir <- recount3_cache()
 `;
 
   /** group studies by species */
-  const grouped = groupBy(studies, (study) => study.species);
+  const grouped = Object.entries(groupBy(studies, (study) => study.species));
+
+  /** sort species in same order as map */
+  grouped.sort(([a], [b]) =>
+    (speciesMap[a] ?? a).localeCompare(speciesMap[b] ?? b),
+  );
 
   /** for each species */
-  for (const [species, studies] of Object.entries(grouped)) {
+  for (const [species, studies] of grouped) {
     /** nice species name */
     const name = speciesMap[species] ?? species;
 
