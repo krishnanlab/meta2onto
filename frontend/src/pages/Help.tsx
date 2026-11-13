@@ -41,7 +41,7 @@ export default function Help() {
             <strong>Share</strong> a generated link to your cart.
           </li>
           <li>
-            <strong>Export</strong> your cart to refine.bio.
+            <strong>Save</strong> your cart from recount3.
           </li>
         </ol>
       </section>
@@ -126,13 +126,17 @@ export default function Help() {
           provide a set of brief guides for popular resources.
         </p>
 
-        <H3>refine.bio</H3>
+        <H3>recount3</H3>
 
         <p>
-          When viewing your cart, click the <i>refine.bio</i> button, and it
-          will <strong>automatically</strong> create a{" "}
-          <Link to="https://www.refine.bio/">refine.bio</Link> dataset with your
-          selected studies! Studies not in refine.bio will be ignored.
+          <Link to="https://rna.recount.bio/">Recount3</Link> provides uniformly
+          processed RNA-Seq data for human and mouse. When viewing your cart,
+          you can automatically download all of the studies that are available
+          in recount3, or get a copyable R script to work directly with the{" "}
+          <Link to="https://bioconductor.org/packages/release/bioc/html/recount3.html">
+            recount3 R package
+          </Link>
+          .
         </p>
 
         <H3>ARCHS4</H3>
@@ -182,47 +186,6 @@ file = "human_gene_v2.6.h5"
 
 #get sample counts for samples belonging to GSE64016
 series_counts = a4.data.series(file, "GSE64016")`}</pre>
-
-        <H3>recount3</H3>
-
-        <p>
-          <Link to="https://rna.recount.bio/">Recount3</Link> provides uniformly
-          processed RNA-Seq data for human and mouse. If you want to download
-          data from this resource, we highly recommend the{" "}
-          <Link to="https://bioconductor.org/packages/release/bioc/html/recount3.html">
-            recount3 R package
-          </Link>
-          . Below is a snippet shows how to download count matrices using this
-          package. For more info, see the package documentation.
-        </p>
-
-        <pre>{`if (!requireNamespace("BiocManager", quietly = TRUE)) {
-    install.packages("BiocManager")
-}
-
-BiocManager::install("recount3")
-
-library(recount3)
-
-# see available projects
-human_projects <- available_projects()
-print(head(human_projects))
-
-# download data files
-cache_dir <- recount3_cache()  # files get saved here
-
-studies <- c("SRP107565", "SRP009615", "SRP119165", "SRP133965")
-for (study in studies) {
-    url <- locate_url(
-        study,
-        "data_sources/sra",
-        type="gene",
-    )
-
-    data = file_retrieve(
-        url=url, bfc=cache_dir
-    )  # saves expression data to cache_dir
-}`}</pre>
       </section>
     </>
   );

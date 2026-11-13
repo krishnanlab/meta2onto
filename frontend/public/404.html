@@ -11,7 +11,7 @@
       try {
         sessionStorage.redirectState = JSON.stringify(history.state);
       } catch (error) {
-        console.error(error);
+        console.warn(error);
       }
       location = "/";
     </script>
