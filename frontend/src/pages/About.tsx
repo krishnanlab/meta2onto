@@ -66,14 +66,15 @@ export default function About() {
       </section>
 
       <section>
-        <H2>Cite</H2>
+        <H2>Acknowledge</H2>
 
         <blockquote>
-          title
+          Meta2Onto: Interpretable & standardized tissue and disease annotations
+          for hundreds of thousands of GEO studies
           <br />
-          authors
+          A project of the Krishnan Lab
           <br />
-          other
+          https://meta2onto.org/
         </blockquote>
       </section>
 

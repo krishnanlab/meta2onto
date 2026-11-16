@@ -97,15 +97,15 @@ export default function Home() {
         <SearchBox />
 
         <div className="flex items-center justify-between gap-4">
-          <div>
-            <span className="mr-2 rounded-full bg-indigo-500 px-2 py-1 tracking-wide text-white">
+          <div className="flex items-center gap-2">
+            <span className="rounded-full bg-indigo-500 px-2 py-1 tracking-wide text-white">
               BETA
             </span>
             <Link to={`${repo}/issues`}>Please give us feedback</Link>
           </div>
 
           <Button
-            to="https://google.com"
+            to="https://docs.google.com/forms/d/e/1FAIpQLScR5brPGzUq1ktRM-mEW8WqXY-_x5cemFePUV-GEeBPYv9Gbw/viewform"
             color="none"
             className="hover:bg-transparent"
           >
