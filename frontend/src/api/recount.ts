@@ -16,6 +16,9 @@ const speciesMap: Record<string, string> = {
   "Mus musculus": "mouse",
 };
 
+/** "nice" species name */
+const niceName = (species: string) => speciesMap[species] ?? species;
+
 /** get static url of study */
 export const getStudyDownload = (id: string, species: string) => {
   /** map our species name to recount */
@@ -74,7 +77,7 @@ export const downloadStudies = async (
     const download = await downloadZip(
       successes.map(({ response, species, filename }) => ({
         response,
-        path: `${species}/${filename}`,
+        path: `${niceName(species)}/${filename}`,
       })),
       filename,
     );
@@ -95,7 +98,7 @@ export const downloadStudies = async (
     const downloads = await Promise.all(
       successes.map(async ({ response, species, filename }) => ({
         data: await response.clone().blob(),
-        subfolder: species,
+        subfolder: niceName(species),
         filename,
       })),
     );
@@ -152,8 +155,7 @@ cache_dir <- recount3_cache()
 
   /** for each species */
   for (const [species, studies] of grouped) {
-    /** nice species name */
-    const name = speciesMap[species] ?? species;
+    const name = niceName(species);
 
     /** study ids */
     const ids = studies.map((study) => `"${study.id}"`).join(", ");
