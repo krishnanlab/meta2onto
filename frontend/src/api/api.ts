@@ -42,7 +42,7 @@ export const studySearch = async ({
 };
 
 /** batch lookup full study details by ids */
-export const studyBatchLookup = async ({
+export const studyLookup = async ({
   ids = [] as string[],
   ordering = "",
   offset = 0,

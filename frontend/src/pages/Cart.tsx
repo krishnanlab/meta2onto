@@ -12,17 +12,19 @@ import {
   ArrowRight,
   Braces,
   Clipboard,
+  DatabaseArrowDown,
   Download,
+  FileArchive,
+  FileStack,
   LinkIcon,
   Mail,
   Search,
   Share2,
-  SquareArrowRightEnter,
   Table2,
   Trash,
 } from "lucide-react";
-import { cartLookup, shareCart, studyBatchLookup } from "@/api/api";
-import { makeDataset } from "@/api/refine.bio";
+import { cartLookup, shareCart, studyLookup } from "@/api/api";
+import { downloadStudies, getDownloadScript } from "@/api/recount";
 import ActionButton, { copy } from "@/components/ActionButton";
 import Ago from "@/components/Ago";
 import Button from "@/components/Button";
@@ -32,11 +34,9 @@ import { H1, H2 } from "@/components/Heading";
 import Link from "@/components/Link";
 import Meta from "@/components/Meta";
 import Pagination from "@/components/Pagination";
-import Popover from "@/components/Popover";
 import Status, { showStatus } from "@/components/Status";
 import Table from "@/components/Table";
 import Textbox from "@/components/Textbox";
-import { useUser } from "@/pages/user";
 import {
   addCreatedCart,
   cartAtom,
@@ -45,7 +45,12 @@ import {
   createdCartsAtom,
   removeFromCart,
 } from "@/state/cart";
-import { downloadCsv, downloadJson, downloadTsv } from "@/util/download";
+import {
+  downloadCsv,
+  downloadFile,
+  downloadJson,
+  downloadTsv,
+} from "@/util/download";
 import { formatNumber } from "@/util/string";
 
 export default function Cart() {
@@ -89,30 +94,27 @@ export default function Cart() {
   const [limit, setLimit] = useState<Limit>("10");
 
   /** look up study details from study ids */
-  const studyBatchLookupQuery = useQuery({
-    queryKey: ["studyBatchLookup", studyIds, ordering, offset, limit],
+  const studyLookupQuery = useQuery({
+    queryKey: ["studyLookup", studyIds, ordering, offset, limit],
     queryFn: () =>
-      studyBatchLookup({
+      studyLookup({
         ids: studyIds,
         ordering: (ordering.desc ? "-" : "") + ordering.id,
-        offset,
-        limit: Number(limit),
+        /** no pagination (no offset/limit), get all studies */
       }),
     enabled: !!size,
   });
 
   /** reset query state */
   const queryClient = useQueryClient();
-  if (!size) queryClient.resetQueries({ queryKey: ["studyBatchLookup"] });
+  if (!size) queryClient.resetQueries({ queryKey: ["studyLookup"] });
 
   /** full study details */
-  const studyDetails = (studyBatchLookupQuery.data?.results || []).map(
-    (study) => ({
-      ...study,
-      /** merge in any details from local cart */
-      ...localCart?.studies.find((s) => !shared && s.id === study.id),
-    }),
-  );
+  const studyDetails = (studyLookupQuery.data?.results || []).map((study) => ({
+    ...study,
+    /** merge in any details from local cart */
+    ...localCart?.studies.find((s) => !shared && s.id === study.id),
+  }));
 
   /** page title */
   const title = shared ? `Shared cart "${name}"` : `Data Cart`;
@@ -140,31 +142,23 @@ export default function Cart() {
   /** created carts */
   const createdCarts = useAtomValue(createdCartsAtom);
 
-  /** filter study ids by ones that are in refine.bio */
-  const refineBioStudyIds = studyDetails.map(
-    (study) => study.database["Refine.bio"]?.external_id ?? "",
-  );
+  /** filter studies by ones that are in recount */
+  const recountStudies = studyDetails
+    .map((study) => ({
+      id: study.database["Recount3"]?.external_id ?? "",
+      species: study.organisms[0] ?? "",
+      samples: study.sample_count,
+    }))
+    .filter((study) => study.id && study.species);
 
-  /** total number of samples in refine.bio studies */
-  const refineBioSamples = sum(
-    studyDetails
-      .filter((study) => "Refine.bio" in study.database)
-      .map((study) => study.sample_count),
-  );
+  /** total number of samples in recount studies */
+  const recountSamples = sum(recountStudies.map((study) => study.samples));
 
-  /** export to refine.bio */
-  const refineBioMutation = useMutation({
-    mutationKey: ["refine-bio", refineBioStudyIds],
-    mutationFn: () => makeDataset(refineBioStudyIds),
+  /** download from recount */
+  const recountMutation = useMutation({
+    mutationKey: ["recount", recountStudies],
+    mutationFn: (zip: boolean) => downloadStudies(recountStudies, "cart", zip),
   });
-
-  /** export refio.bio result link */
-  const refineBioLink = refineBioMutation.data
-    ? new URL(`https://www.refine.bio/dataset/${refineBioMutation.data.id}`)
-    : "";
-
-  /** user self-identification */
-  const { userEmail, setUserEmail } = useUser();
 
   /** download cart in particular format */
   const downloadCart = (type: string) => {
@@ -173,9 +167,11 @@ export default function Cart() {
     const filename = name || "cart";
 
     if (type === "json")
-      return downloadJson(
-        studyDetails.map((study) => omit(study, ["feedback"])),
-        filename,
+      return downloadFile(
+        downloadJson(
+          studyDetails.map((study) => omit(study, ["feedback"])),
+          filename,
+        ),
       );
 
     /** unique list of databases */
@@ -219,8 +215,8 @@ export default function Cart() {
       ]),
     ];
 
-    if (type === "csv") downloadCsv(table, filename);
-    if (type === "tsv") downloadTsv(table, filename);
+    if (type === "csv") downloadFile(downloadCsv(table, filename));
+    if (type === "tsv") downloadFile(downloadTsv(table, filename));
   };
 
   return (
@@ -319,23 +315,32 @@ export default function Cart() {
 
                 {cart && (
                   <>
-                    <Popover
+                    <Dialog
+                      title="Download Cart"
                       content={
                         <>
-                          <Button onClick={() => downloadCart("csv")}>
-                            <Table2 />
-                            CSV
-                          </Button>
+                          <p>
+                            Download <i>IDs, names, and other metadata</i> for{" "}
+                            <strong>
+                              {formatNumber(studyDetails.length)} studies
+                            </strong>{" "}
+                            in cart:
+                          </p>
 
-                          <Button onClick={() => downloadCart("tsv")}>
-                            <Table2 />
-                            TSV
-                          </Button>
-
-                          <Button onClick={() => downloadCart("json")}>
-                            <Braces />
-                            JSON
-                          </Button>
+                          <div className="flex gap-2 *:flex-1">
+                            <Button onClick={() => downloadCart("csv")}>
+                              <Table2 />
+                              CSV
+                            </Button>
+                            <Button onClick={() => downloadCart("tsv")}>
+                              <Table2 />
+                              TSV
+                            </Button>
+                            <Button onClick={() => downloadCart("json")}>
+                              <Braces />
+                              JSON
+                            </Button>
+                          </div>
                         </>
                       }
                     >
@@ -343,79 +348,80 @@ export default function Cart() {
                         <Download />
                         Download
                       </Button>
-                    </Popover>
+                    </Dialog>
 
                     <Dialog
-                      title="Cart to Refine.bio"
+                      onOpen={recountMutation.reset}
+                      title="Download Cart with Recount3"
                       content={
-                        <>
-                          {showStatus({ query: refineBioMutation }) ? (
-                            <Status query={refineBioMutation} />
-                          ) : refineBioLink ? (
-                            <>
-                              <p>Cart exported to</p>
-                              <Textbox
-                                readOnly
-                                value={String(refineBioLink)}
-                                onFocus={(event) => event.target.select()}
-                              />
-                              <div className="flex flex-wrap items-center gap-4">
-                                <ActionButton
-                                  onClick={() => copy(String(refineBioLink))}
-                                >
-                                  <Clipboard />
-                                  Copy
-                                </ActionButton>
-                                <Button
-                                  to={`mailto:?body=${encodeURIComponent(String(refineBioLink))}`}
-                                >
-                                  <Mail />
-                                  Email
-                                </Button>
-                                <Button to={String(refineBioLink)}>
-                                  <ArrowRight />
-                                  View
-                                </Button>
-                              </div>
-                            </>
-                          ) : (
-                            <>
-                              <p>
-                                Export this cart to a Refine.bio dataset.
-                                <br />
-                                <strong>
-                                  {formatNumber(refineBioStudyIds.length)}
-                                </strong>{" "}
-                                supported studies
-                                <br />
-                                <strong>
-                                  {formatNumber(refineBioSamples)}
-                                </strong>{" "}
-                                supported samples
-                              </p>
-
-                              <Textbox
-                                placeholder="Email (optional)"
-                                value={userEmail}
-                                onChange={setUserEmail}
-                              />
-
-                              {!refineBioSamples && <i>Nothing to export</i>}
-                              <Button
-                                onClick={() => refineBioMutation.mutate()}
-                                aria-disabled={!refineBioSamples}
-                              >
-                                <SquareArrowRightEnter />
-                                Export
-                              </Button>
-                            </>
-                          )}
-                        </>
+                        !recountStudies?.length ? (
+                          <p>
+                            <strong>No supported studies</strong> in cart.
+                          </p>
+                        ) : (
+                          <>
+                            <p>
+                              <strong>
+                                {formatNumber(recountStudies.length)} supported
+                                studies
+                              </strong>{" "}
+                              in cart.
+                            </p>
+                            {showStatus({
+                              showSuccess: true,
+                              query: recountMutation,
+                            }) ? (
+                              <Status showSuccess query={recountMutation} />
+                            ) : (
+                              <>
+                                <p>
+                                  Download <i>process gene count</i> files:
+                                </p>
+                                <div className="flex flex-wrap gap-2 *:flex-1">
+                                  <Button
+                                    onClick={() => recountMutation.mutate(true)}
+                                    aria-disabled={!recountSamples}
+                                  >
+                                    <FileArchive />
+                                    ZIP
+                                  </Button>
+                                  <Button
+                                    onClick={() =>
+                                      recountMutation.mutate(false)
+                                    }
+                                    aria-disabled={!recountSamples}
+                                  >
+                                    <FileStack />
+                                    Individual
+                                  </Button>
+                                </div>
+                              </>
+                            )}
+                            <p>
+                              Or use their{" "}
+                              <Link to="https://bioconductor.org/packages/release/bioc/html/recount3.html">
+                                R package
+                              </Link>{" "}
+                              to work with more data:
+                            </p>
+                            <pre className="max-h-80">
+                              {getDownloadScript(recountStudies)}
+                            </pre>
+                            <ActionButton
+                              onClick={() =>
+                                copy(getDownloadScript(recountStudies))
+                              }
+                            >
+                              <Clipboard />
+                              Copy Script
+                            </ActionButton>
+                          </>
+                        )
                       }
                     >
                       <Button aria-disabled={!size}>
-                        <SquareArrowRightEnter />
-                        Refine.bio
+                        <DatabaseArrowDown />
+                        Recount3
                       </Button>
                     </Dialog>
                   </>
@@ -437,7 +443,7 @@ export default function Cart() {
             )}
 
             <Status
-              query={studyBatchLookupQuery}
+              query={studyLookupQuery}
               loading={`Loading ${formatNumber(studyIds.length)} studies`}
             />
 
@@ -493,7 +499,8 @@ export default function Cart() {
                       ),
                     },
                   ]}
-                  rows={studyDetails}
+                  /** manually paginate */
+                  rows={studyDetails.slice(offset, offset + Number(limit))}
                   sort={ordering}
                   onSort={setOrdering}
                   page={offset}

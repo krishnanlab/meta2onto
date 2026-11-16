@@ -40,7 +40,7 @@ export const storageAtom = <Schema extends z.ZodType>(
           console.groupCollapsed(
             `Error parsing storage key "${key}", clearing`,
           );
-          console.error(error);
+          console.warn(error);
           console.groupEnd();
           localStorage.removeItem(key);
           return initial;

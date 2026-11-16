@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import type { UseMutationResult, UseQueryResult } from "@tanstack/react-query";
 import clsx from "clsx";
 import { isEmpty as _isEmpty } from "lodash";
-import { Info, LoaderCircle, TriangleAlert } from "lucide-react";
+import { Check, Info, LoaderCircle, TriangleAlert } from "lucide-react";
 import Tooltip from "@/components/Tooltip";
 
 type Query =
@@ -13,6 +13,8 @@ type Props = {
   loading?: ReactNode;
   error?: ReactNode;
   empty?: ReactNode;
+  success?: ReactNode;
+  showSuccess?: boolean;
   query: Query;
   className?: string;
 };
@@ -22,6 +24,8 @@ export default function Status({
   loading = "Loading",
   error = "Error",
   empty = "No results",
+  success = "Success",
+  showSuccess = false,
   query,
   className,
 }: Props) {
@@ -32,7 +36,7 @@ export default function Status({
 
   if (isLoading(query))
     return (
-      <span className={clsx("bg-stone-100 text-stone-500", className)}>
+      <span className={clsx("bg-stone-100 text-stone-700", className)}>
         <LoaderCircle className="animate-spin" />
         {loading}
       </span>
@@ -40,7 +44,7 @@ export default function Status({
 
   if (isError(query))
     return (
-      <span className={clsx("bg-red-100 text-red-500", className)}>
+      <span className={clsx("bg-red-100 text-red-700", className)}>
         <TriangleAlert />
         <Tooltip content={query.error?.message}>
           <span className="underline decoration-dashed underline-offset-2">
@@ -55,6 +59,14 @@ export default function Status({
       <span className={clsx("bg-stone-100 text-stone-500", className)}>
         <Info />
         {empty}
+      </span>
+    );
+
+  if (showSuccess && isSuccess(query))
+    return (
+      <span className={clsx("bg-emerald-100 text-emerald-700", className)}>
+        <Check />
+        {success}
       </span>
     );
 }
@@ -72,3 +84,6 @@ export const isError = (query: Query) => query.status === "error";
 /** is empty */
 export const isEmpty = (query: Query) =>
   query.status === "success" && _isEmpty(query.data);
+
+/** is success */
+export const isSuccess = (query: Query) => query.status === "success";
