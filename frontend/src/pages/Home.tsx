@@ -178,7 +178,7 @@ export default function Home() {
             title="Collect"
             description={
               <>
-                Add relevant studies to your cart, filter by <i>recount3</i>,{" "}
+                Add relevant studies to your cart, filter by <i>Recount3</i>,{" "}
                 <i>ARCHS4</i>, and more
               </>
             }
@@ -192,7 +192,7 @@ export default function Home() {
             title="Reuse"
             description={
               <>
-                Download your cart, share it, or download from <i>recount3</i>
+                Download your cart, share it, or download from <i>Recount3</i>
               </>
             }
           />

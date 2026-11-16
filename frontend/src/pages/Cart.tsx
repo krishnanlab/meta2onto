@@ -34,7 +34,6 @@ import { H1, H2 } from "@/components/Heading";
 import Link from "@/components/Link";
 import Meta from "@/components/Meta";
 import Pagination from "@/components/Pagination";
-import Popover from "@/components/Popover";
 import Status, { showStatus } from "@/components/Status";
 import Table from "@/components/Table";
 import Textbox from "@/components/Textbox";
@@ -316,23 +315,32 @@ export default function Cart() {
 
                 {cart && (
                   <>
-                    <Popover
+                    <Dialog
+                      title="Download Cart"
                       content={
                         <>
-                          <Button onClick={() => downloadCart("csv")}>
-                            <Table2 />
-                            CSV
-                          </Button>
+                          <p>
+                            Download <i>IDs, names, and other metadata</i> for{" "}
+                            <strong>
+                              {formatNumber(studyDetails.length)} studies
+                            </strong>{" "}
+                            in cart:
+                          </p>
 
-                          <Button onClick={() => downloadCart("tsv")}>
-                            <Table2 />
-                            TSV
-                          </Button>
-
-                          <Button onClick={() => downloadCart("json")}>
-                            <Braces />
-                            JSON
-                          </Button>
+                          <div className="flex gap-2 *:flex-1">
+                            <Button onClick={() => downloadCart("csv")}>
+                              <Table2 />
+                              CSV
+                            </Button>
+                            <Button onClick={() => downloadCart("tsv")}>
+                              <Table2 />
+                              TSV
+                            </Button>
+                            <Button onClick={() => downloadCart("json")}>
+                              <Braces />
+                              JSON
+                            </Button>
+                          </div>
                         </>
                       }
                     >
@@ -340,14 +348,16 @@ export default function Cart() {
                         <Download />
                         Download
                       </Button>
-                    </Popover>
+                    </Dialog>
 
                     <Dialog
-                      title="Download from Recount3"
                       onOpen={recountMutation.reset}
+                      title="Download Cart with Recount3"
                       content={
                         !recountStudies?.length ? (
-                          <strong>No supported studies in cart</strong>
+                          <p>
+                            <strong>No supported studies</strong> in cart.
+                          </p>
                         ) : (
                           <>
                             <p>
@@ -355,47 +365,48 @@ export default function Cart() {
                                 {formatNumber(recountStudies.length)} supported
                                 studies
                               </strong>{" "}
-                              ({formatNumber(recountSamples)} samples) in cart
+                              in cart.
                             </p>
-
-                            <p>Download raw files directly:</p>
-
                             {showStatus({
                               showSuccess: true,
                               query: recountMutation,
                             }) ? (
                               <Status showSuccess query={recountMutation} />
                             ) : (
-                              <div className="flex flex-wrap gap-2 *:flex-1">
-                                <Button
-                                  onClick={() => recountMutation.mutate(true)}
-                                  aria-disabled={!recountSamples}
-                                >
-                                  <FileArchive />
-                                  ZIP
-                                </Button>
-                                <Button
-                                  onClick={() => recountMutation.mutate(false)}
-                                  aria-disabled={!recountSamples}
-                                >
-                                  <FileStack />
-                                  Individual
-                                </Button>
-                              </div>
+                              <>
+                                <p>
+                                  Download <i>process gene count</i> files:
+                                </p>
+                                <div className="flex flex-wrap gap-2 *:flex-1">
+                                  <Button
+                                    onClick={() => recountMutation.mutate(true)}
+                                    aria-disabled={!recountSamples}
+                                  >
+                                    <FileArchive />
+                                    ZIP
+                                  </Button>
+                                  <Button
+                                    onClick={() =>
+                                      recountMutation.mutate(false)
+                                    }
+                                    aria-disabled={!recountSamples}
+                                  >
+                                    <FileStack />
+                                    Individual
+                                  </Button>
+                                </div>
+                              </>
                             )}
-
                             <p>
-                              Or use this cart's studies with the{" "}
+                              Or use their{" "}
                               <Link to="https://bioconductor.org/packages/release/bioc/html/recount3.html">
-                                recount3 R package
-                              </Link>
-                              :
+                                R package
+                              </Link>{" "}
+                              to work with more data:
                             </p>
-
-                            <pre className="max-h-80 max-w-100">
+                            <pre className="max-h-80">
                               {getDownloadScript(recountStudies)}
                             </pre>
-
                             <ActionButton
                               onClick={() =>
                                 copy(getDownloadScript(recountStudies))

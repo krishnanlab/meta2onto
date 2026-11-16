@@ -41,7 +41,7 @@ export default function Help() {
             <strong>Share</strong> a generated link to your cart.
           </li>
           <li>
-            <strong>Save</strong> your cart from recount3.
+            <strong>Save</strong> your cart from Recount3.
           </li>
         </ol>
       </section>
@@ -126,15 +126,15 @@ export default function Help() {
           provide a set of brief guides for popular resources.
         </p>
 
-        <H3>recount3</H3>
+        <H3>Recount3</H3>
 
         <p>
           <Link to="https://rna.recount.bio/">Recount3</Link> provides uniformly
           processed RNA-Seq data for human and mouse. When viewing your cart,
           you can automatically download all of the studies that are available
-          in recount3, or get a copyable R script to work directly with the{" "}
+          in Recount3, or get a copyable R script to work directly with the{" "}
           <Link to="https://bioconductor.org/packages/release/bioc/html/recount3.html">
-            recount3 R package
+            Recount3 R package
           </Link>
           .
         </p>
