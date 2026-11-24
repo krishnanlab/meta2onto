@@ -488,16 +488,26 @@ export default function Cart() {
                       name: "Added",
                       render: (added) => <Ago date={added} />,
                     },
-                    {
-                      key: "id",
-                      name: "",
-                      sortable: false,
-                      render: (id) => (
-                        <Button onClick={() => removeFromCart(id)} color="none">
-                          <Trash />
-                        </Button>
-                      ),
-                    },
+                    ...(shared
+                      ? []
+                      : [
+                          {
+                            key: "id" as const,
+                            name: "",
+                            sortable: false,
+                            render: (
+                              id: (typeof studyDetails)[number]["id"],
+                            ) => (
+                              <Button
+                                onClick={() => removeFromCart(id)}
+                                color="none"
+                                aria-label="Remove from cart"
+                              >
+                                <Trash />
+                              </Button>
+                            ),
+                          },
+                        ]),
                   ]}
                   /** manually paginate */
                   rows={studyDetails.slice(offset, offset + Number(limit))}

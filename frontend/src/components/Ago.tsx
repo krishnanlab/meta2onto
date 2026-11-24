@@ -19,13 +19,13 @@ TimeAgo.addDefaultLocale(en);
 export default function Ago({ date, className }: Props) {
   /** parse arg as date */
   const parsed = parseDate(date);
-  if (!parsed) return <span>???</span>;
+  if (!parsed) return <span>-</span>;
 
   /** full date for tooltip */
   const full = formatDate(date);
 
   return (
-    <Tooltip content={full || "???"}>
+    <Tooltip content={full || "-"}>
       <ReactTimeAgo
         className={clsx("text-nowrap", className)}
         date={parsed}
