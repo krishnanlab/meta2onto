@@ -74,7 +74,7 @@ export default function Cart() {
   const sharedCart = cartLookupQuery.data;
 
   /** current cart */
-  const cart = localCart || sharedCart;
+  const cart = sharedCart || localCart;
 
   /** cart study ids */
   const studyIds = (cart.studies || []).map((study) => study.id);
